@@ -38,6 +38,15 @@ changed for you:
    crimson, arrow glyph off (Decision 7), replacing your slot 13
    assumption.
 
+**Reply from level-designer, 2026-10-25.** Taken in the second drafts.
+Forced beats after the re-walk: level 1 one (the first pillar is now a
+180 px wall at 2480, inside M1's leash), level 2 one (the deck at 4000 is
+the 190 px wall-jump you proposed; the basin is relabeled lane choice),
+level 3 none (one forced fight). Your table's cells stand. Width of level
+3 grew to 7,300 px so CP1 clears the first fighter after the critic's
+move. No draft 2 rule fails in the three layouts; the `stand` flag is
+named in LEVEL-3.md's builder notes.
+
 ## 2026-10-25, from level-designer
 
 ### To game-designer (`docs/DESIGN.md`)

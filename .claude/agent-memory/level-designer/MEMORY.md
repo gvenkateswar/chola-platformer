@@ -27,6 +27,28 @@
   arrays in the level files if needed (gate footing, patrol 400 to 800,
   checkpoint spacing and cone margin, gap and step limits).
 
+## Second draft (2026-10-25), after levels review and DESIGN.md draft 2
+
+- Catch rule (Decision 8): only a stopped hero is caught (within 40 px
+  under 100 px/s for 0.2 s, wall-sliding, or the 0.5 s gate stand). A
+  forced beat is therefore a stop inside the leash: a wall over 140 px
+  (double jump or wall jump) within 300 px of the patrol end. L1 pillar 1
+  is a 180 px wall; L2 deck is a 190 px wall; L3 has none.
+- Sentinels (patrol 0, facing west) allowed at the Kadaram gateway only;
+  `stand` flag is a builder task. Gateway pair is exempt from rule 2.
+- L3 gate is slot 35 `gate_l3.png`, crimson glyph off (Decision 7).
+  `banners:false` in all three levels. L3 needs `water:660` to draw
+  water.
+- Beat sheet carries Tension (1 to 5) and s (seconds, first-time player);
+  sums 120 / 114 / 136 against DESIGN 7's 126 / 131 / 150.
+- Coins must be `[x,y,lane]` data, never prose.
+- "Never at the end of a jump" (rule 4): put a near-lane exit gate at
+  least 200 px past the last landing (last plinth or root knot 320 wide).
+- ASSETS.md slots 19 to 36 now exist with filenames; cite them by name.
+- Critic found: L3 opened inside S1's cone (fixed by moving S1 east and
+  shifting the stilts 100 px); L1 G2 was a two-guard read (F1 moved to
+  2700–3100 so G2 is at the edge of his sweep).
+
 ## Rule findings (first draft)
 
 - Rule 3 (gate inside the patrol) and rule 5 (no cone at a gate exit)
@@ -54,4 +76,7 @@
 
 ## Owner reactions
 
-- None yet; first draft not reviewed.
+- First draft: Gaurav ruled (DECISIONS.md 7 to 9) a crimson-free level 3
+  gate, the stop-only catch rule, and that levels stay about 2 minutes.
+  The design-critic's verdict was "ready with fixes" (eight findings, all
+  taken in the second draft).
