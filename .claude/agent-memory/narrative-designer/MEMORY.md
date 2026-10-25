@@ -22,10 +22,20 @@ jungle," "citadel of the maharaja," "Ganges-conqueror, lord of the eastern
 sea"; "only great overseas naval expedition"; "Tamil merchant guilds";
 "+1 kasu," "Guard felled," "Fallen"; the end-screen stats line.
 
+## Words struck by the critic (review 2026-10-25)
+"rowed the bench" (RESEARCH 9.2: unknown whether ships were rowed; use
+"slept on the deck beside me"); "I will see neither" (the jeweled gate is
+walked through); "Merbok" (modern name; record register uses "the Kadaram
+shore"); "Rajendra ... general" is Ilamaran's hearsay, not a [documented]
+tag (sources screen says "co-regent from 1012"). Guard shout "Hoi! You
+there!" kept.
+
+## Hints
+Positions follow docs/levels/LEVEL-N.md section 9. First gate of every
+level links lanes 0-1 only: gate lines promise ↑ only; touch variant
+"tap ▲." Mid-level floats replace the checkpoint line at L1 CP2, L2 CP2,
+L3 CP4.
+
 ## Open
-- docs/levels/*.md was empty on 2026-10-25; hints sit at the build's
-  hints: x positions (2780, 2010, 2860) and may move.
-- Task brief said vimana "about sixty-five metres"; RESEARCH.md 3.1 says
+- Brief said vimana "about sixty-five metres"; RESEARCH.md 3.1 says
   "over sixty metres." Glossary uses the research wording.
-- Chapter III date line "the Merbok river" is record register; offered
-  "the Kadaram shore" as the swap.

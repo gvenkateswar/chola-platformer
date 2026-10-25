@@ -67,29 +67,35 @@ far end. (68 words)
 
 ### Chapter III · Kadaram · Srivijaya
 
-**Date line:** 1025 CE · the Merbok river
+**Date line:** 1025 CE · the Kadaram shore
 
 Rain. The river is flat and brown and the houses stand in it on legs. One
 mountain behind, in cloud. They say the king of Kadaram keeps elephants
-and a gate of jewels; I will see neither. Our line goes to a timber wall
-with a carved gateway, and the men in front of it know this ground. I have
-carried this sword fifteen years without drawing it on a man. (69 words)
+and a gate of jewels. The gate is ahead of us. The elephants I will not
+see. The men in front of that gate know this ground. I have carried this
+sword fifteen years without drawing it on a man. (70 words)
 
 ## 4. In-level hints and floats
 
-`docs/levels/*.md` did not exist when this was written. These hints sit at
-the build's current `hints:` x positions and replace the build's existing
-floats. Positions may move when the level designer sets the first gate of
-each level (DESIGN.md 9, rule 4). All under 12 words; glyphs as built.
+Positions follow `docs/levels/LEVEL-N.md` section 9, still in revision;
+the x values here may shift. Each level's first gate links lanes 0 and 1
+only, so the gate lines promise ↑ and nothing else. All under 12 words.
 
 | Where | Text |
 |---|---|
-| Level 1, first gate (x 2780) | The lamp marks a gate. ↑ far path, ↓ near. |
-| Level 2, first gate (x 2010) | Lamplit again. ↑ the warehouse ledge, ↓ the wharf. |
-| Level 3, first gate (x 2860) | A lamp in the rain. ↑ the walkway, ↓ the stones. |
+| Level 1, double jump (x 1000) | Jump again in the air. The step is high. |
+| Level 1, first gate (x 1740) | The lamp marks a gate. ↑ the cloister roof. |
+| Level 2, first gate (x 260) | Lamplit again. ↑ the warehouse ledge. |
+| Level 2, climb (x 320) | Up the bales. Height hides you. |
+| Level 3, sword (x 300) | Here the sword comes out. J or X. |
+| Level 3, first gate (x 340) | A lamp in the rain. ↑ the stilt walk. |
+| Touch variant of each gate line (DESIGN.md 8) | Same words; "↑" becomes "tap ▲." |
 | Up or down pressed away from a gate (replaces "no crossing here") | No gate here. Find the lamp. |
 | Attack pressed in levels 1 and 2, once per level (DESIGN.md 3) | Not here. Not against our own. The sword waits. |
 | Checkpoint reached (replaces "Banner planted") | The banner is planted. Breathe. |
+| Level 1, CP2 (x 2900), replaces the checkpoint line | The tower. I did not know stone went that high. |
+| Level 2, CP2 (x 3030), replaces the checkpoint line | A foreign king's house of monks. Nobody minds it. |
+| Level 3, CP4 (x 5100), replaces the checkpoint line | A wall of timber. Men in front. No way round. |
 | Return to checkpoint after a fall or third heart (replaces "Fallen") | Back to the banner. |
 | Guard spots the hero (DESIGN.md 3 asks for a shout) | Hoi! You there! |
 
@@ -108,7 +114,7 @@ the wall, so it must be so. The king of Kadaram is in a boat under guard.
 I did not see his face.
 
 **The line of cost:**
-Sattan, son of Kandan, of Anaimangalam, who rowed the bench beside mine
+Sattan, son of Kandan, of Anaimangalam, who slept on the deck beside me
 from Nagapattinam, is in the river, and his mother does not know.
 
 **Closing line (record, replaces "the only great overseas naval
@@ -124,7 +130,7 @@ No numbers appear on this screen (Pillar 3).
 ## 6. Sources screen
 
 **Documented:** the temple and the gold-plated finial of 1010 (SII II
-no. 1); Rajendra as the king's son and general; the Buddhist monastery at
+no. 1); Rajendra as the king's son, co-regent from 1012; the Buddhist monastery at
 Nagapattinam, funded by Srivijaya's kings with Rajaraja's grant (Larger
 Leiden plates, 1006); sewn-plank hulls; the 1025 raid, the captured king,
 the seized gateway (Rajendra's Thanjavur inscription); Srivijaya's embassy
@@ -143,35 +149,31 @@ and Sakhuja, eds., *Nagapattinam to Suvarnadwipa* (2009). Balasubrahmanyam,
 | On screen | What it is |
 |---|---|
 | Ilamaran | The hero, a common soldier (sevagan) of the fleet. Invented name; RESEARCH.md 4 does not object. |
-| Sattan, son of Kandan | Ilamaran's benchmate, lost at Kadaram. Invented, in the attested "X son of Y of village Z" form. |
+| Sattan, son of Kandan | Ilamaran's deckmate, lost at Kadaram. Invented, in the attested "X son of Y of village Z" form. |
 | Rajaraja | Rajaraja I, king 985–1014, builder of the temple. "The king" in Ilamaran's mouth; never "emperor." |
 | Rajendra | Rajendra I, the king's son and general in 1010; co-regent 1012; king 1014–1044; sent the fleet of 1025. |
-| Thanjavur | Chola capital; site of the Brihadisvara temple, finished 1010. The tower is over sixty metres; Ilamaran has no metres and does not say so. |
+| Thanjavur | Chola capital; the Brihadisvara temple, finished 1010, its tower over sixty metres. Ilamaran has no metres. |
 | Nagapattinam | The main eastern port; home of the Chudamani vihara, a Buddhist monastery funded by Srivijaya. |
 | Anaimangalam | Village near Nagapattinam granted to the vihara in 1006; Sattan's home. |
-| Srivijaya | Malay Buddhist kingdom centered on Palembang, Sumatra, with Kedah in its network. The level-3 enemy is Srivijayan, never a Chola guard. |
-| Kadaram | Kedah, on the Malay peninsula; the Merbok estuary, Gunung Jerai behind. "Kadaram has fallen" is a Chola boast and the game says so. |
+| Srivijaya | Malay Buddhist kingdom centered on Palembang, Sumatra, Kedah in its network. The level-3 enemy is Srivijayan. |
+| Kadaram | Kedah, Malay peninsula; a mangrove estuary, one mountain behind. "Kadaram has fallen" is a Chola boast. |
 | kasu | Chola coin and unit of account (SII II). Gold in the game by convention; copper existed. Never counted. |
 | sevagan | A common soldier. Glossed here; used once in Chapter II. |
 | tiger | The Chola emblem; a tiger on a crimson field on a pole. "The Sea Belongs to the Tiger" is the boast, kept by DECISIONS.md 4. |
 
 ## Open questions for Gaurav
 
-None. Two notes for the design-critic instead: the Chapter III date line
-names the Merbok river, which is the historian's identification of Kadaram's
-port, not something Ilamaran would call it; swap for "the Kadaram shore" if
-the record register should stay out of the date lines. And the guard's shout
-is one line; cut it if DESIGN.md's "!" is enough.
+None.
 
 ## Revision notes
 
-- 2026-10-25, first draft. Rewrote every player-facing string in
-  `index.html` against RESEARCH.md: "warrior of the Chola navy" to "soldier
-  of the fleet"; "young prince Rajendra" to "the king's son and general";
-  war elephants off the Nagapattinam docks and pearls, cloth and rice on;
-  the Five Hundred of Ayyavole, "monsoon jungle," "citadel of the
-  maharaja," and the "sixty-six metres" line removed; "only great overseas
-  naval expedition" replaced with VISION.md's wording; Song trade and
-  "Tamil merchant guilds" dropped rather than restated. Added the line of
-  cost and the inert-attack float. Hints are placed at the build's
-  positions because `docs/levels/` was empty. Word count 1,470 including headings.
+- 2026-10-25, second draft. All seven findings of
+  `docs/reviews/script-review-2026-10-25.md` taken: gate hints at the
+  level documents' positions, ↑-only; double-jump, climb, sword, touch, and
+  three mid-level lines added; Chapter III no longer denies the gateway;
+  the line of cost no longer says the ships were rowed (RESEARCH.md 9.2);
+  "Merbok" to "the Kadaram shore"; Rajendra's sources tag narrowed.
+- 2026-10-25, first draft. Every player-facing string in `index.html`
+  rewritten against RESEARCH.md: navy, young prince, war elephants,
+  Ayyavole, jungle, citadel, metres, and the "only expedition" claim
+  removed; line of cost and inert-attack float added.
