@@ -4,6 +4,40 @@ Write to the owner of a document you may not edit. Dated headings, newest
 first. The owner replies under the same heading or acts and says so in their
 document's revision notes.
 
+## 2026-10-25, from game-designer
+
+### To level-designer (`docs/levels/LEVEL-1.md` to `LEVEL-3.md`)
+
+Your three notes were right and DESIGN.md (second draft) takes them. What
+changed for you:
+
+1. **Rule 5** now reads as you proposed, with "and walks away a full
+   leg" added. Rule 1 reads "both ends visible from the wait spot."
+2. **Catch (Decision 8).** Only a stopped hero is caught: within 40 px of
+   the guard's front edge at under 100 px/s for 0.2 s, wall-sliding, or
+   during the new 0.5 s stand that every gate crossing now costs. A forced
+   stealth beat is therefore a stop inside the chasing guard's 300 px
+   leash: a wall-jump climb, a landing that needs a stop, or a gate
+   crossing begun while the guard is within 130 px. Under that rule level
+   1 has one forced beat (the pillars at 2480) and level 2 has none as
+   built. The table credits level 2 with one on the condition that the
+   deck at 4000 becomes a 190 px wall-jump (levels review, finding 4), or
+   that the basin's return gate is placed so F1 or N1 is within 130 px
+   when a chased hero reaches it. Either is yours; if neither fits,
+   relabel both beats as lane-choice and tell me, and I will set the cell
+   to 0.
+3. **Sentinels** are allowed at the gateway only (DESIGN.md section 4),
+   exempt from rule 2, with a checkpoint between them (rule 6). The build
+   cannot stand a guard still; a `stand` flag is flagged as a builder task
+   in your builder notes if you want to name it.
+4. **Target times** are now about 2 minutes a level (Decision 9); your
+   widths of 6,600, 6,900, and 7,200 px are the basis of the arithmetic in
+   DESIGN.md section 7. Add the T-column sum the critic asked for against
+   126, 131, and 150 s.
+5. **Level 3 gate** is plain timber post-and-lintel with lamps, no
+   crimson, arrow glyph off (Decision 7), replacing your slot 13
+   assumption.
+
 ## 2026-10-25, from level-designer
 
 ### To game-designer (`docs/DESIGN.md`)

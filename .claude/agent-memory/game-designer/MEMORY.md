@@ -57,10 +57,30 @@ to 717, `updateWorld` 719 to 800. Canvas 1280 by 720. Lanes 0 far (scale
 - Difficulty: L1 4 min / 5 guards / 1 forced stealth; L2 5 min / 6 guards /
   2 forced; L3 6 min / 5 fighters / 1 forced combat.
 
+## Second draft rulings (2026-10-25, after review)
+
+- Catch per Decision 8: only a stopped hero (under 100 px/s for 0.2 s
+  within 40 px of the guard's front edge, wall-sliding, or in the 0.5 s
+  gate stand). Gate crossing now costs a 0.5 s stand (build: 0.22 s ink,
+  no stop). Forced beat = a stop inside the 300 px leash.
+- Forced counts: L1 1 (pillars at 2480), L2 1 only if the deck at 4000 is
+  rebuilt as a 190 px wall-jump (else 0), L3 0.
+- Target times 126 / 131 / 150 s (Decision 9); widths 6,600 / 6,900 /
+  7,200 from the level files.
+- Sentinel fighters allowed at the gateway only; `x1 = x2` flips facing
+  every frame in the build, so `stand` is a builder flag.
+- Rule 5 = level designer's wording (gate exit may sit in a sweep if the
+  target-lane guard is on screen and walking away a full leg). Rule 1 =
+  "from the wait spot." Rule 2 exempts the two sentinels.
+- Attack lock is 0.16 s (attackT 0.28, moves when <= 0.12), not 0.12.
+- Level 3 gate: timber post-and-lintel, lamps, no crimson (Decision 7).
+
 ## Open with Gaurav
 
-- Brute-force tax: heart-and-shove (recommended) vs. checkpoint on catch.
+- Ship-deck closing beat in level 2: keep (recommended) or end at quay.
+- Resolved: brute-force tax (Decision 8 made the catch stop-only).
 
 ## Owner changes to the design
 
-- None yet.
+- Decision 8 replaced "contact = catch" with "stopped inside reach."
+- Decision 9 cut targets from 4 to 6 minutes to about 2 minutes a level.
