@@ -16,3 +16,7 @@ note in docs/NOTES.md addressed to Gaurav.
    The Chola guard remains in the game as an obstacle to avoid, not a target.
 4. **Ending.** Keep "The Sea Belongs to the Tiger" and add one line of cost.
 5. **Hero's name.** Ilamaran stays unless the historian objects.
+6. **Redraw the hero.** All five hero poses are regenerated to match
+   RESEARCH.md (straight double-edged sword, cotton sash), not only the
+   attack pose. Art-director owns the new prompts; sprite-artist produces
+   them through Canva.
