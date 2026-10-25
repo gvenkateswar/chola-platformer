@@ -41,6 +41,10 @@
     background:linear-gradient(90deg,transparent,var(--gold),transparent);}
   .story{max-width:56ch; font-size:clamp(15px,1.8vw,18px); line-height:1.75; color:#D3C6A6; margin:0 auto;}
   .story b{color:var(--gold); font-weight:400;}
+  .subtitle{max-width:52ch; margin:16px auto 0; font-size:clamp(14px,1.7vw,17px); letter-spacing:.06em; color:var(--parchment);}
+  .dateline{margin-top:12px; font-family:'Marcellus SC','Marcellus',serif; letter-spacing:.22em;
+    font-size:clamp(11px,1.3vw,13px); color:var(--gold-dim);}
+  .dateline[hidden]{display:none;}
   .keys{margin-top:26px; display:flex; gap:22px; flex-wrap:wrap; justify-content:center;
     font-size:13px; letter-spacing:.08em; color:#A08C6B; max-width:820px;}
   .keys kbd{
@@ -74,25 +78,26 @@
   <canvas id="game" width="1280" height="720"></canvas>
 
   <div class="overlay" id="titleScreen">
-    <div class="eyebrow">A 2.5D Chronicle · 1010–1025 CE</div>
+    <div class="eyebrow">A voyage east · 1010–1025 CE</div>
     <h1>CHOLA<small>Tides of Bronze</small></h1>
+    <p class="subtitle">One soldier of the fleet, from the temple at Thanjavur to the Srivijaya shore.</p>
     <div class="rule"></div>
-    <p class="story">You are <b>Ilamaran</b>, a warrior of the Chola navy. From the shadow of
-    Rajaraja's great temple at <b>Thanjavur</b>, through the ship-crowded harbor of
-    <b>Nagapattinam</b>, to Emperor Rajendra's expedition against <b>Srivijaya</b> — run, climb,
-    and slip between the near and far paths of the world.</p>
+    <p class="story">You are <b>Ilamaran</b>. Nobody will write your name on a wall. Run, climb, and
+    cross between the near and far paths of the painting at the lamplit gates.
+    The sword stays in its scabbard until Kadaram.</p>
     <div class="keys">
       <span><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> move</span>
       <span><kbd>Space</kbd>/<kbd>W</kbd> jump · wall-jump · double-jump</span>
       <span><kbd>↑</kbd><kbd>↓</kbd> cross planes at the lamplit gates</span>
-      <span><kbd>J</kbd>/<kbd>X</kbd> sword</span>
+      <span><kbd>J</kbd>/<kbd>X</kbd> sword · from Chapter III</span>
     </div>
-    <button class="btn" id="startBtn">Begin the Voyage</button>
+    <button class="btn" id="startBtn">Begin the voyage</button>
   </div>
 
   <div class="overlay" id="interScreen" hidden>
     <div class="eyebrow" id="interEyebrow">Chapter I</div>
     <h1 style="font-size:clamp(30px,5vw,54px)" id="interTitle">Thanjavur</h1>
+    <div class="dateline" id="interDate" hidden></div>
     <div class="rule"></div>
     <p class="story" id="interStory"></p>
     <button class="btn" id="interBtn">Onward</button>
@@ -104,8 +109,7 @@
     <div class="rule"></div>
     <p class="story">Rajendra Chola's fleet crossed the Bay of Bengal and broke the power of
     Srivijaya — the only great overseas naval expedition in Indian history. Trade with Song
-    China flowed free, and Tamil merchant guilds rose across Southeast Asia.
-    <br><br><b id="endStats"></b></p>
+    China flowed free, and Tamil merchant guilds rose across Southeast Asia.</p>
     <button class="btn" id="againBtn">Sail Again</button>
   </div>
 
@@ -128,6 +132,37 @@ const bctx = BGC.getContext('2d');
 const HORIZON = 400;                      // vanishing focus for depth lanes
 // depth lanes: 0 = background path, 1 = main path, 2 = foreground path
 const LANES = [{s:0.80}, {s:1.0}, {s:1.17}];
+
+// ============================================================ tuning (docs/DESIGN.md draft 2)
+// Designer-tunable numbers. Each cites the DESIGN.md section it comes from.
+const TUNE = {
+  GUARD_WALK:        95,   // §3 Patrol: walk speed, px/s; turns only at patrol ends or when he sees
+  SIGHT_RANGE:      300,   // §3 Sight: forward cone, 0 to 300 px ahead of the guard's face
+  SIGHT_BAND:        80,   // §3 Sight: hero feet within 80 px of guard feet (same lane only)
+  SEEN_TIME:       0.25,   // §3 Sight: continuous sight before "!" and the shout
+  CHASE_SPEED:      260,   // §3 Seen: chase speed, below the hero's 385
+  CHASE_LEASH:      300,   // §3 Seen: never more than 300 px beyond either patrol end
+  CHASE_DROP_DIST:  420,   // §3 Seen: chase ends when the hero is this far away
+  CHASE_OUT_BAND:   1.0,   // §3 Seen: ...or out of band this long
+  CHASE_MAX:        3.0,   // §3 Seen: ...or after this long
+  LOOK_TIME:        1.0,   // §3 Seen: stands with a "?" before walking back
+  REACH:             40,   // §3 Caught: px ahead of the guard's front edge
+  STOP_SPEED:       100,   // §3 Caught: under this speed counts as stopped...
+  STOP_TIME:        0.2,   // §3 Caught: ...once held this long (wall-slide and gate stand count at once)
+  SHOVE_DIST:       200,   // §3 Caught: shoved 200 px back the way he came
+  SHOVE_VX:         260,   // §3 Caught: vx 260 as built
+  SHOVE_VY:        -380,   // §3 Caught: vy -380 as built
+  SCOLD_TIME:       1.5,   // §3 Caught: guard scolds, then resumes his patrol
+  INVULN:           1.2,   // §3 Caught: invulnerable after a catch
+  GATE_STAND:       0.5,   // §2 table, §3: the stand on every gate crossing
+  FALL_DAMAGE:        1,   // §5: a fall costs one heart (was 2)
+  SWORD_FROM_LEVEL:   2,   // §2, DECISIONS 3: attack inert in levels 1 and 2 (indices 0, 1)
+};
+const INK = '#1E1610';     // §3, §4 violence rule: every hit is black ink, never crimson
+// docs/SCRIPT.md section 4, verbatim
+const LINE_INERT_ATTACK = 'Not here. Not against our own. The sword waits.';
+const LINE_SHOUT = 'Hoi! You there!';
+const IS_TOUCH = 'ontouchstart' in window;
 
 function fit(){
   const s = Math.min(innerWidth / W, innerHeight / H);
@@ -222,7 +257,7 @@ const sfx = {
   djump: ()=> tone(420, .16, 'square', .06, 300),
   shift: ()=> { noiseBurst(.18,.16,500); tone(520,.2,'sine',.08,-260); },
   deny : ()=> tone(150, .12, 'square', .06, -30),
-  coin : ()=> { tone(1046, .1, 'sine', .15); setTimeout(()=>tone(1568,.16,'sine',.13), 70); },
+  shout: ()=> { tone(230, .12, 'square', .07, 70); setTimeout(()=>tone(300,.14,'square',.06,-40), 110); },
   hurt : ()=> { noiseBurst(.2,.3); tone(160,.25,'sawtooth',.12,-80); },
   slash: ()=> noiseBurst(.09,.12,1400),
   kill : ()=> { noiseBurst(.14,.2); tone(220,.2,'triangle',.14,-120); },
@@ -366,48 +401,46 @@ function drawBackdrop(im, par){
 // platform: [x, y, w, h, lane, kind]   kind: 'stone'|'wood'|'stall'
 // guard: [x1, x2, groundY, lane] | coin: [x, y, lane]
 function buildLevel1(){
-  const P=[], C=[], G=[];
-  const g = (x,w,y=620)=>P.push([x,y,w,240,1,'stone']);
-  g(-80,1040);
-  P.push([300,500,140,26,1],[520,410,140,26,1],[740,330,150,26,1]);
-  P.push([980,330,200,300,1]);
-  C.push([360,460,1],[590,370,1],[810,290,1],[1060,290,1],[1120,290,1]);
-  // background wall-walk with its own coins + guard
-  P.push([1200,492,720,26,0]);
-  C.push([1300,452,0],[1440,452,0],[1580,452,0],[1720,452,0]);
-  G.push([1260,1840,492,0]);
-  g(1240,520);
-  P.push([1960,540,90,190,1],[2160,450,90,280,1],[2360,340,90,390,1]);   // wall-jump pillars
-  C.push([2000,500,1],[2200,410,1],[2400,300,1]);
-  g(2550,500);
-  // — the canyon: cross by the far walkway or the near ruins, entered at the gates —
-  P.push([2980,514,880,30,0]);                                            // far walkway
-  C.push([3120,474,0],[3320,474,0],[3520,474,0]);
-  G.push([3040,3680,514,0]);
-  P.push([2980,656,130,64,2],[3230,656,130,64,2],[3480,656,130,64,2],[3780,656,130,64,2]); // near broken plinths
-  C.push([3045,610,2],[3295,610,2],[3545,610,2]);
-  g(3760,420);
-  P.push([3880,500,120,24,1],[4080,420,120,24,1]);
-  C.push([3940,460,1],[4140,380,1]);
-  g(4180,1020);
-  P.push([4350,470,220,26,1]);
-  C.push([4410,430,1],[4490,430,1],[4700,570,1],[4770,570,1]);
-  G.push([1330,1700,620,1],[2650,3010,620,1],[4460,4900,620,1]);
+  // docs/levels/LEVEL-1.md section 9 (builder notes); beats, guards, checkpoints in sections 3 to 6
+  const P = [
+    [-80,620,1230,240,1], [300,500,140,26,1], [500,410,140,26,1], [700,330,150,26,1],
+    [1150,330,180,300,1], [1330,620,3230,240,1], [1680,492,1460,26,0],
+    [2480,440,90,290,1], [2660,360,90,370,1], [2840,280,200,450,1],          // the pillars (forced beat)
+    [3700,524,300,24,1], [4460,514,900,30,0], [4800,420,300,24,0],
+    [4460,656,140,64,2], [4720,656,140,64,2], [4980,656,140,64,2], [5240,656,320,64,2],
+    [5200,620,1400,240,1], [5640,540,760,26,0], [6000,524,300,24,1],
+  ];
+  const G = [   // M1, F1, M2, F2, M3 (section 5)
+    [1900,2300,620,1], [2700,3100,492,0], [3550,3950,620,1], [4600,5000,514,0], [5850,6250,620,1],
+  ];
+  const C = [
+    [360,460,1],[560,370,1],[770,290,1],[900,280,1],[1000,240,1],[1100,280,1],
+    [1860,452,0],[1980,452,0],[2100,452,0],[2220,452,0],
+    [2525,400,1],[2705,320,1],[2940,240,1],[3760,484,1],[3850,484,1],[3940,484,1],
+    [4530,610,2],[4790,610,2],[5050,610,2],[4880,380,0],[4980,380,0],[5080,380,0],
+    [5800,500,0],[5950,500,0],[6100,500,0],[6250,500,0],
+  ];
   return {
-    name:'Thanjavur', chapter:'Chapter I', width:5200, killY:820,
-    story:'1010 CE. Rajaraja Chola consecrates the Brihadisvara temple — its granite vimana '+
-          'rises sixty-six metres over the city. Cross the temple grounds by the near and far '+
-          'paths, and answer the summons of the young prince Rajendra.',
+    name:'Thanjavur', chapter:'Chapter I', width:6600, killY:820,
+    date:'1010 CE · the 25th year of Rajaraja',
+    story:'The stone is new. They say the king gave a copper pot plated in gold for '+
+          'the top of the tower today, and I believe it; it burns from the far side '+
+          'of the paddy. I am to join the muster of Rajendra, the king\'s son and '+
+          'general, past the two east gateways. The gate guards want no village boy '+
+          'inside the enclosure. I will cross it anyway.',
     platforms:P, coins:C, guards:G,
-    checkpoints:[[1300,620],[2700,620],[4260,620]],
-    links:[[1250,130,0,1],[1620,140,0,1],[2965,120,0,1],[3765,90,0,1],[2985,60,1,2],[3785,100,1,2]],
-    hints:[[2780,540,'cross at the lamplit gates — ↑ far · ↓ near']],
-    goal:{x:5080,y:620}, start:[60,620],
+    checkpoints:[[1400,620],[2900,280],[4400,620],[5400,620]],
+    links:[[1680,120,0,1],[2340,120,0,1],[4440,120,0,1],[4480,60,1,2],
+           [5260,120,0,1],[5460,60,1,2],[5640,120,0,1],[6300,120,0,1]],
+    // [x, y, text, touch text] from docs/SCRIPT.md section 4
+    hints:[[1740,540,'The lamp marks a gate. ↑ the cloister roof.','The lamp marks a gate. tap ▲ the cloister roof.'],
+           [1000,280,'Jump again in the air. The step is high.']],
+    goal:{x:6460,y:620}, start:[60,620],
     sky:['#8A7B5C','#B5A47C','#CDBA8C','#D9C69A'], sun:{x:.74,y:.28,r:60,c:'#F4E7C0'},
     far:'gopuram', mid:'palms',
     pal:mkPal('#C0A171','#997253','#6B4E33'),
     fogHaze:'rgba(213,199,160,0.34)', grade:'rgba(120,90,40,0.05)',
-    motes:'#E9DCAF', banners:true,
+    motes:'#E9DCAF', banners:false,
   };
 }
 
@@ -520,7 +553,14 @@ const player = {
   face:1, onGround:false, wallDir:0, jumps:0, coyote:0,
   attackT:0, hurtT:0, hp:3, checkpoint:[0,0],
   runPhase:0, shiftFx:0, shiftCool:0,
+  standT:0, stillT:0, sliding:false, shoveDir:0, shoveLeft:0,   // DESIGN.md §2, §3
 };
+
+// guard: patrols, sees forward, chases, scolds (DESIGN.md §3)
+function makeGuard(g){
+  return {x:g[0]+30, x1:g[0], x2:g[1], y:g[2], lane:g[3]??1, dir:1, dead:false, w:26, h:54,
+          phase:hash(g[0])*6, mode:'patrol', modeT:0, seeT:0, chaseT:0, outBandT:0};
+}
 
 function topAt(ln, cx){
   let best = null;
@@ -548,8 +588,10 @@ function loadLevel(i){
   player.checkpoint = [level.start[0], level.start[1]];
   player.hurtT = 0; player.attackT = 0; player.shiftFx = 0;
   level.coins = level.coins.map(c=>({x:c[0], y:c[1], lane:c[2]??1, taken:false, spin:hash(c[0])*6}));
-  level.guards = level.guards.map(g=>({x:g[0]+30, x1:g[0], x2:g[1], y:g[2], lane:g[3]??1, dir:1, dead:false, w:26, h:54, phase:hash(g[0])*6}));
+  level.guards = level.guards.map(makeGuard);
   level.checkpoints = level.checkpoints.map(c=>({x:c[0], y:c[1], lit:false}));
+  level.inertShown = false;
+  player.standT = 0; player.stillT = 0; player.shoveLeft = 0; player.sliding = false;
   totalCoins += level.coins.length;
   particles = []; floats = [];
   // perched birds on middle-lane platform tops
@@ -569,6 +611,8 @@ function showInter(i){
   $('interEyebrow').textContent = l.chapter;
   $('interTitle').textContent = l.name;
   $('interStory').textContent = l.story;
+  $('interDate').textContent = l.date || '';
+  $('interDate').hidden = !l.date;
   $('interScreen').hidden = false;
   state = 'inter';
 }
@@ -619,6 +663,7 @@ function tryShift(dir){
   if(best === null){ sfx.deny(); p.shiftCool = 0.2; return; }
   spawnInk(p.x, p.y-28, p.lane);
   p.lane = target; p.shiftFx = 0.22; p.shiftCool = 0.3;
+  p.standT = TUNE.GATE_STAND; p.vx = 0;     // §3: the stand while the ink blooms; new lane's sight applies at once
   if(best <= p.y){ p.y = best; p.vy = 0; p.onGround = true; p.jumps = 0; }
   spawnInk(p.x, p.y-28, p.lane);
   sfx.shift(); shake = 3;
@@ -627,8 +672,14 @@ function tryShift(dir){
 function movePlayer(dt){
   const p = player;
   const ACCEL = 2600, MAXV = 385, FRICTION = 2200;
-  const dir = (keys.L?-1:0) + (keys.R?1:0);
-  if(dir !== 0 && p.attackT <= 0.12){
+  const standing = p.standT > 0, shoved = p.shoveLeft > 0;
+  p.standT = Math.max(0, p.standT - dt);
+  const dir = (standing || shoved) ? 0 : (keys.L?-1:0) + (keys.R?1:0);
+  if(shoved){
+    p.vx = p.shoveDir * TUNE.SHOVE_VX;      // §3: shoved back the way he came
+  } else if(standing){
+    p.vx = 0;
+  } else if(dir !== 0 && p.attackT <= 0.12){
     p.vx += dir*ACCEL*dt;
     p.face = dir;
   } else {
@@ -638,6 +689,8 @@ function movePlayer(dt){
   p.vx = clamp(p.vx, -MAXV, MAXV);
 
   const sliding = !p.onGround && p.wallDir !== 0 && dir === p.wallDir && p.vy > 0;
+  p.sliding = sliding;
+  if(standing) jumpQueued = 0;
   p.vy += 2300*dt;
   if(sliding) p.vy = Math.min(p.vy, 150);
   p.vy = Math.min(p.vy, 1200);
@@ -657,17 +710,21 @@ function movePlayer(dt){
   jumpQueued = Math.max(0, jumpQueued - dt);
   if(!keys.J && p.vy < -300) p.vy = -300;
 
-  if(shiftQueued !== 0){ tryShift(shiftQueued); shiftQueued = 0; }
+  if(shiftQueued !== 0){ if(!standing && !shoved) tryShift(shiftQueued); shiftQueued = 0; }
   p.shiftCool = Math.max(0, p.shiftCool - dt);
   p.shiftFx = Math.max(0, p.shiftFx - dt);
 
-  if(attackQueued && p.attackT <= 0){ p.attackT = 0.28; sfx.slash(); }
+  if(attackQueued && levelIdx < TUNE.SWORD_FROM_LEVEL){
+    // §2, DECISIONS 3: the sword waits; the key shows one line, once per level, and does nothing else
+    if(!level.inertShown){ level.inertShown = true; floats.push({x:p.x, y:p.y-88, t:1.8, text:LINE_INERT_ATTACK}); }
+  } else if(attackQueued && p.attackT <= 0){ p.attackT = 0.28; sfx.slash(); }
   attackQueued = false;
   p.attackT = Math.max(0, p.attackT - dt);
   p.hurtT = Math.max(0, p.hurtT - dt);
 
   const plats = lanePlatforms(p.lane);
   p.wallDir = 0;
+  const x0 = p.x;
   p.x += p.vx*dt;
   for(const [bx,by,bw,bh] of plats){
     if(rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, bx,by,bw,bh)){
@@ -677,6 +734,8 @@ function movePlayer(dt){
     }
   }
   p.x = clamp(p.x, p.w/2, level.width - p.w/2);
+  if(shoved){ p.shoveLeft = p.vx === 0 ? 0 : p.shoveLeft - Math.abs(p.x - x0); }
+  p.stillT = Math.abs(p.vx) < TUNE.STOP_SPEED ? p.stillT + dt : 0;
 
   const wasGround = p.onGround;
   p.onGround = false;
@@ -695,14 +754,15 @@ function movePlayer(dt){
     p.runPhase += dt*Math.abs(p.vx)*0.045;
     if(Math.random() < dt*8) spawnDust(p.x - p.face*8, p.y, 1);
   }
-  if(p.y - p.h > level.killY){ hurt(2, true); }
+  if(p.y - p.h > level.killY){ hurt(TUNE.FALL_DAMAGE, true); }
 }
 
 function hurt(dmg, respawn){
   const p = player;
   if(p.hurtT > 0 && !respawn) return;
   p.hp -= dmg; p.hurtT = 1.2; shake = 12; sfx.hurt();
-  spawnBurst(p.x, p.y - 28, '#B5342A', 14, p.lane);
+  spawnBurst(p.x, p.y - 28, INK, 14, p.lane);
+  p.standT = 0; p.shoveLeft = 0; p.stillT = 0;
   if(p.hp <= 0){
     deaths++;
     p.hp = 3;
@@ -716,6 +776,99 @@ function hurt(dmg, respawn){
   }
 }
 
+// ---- guards: patrol, forward sight, chase, catch on a stop (DESIGN.md §3, DECISIONS 8)
+function guardSees(g){
+  const p = player;
+  if(g.lane !== p.lane || Math.abs(p.y - g.y) > TUNE.SIGHT_BAND) return false;   // lanes never see each other
+  const ahead = (p.x - g.x)*g.dir - g.w/2;                 // px in front of his face
+  return ahead >= -g.w/2 && ahead <= TUNE.SIGHT_RANGE;     // behind him is safe
+}
+function inReach(g){
+  const p = player;
+  if(g.lane !== p.lane || Math.abs(p.y - g.y) > TUNE.SIGHT_BAND) return false;
+  const gap = (p.x - g.x)*g.dir - g.w/2 - p.w/2;           // his front edge to the hero's near edge
+  return gap <= TUNE.REACH && gap >= -(g.w + p.w);   // overlapping his body counts as in reach
+}
+function heroStopped(){
+  const p = player;
+  return p.stillT >= TUNE.STOP_TIME || p.sliding || p.standT > 0;
+}
+function catchHero(g){
+  const p = player;
+  g.mode = 'scold'; g.modeT = TUNE.SCOLD_TIME; g.seeT = 0;
+  g.dir = Math.sign(p.x - g.x) || g.dir;
+  p.hp -= 1; p.hurtT = TUNE.INVULN; shake = 8; sfx.hurt();
+  spawnBurst(p.x, p.y - 28, INK, 14, p.lane);              // black ink, never crimson
+  p.standT = 0; p.stillT = 0;
+  // TODO(builder): DESIGN.md §3 asks for a 1 s ink-wash fade here; the return is still instant.
+  if(p.hp <= 0){                                           // third heart: back to the last checkpoint
+    deaths++; p.hp = 3; p.shoveLeft = 0;
+    p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1; p.vx = p.vy = 0;
+    floats.push({x:p.x, y:p.y-90, t:1.6, text:'Fallen — the banner rises again'});
+    return;
+  }
+  p.shoveDir = g.dir; p.shoveLeft = TUNE.SHOVE_DIST;      // away from him: back the way he came
+  p.vy = TUNE.SHOVE_VY; p.onGround = false;
+}
+function updateGuards(dt){
+  const p = player;
+  for(const g of level.guards){
+    if(g.dead) continue;
+    g.modeT -= dt;
+    let speed = 0;
+    if(g.mode === 'patrol'){
+      speed = TUNE.GUARD_WALK;
+      g.x += g.dir*speed*dt;
+      if(g.x < g.x1){ g.x = g.x1; g.dir = 1; }
+      if(g.x > g.x2){ g.x = g.x2; g.dir = -1; }
+    } else if(g.mode === 'return'){
+      if(g.x >= g.x1 && g.x <= g.x2) g.mode = 'patrol';
+      else { g.dir = g.x < g.x1 ? 1 : -1; speed = TUNE.GUARD_WALK; g.x += g.dir*speed*dt; }
+    } else if(g.mode === 'look'){
+      if(g.modeT <= 0) g.mode = 'return';
+    } else if(g.mode === 'scold'){
+      if(g.modeT <= 0) g.mode = 'return';
+    } else if(g.mode === 'chase'){
+      const dx = p.x - g.x;
+      g.chaseT += dt;
+      g.outBandT = Math.abs(p.y - g.y) > TUNE.SIGHT_BAND ? g.outBandT + dt : 0;
+      if(p.lane !== g.lane || Math.abs(dx) > TUNE.CHASE_DROP_DIST ||
+         g.outBandT > TUNE.CHASE_OUT_BAND || g.chaseT > TUNE.CHASE_MAX){
+        g.mode = 'look'; g.modeT = TUNE.LOOK_TIME; g.seeT = 0;
+      } else {
+        if(Math.abs(dx) > 4) g.dir = Math.sign(dx);
+        speed = Math.abs(dx) > 4 ? TUNE.CHASE_SPEED : 0;
+        g.x = clamp(g.x + g.dir*speed*dt, g.x1 - TUNE.CHASE_LEASH, g.x2 + TUNE.CHASE_LEASH);
+      }
+    }
+    if(speed > 0) g.phase += dt*6*speed/TUNE.GUARD_WALK;
+
+    // sight: needs SEEN_TIME of continuous view
+    if(g.mode === 'patrol' || g.mode === 'return' || g.mode === 'look'){
+      if(guardSees(g)){
+        g.seeT += dt;
+        if(g.seeT >= TUNE.SEEN_TIME){
+          g.mode = 'chase'; g.chaseT = 0; g.outBandT = 0;
+          floats.push({x:g.x, y:g.y-100, t:1.2, text:LINE_SHOUT}); sfx.shout();
+        }
+      } else g.seeT = 0;
+    }
+
+    // the sword (level 3 only; levels 1 and 2 keep it sheathed)
+    if(levelIdx >= TUNE.SWORD_FROM_LEVEL && g.lane === p.lane && p.attackT > 0.1){
+      const hx = p.x + p.face*30;
+      if(rectsOverlap(hx-26, p.y-p.h, 52, p.h, g.x-g.w/2, g.y-g.h, g.w, g.h)){
+        g.dead = true; sfx.kill(); shake = 6;
+        spawnBurst(g.x, g.y-30, '#8C2F22', 16, g.lane);
+        floats.push({x:g.x, y:g.y-70, t:0.9, text:'Guard felled'});
+        continue;
+      }
+    }
+    // caught only when stopped inside his reach; a moving hero is never caught (DECISIONS 8)
+    if(g.mode !== 'scold' && p.hurtT <= 0 && inReach(g) && heroStopped()) catchHero(g);
+  }
+}
+
 function updateWorld(dt){
   const p = player;
 
@@ -723,9 +876,8 @@ function updateWorld(dt){
     if(c.taken) continue;
     c.spin += dt*4;
     if(c.lane === p.lane && rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, c.x-12, c.y-12, 24, 24)){
-      c.taken = true; coinsTaken++; sfx.coin();
-      spawnBurst(c.x, c.y, '#D9A84E', 10, c.lane);
-      floats.push({x:c.x, y:c.y-14, t:0.8, text:'+1 kasu'});
+      c.taken = true; coinsTaken++;          // §6: an ink bloom and nothing else; never counted
+      spawnInk(c.x, c.y, c.lane);
     }
   }
 
@@ -736,27 +888,7 @@ function updateWorld(dt){
     }
   }
 
-  for(const g of level.guards){
-    if(g.dead) continue;
-    g.phase += dt*6;
-    g.x += g.dir*95*dt;
-    if(g.x < g.x1){ g.x = g.x1; g.dir = 1; }
-    if(g.x > g.x2){ g.x = g.x2; g.dir = -1; }
-    if(g.lane === p.lane && Math.abs(p.x-g.x) < 220 && Math.abs(p.y-g.y) < 80) g.dir = Math.sign(p.x-g.x)||g.dir;
-
-    if(g.lane === p.lane && p.attackT > 0.1){
-      const hx = p.x + p.face*30;
-      if(rectsOverlap(hx-26, p.y-p.h, 52, p.h, g.x-g.w/2, g.y-g.h, g.w, g.h)){
-        g.dead = true; sfx.kill(); shake = 6;
-        spawnBurst(g.x, g.y-30, '#8C2F22', 16, g.lane);
-        floats.push({x:g.x, y:g.y-70, t:0.9, text:'Guard felled'});
-        continue;
-      }
-    }
-    if(g.lane === p.lane && p.hurtT<=0 && rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, g.x-g.w/2, g.y-g.h, g.w, g.h)){
-      hurt(1, false);
-    }
-  }
+  updateGuards(dt);
 
   // birds startle when the hero comes close on the main path
   for(const b of birds){
@@ -776,9 +908,6 @@ function updateWorld(dt){
     if(levelIdx < LEVELS.length-1){
       queueLevel(levelIdx+1);
     } else {
-      const mins = ((performance.now()-runStart)/60000);
-      $('endStats').textContent =
-        `${coinsTaken} / ${totalCoins} kasu gathered · ${deaths} fall${deaths===1?'':'s'} · ${mins.toFixed(1)} min voyage`;
       $('endScreen').hidden = false;
       state = 'end';
     }
@@ -1526,9 +1655,9 @@ function drawLaneContents(l){
     for(const b of birds) drawBird(b);
     // plane-shift hint markers
     ctx.font = '19px "Marcellus SC", Marcellus, serif'; ctx.textAlign='center';
-    for(const [hx,hy,txt] of level.hints){
+    for(const [hx,hy,txt,touchTxt] of level.hints){
       ctx.fillStyle = 'rgba(70,52,32,'+(0.55+0.3*Math.sin(time*2.4))+')';
-      ctx.fillText(txt, hx, hy-46);
+      ctx.fillText(IS_TOUCH && touchTxt ? touchTxt : txt, hx, hy-46);
       ctx.fillStyle = 'rgba(150,44,34,0.8)';
       ctx.beginPath(); ctx.moveTo(hx, hy-30); ctx.lineTo(hx-7, hy-18); ctx.lineTo(hx+7, hy-18); ctx.closePath(); ctx.fill();
     }
@@ -1540,6 +1669,11 @@ function drawLaneContents(l){
     drawFigure(g.x, g.y, g.dir, g.phase, {
       skin:'#6E4530', cloth:'#8C2F22', sashC:'#3A2A1C', isGuard:true, vx:95, onGround:true,
     });
+    const mark = g.mode === 'chase' ? '!' : (g.mode === 'look' || g.seeT > 0) ? '?' : '';
+    if(mark){                                    // §3: ink "?" then "!"
+      ctx.fillStyle = INK; ctx.font = '30px "Marcellus SC", Marcellus, serif'; ctx.textAlign = 'center';
+      ctx.fillText(mark, g.x, g.y - 92); ctx.textAlign = 'left';
+    }
   }
   if(player.lane === l && state==='play'){
     // ghost flash during a plane shift
@@ -1595,22 +1729,17 @@ function drawHUD(){
     ctx.bezierCurveTo(x+4, y-14, x+12, y-6, x, y+6);
     ctx.fill();
   }
-  ctx.fillStyle = '#C99A3F';
-  ctx.beginPath(); ctx.arc(38, 72, 9, 0, 7); ctx.fill();
-  ctx.fillStyle = '#7A5326';
-  ctx.beginPath(); ctx.arc(38, 72, 5.5, 0, 7); ctx.fill();
-  ctx.fillStyle = '#E9DFC6';
-  ctx.font = '18px Marcellus, serif'; ctx.textAlign = 'left'; ctx.textBaseline='middle';
-  ctx.fillText(level.coins.filter(c=>c.taken).length + ' / ' + level.coins.length, 56, 73);
+  // no coin counter (DESIGN.md §6, Pillar 3)
+  ctx.textAlign = 'left'; ctx.textBaseline='middle';
   // depth-plane indicator
   const names = ['far path','main path','near path'];
   for(let i=0;i<3;i++){
     ctx.fillStyle = i===player.lane ? '#B5342A' : 'rgba(110,95,80,0.4)';
-    ctx.fillRect(28+i*16, 100, 12, 5);
+    ctx.fillRect(28+i*16, 62, 12, 5);
   }
   ctx.fillStyle = 'rgba(233,223,198,0.75)';
   ctx.font = '13px Marcellus, serif';
-  ctx.fillText(names[player.lane], 82, 103);
+  ctx.fillText(names[player.lane], 82, 65);
   ctx.textAlign = 'right';
   ctx.fillStyle = 'rgba(233,223,198,0.85)';
   ctx.font = '16px "Marcellus SC", Marcellus, serif';
@@ -1694,7 +1823,7 @@ function render(){
   drawHUD();
 
   if(player.hurtT > 1.05){
-    ctx.fillStyle = 'rgba(140,30,20,'+((player.hurtT-1.05)*2.2)+')';
+    ctx.fillStyle = 'rgba(30,22,16,'+((player.hurtT-1.05)*2.2)+')';   // ink, not crimson (§3)
     ctx.fillRect(0,0,W,H);
   }
 }
@@ -1705,7 +1834,7 @@ function renderTitleBG(){
     level.palFront = dimPal(level.pal, -22);
     level.palBack  = dimPal(level.pal, 10);
     level.coins = level.coins.map(c=>({x:c[0],y:c[1],lane:c[2]??1,taken:false,spin:hash(c[0])*6}));
-    level.guards = level.guards.map(g=>({x:g[0]+30,x1:g[0],x2:g[1],y:g[2],lane:g[3]??1,dir:1,dead:false,w:26,h:54,phase:hash(g[0])*6}));
+    level.guards = level.guards.map(makeGuard);
     level.checkpoints = level.checkpoints.map(c=>({x:c[0],y:c[1],lit:false}));
     prepLinks();
     birds = [];

@@ -143,3 +143,11 @@ Two proposals from the vision review, neither built, neither required:
    your call.
 
 Rulings you can rely on are in VISION.md section 3 (table of six decisions).
+
+## 2026-10-25, from builder (branch build/level-1)
+
+### To level-designer (`docs/levels/LEVEL-1.md`)
+
+1. The first-gate hint at [1740, 540] draws its text at y 494, on the
+   edge of the far-lane wall-walk (y 492). It reads, but it sits on the
+   stone. A y of 600 or so would put it in clear air under the walk.
