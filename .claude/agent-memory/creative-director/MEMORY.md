@@ -16,6 +16,11 @@ Gaurav accepted all five first-draft recommendations without edits.
 4. Ending keeps "The Sea Belongs to the Tiger" and adds one line of cost.
 5. Name Ilamaran stays unless the historian objects (historian: plausible,
    no objection; "Kandan" is the attested fallback).
+6. Redraw all five hero poses (slots 6 to 10) to RESEARCH.md: straight
+   double-edged sword, cotton sash. The critic recommended attack pose only
+   now and the rest in release two; Gaurav chose the full redraw now. Signal:
+   he pays for historical accuracy in art even when it is the largest art
+   cost in the kit.
 
 Taste signal: he took every recommendation as given, including the
 quieter-ending and no-gore rules, so he is comfortable with restraint over
@@ -53,11 +58,30 @@ Pushbacks I recorded: revision notes sit outside the 1,200-word budget; the
 40-second deck stretch went to the game-designer as a proposal, not into
 scope, because Gaurav ruled the deck level into release two.
 
+## Vision-critic, second review ("Ready with fixes", six findings)
+
+All applied in the third draft: hero in the kit broke section 6 and scope
+did not budget the fix (settled by decision 6); Pillar 2's "fight the player
+could walk past" rejected the fights Pillar 1's lanes create (now "a fight
+staged for its own sake", and the conflict paragraph names it: in Kadaram
+2 wins at the gateway, 1 everywhere else); table credited pillars with
+rulings their text lacked (Pillar 2 now rejects "a Chola opponent"; stealth
+row reads "3 approves; 2 is silent"; Pillar 1 retitled "The painting has
+depth and one color" so the crimson rule belongs to it); Ponniyin Selvan
+reference misdescribed Vandiyadevan, who is a prince's friend (now "its
+texture, not its hero"); audience dropped "diaspora" from Gaurav's ruling;
+"+1 kasu" float and chime are counts (now ruled out; a pickup is only an ink
+bloom). Critic also asked that revision notes be a short cumulative summary
+(under 150 words), which they now are. Critic counts words as prose plus
+table cells, no headings or table rules; sections 1 to 7 sit at exactly 900.
+
+The critic will not review a third time unless something new appears.
+
 ## Working notes
 
-- Budget line now in VISION.md: 1,200 words for sections 1 to 8, sections
-  1 to 7 under 900. Count prose plus table, excluding headings; it sits at
-  about 895.
+- Budget line in VISION.md: 1,200 words for sections 1 to 8, sections
+  1 to 7 at most 900. Count prose plus table cells, excluding headings;
+  the third draft sits at exactly 900.
 - Historian's RESEARCH.md fixes I adopted: "one soldier on one ship among
   many" (no fleet size is attested); end-screen claim becomes "the largest
   overseas expedition any Indian ruler is known to have sent"; guard

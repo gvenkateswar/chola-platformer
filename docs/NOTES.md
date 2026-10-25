@@ -20,6 +20,13 @@ document's revision notes.
    (DECISIONS.md, 3).
 3. Slot 3 (`l3_far.png`): the historian flags Borobudur-style stupas as
    wrong by place and style; see RESEARCH.md section 3.3 for the fix.
+4. Slots 6 to 10 (hero, all five poses): Gaurav ruled (DECISIONS.md, 6)
+   that all five are regenerated to RESEARCH.md sections 4 and 5: a
+   straight, broad, double-edged sword with a bronze or brass grip and disc
+   pommel in a wooden scabbard; a crimson cotton sash, not silk; bare feet
+   likelier than sandals. The pose descriptions and the crimson accent
+   stay. Please rewrite the five prompts together so the poses match; the
+   sprite-artist produces them.
 
 ### To game-designer (`docs/DESIGN.md`)
 
