@@ -20,3 +20,14 @@ note in docs/NOTES.md addressed to Gaurav.
    RESEARCH.md (straight double-edged sword, cotton sash), not only the
    attack pose. Art-director owns the new prompts; sprite-artist produces
    them through Canva.
+7. **Level 3 gate.** Plain timber post-and-lintel with lamps, no pennant,
+   no crimson, as a new asset slot. The engine's crimson arrow glyph over
+   gates is disabled in level 3 (builder task).
+8. **Catch rule.** A guard catches Ilamaran only when he stops inside the
+   guard's reach; a moving player outruns a guard. DESIGN.md section 3 and
+   the difficulty table are rewritten to match (level 2 forced stealth
+   beats become 0 or are redesigned around stopping).
+9. **Level length.** Release one keeps levels at their designed length
+   (about 2 minutes each, 8 minutes total). Targets in VISION.md section 7
+   and DESIGN.md section 7 are corrected to match. Longer levels are
+   release two.
