@@ -37,9 +37,32 @@
 - l1_far came back with several extra gopurams and distant temples; the
   new prompt says "the vimana is the only tall structure."
 
+## Third edition (2026-10-25): slots 19 to 36
+
+- Slot numbers are the level-designer's (NOTES.md) and are already cited
+  in LEVEL-2/3; never renumber them. Level 3 gate is 35 (DECISIONS.md 7),
+  kasu is 36, next free slot is 37.
+- Prop kinds and sizes: tileable 1024 sq opaque; point props 512x1024 or
+  1024 sq or 1536x1024 transparent, bottom edge = ground; poses 1024x1536;
+  wide pieces 1536x1024 with the walkable surface stated as a fraction of
+  height, and a builder note required before generation (critic finding 4).
+- Shield-bearer (32): oblong hide shield, the only silhouette change
+  [invented]; round would read as the Chola guard.
+- Nandi (21) faces left (backdrop, never flipped) and has no pavilion:
+  the Nandi hall is Nayak.
+- No ink effects in enemy sprites; the engine draws flare, splash,
+  wash-out. Kneel pose carries no wounds (violence rule).
+- Kasu (36): one face, 256 sq; the engine spins by x-scaling.
+
+## Critic (design-critic) taste
+
+- Wants every slot keyed by filename the builder can use, a format per
+  kind, and the engine line cited when a claim depends on it. Praised the
+  per-character "check every result for red" audit; keep that pattern.
+
 ## Pending
 
-- Slots 19 onward wait for docs/levels/*.md section 7.
+- Builder has not confirmed pixel heights for wide pieces 24 to 28.
 - Sprite-artist has not yet reported which phrasings produced good
   results under Canva; record them here when they arrive.
-- design-critic review of the second edition not yet received.
+- Critic has not reviewed the third edition.
