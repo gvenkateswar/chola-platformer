@@ -1,179 +1,208 @@
 # Chola: Tides of Bronze — Vision
 
-Owner: creative-director. Readers: everyone. First draft, 2026-10-25, written
-from the build at `index.html`, the art kit in `ASSETS.md`, and a short play
-session. `docs/RESEARCH.md` did not exist when this was written; section 6 must
-be checked against it when it arrives.
+Owner: creative-director. Readers: everyone. Second draft, 2026-10-25,
+revised after Gaurav's rulings in `docs/DECISIONS.md`, the vision-critic's
+review in `docs/reviews/vision-review-2026-10-25.md`, and the historian's
+note at the top of `docs/RESEARCH.md`.
+
+Budget: 1,200 words for sections 1 to 8 (sections 1 to 7 at most 900,
+section 8 under 300), counting prose and table cells, not headings. Revision
+notes sit outside the budget.
 
 ## 1. The game in one sentence
 
-A common Chola sailor runs from Thanjavur's temple to the Srivijaya shore,
-slipping between the depth layers of an ink-and-watercolor world as Rajendra's
-fleet sails east.
+A common Chola soldier of the fleet runs from Thanjavur's temple to the
+Srivijaya shore, crossing between the depth layers of an ink-and-watercolor
+world at lamplit gates.
 
 ## 2. Player fantasy
 
-You are nobody. You are one oarsman in a fleet of hundreds, and the emperor
-will never learn your name. That is the point. Other games about kings put
-the crown on your head; this one puts a sword at your hip and a sea in front
-of you, and lets you watch the largest event of your century happen around
-you at eye level.
+You are nobody: one soldier on one ship among many, and the emperor will
+never learn your name. A sword at your hip, the sea in front of you, and the
+largest event of your century happening around you at eye level.
 
-You get to move through a painting. The temple is a wash of umber in the
-morning haze, and when you step through a lamplit gate you walk into that
-haze and the near world blurs behind you. Nothing else lets you change which
-layer of the picture you stand in.
+You move through a painting. The temple is a wash of umber in the morning
+haze; step through a lamplit gate and you walk into that haze, and play goes
+on inside it. LittleBigPlanet and Mutant Mudds let you change layers;
+neither makes the layer a wash of paint or makes you earn the crossing at a
+gate.
 
-And you get to go where almost no game has gone: eleventh-century Tamil
-country, then across the Bay of Bengal, on foot, on deck, on a strange shore,
-under the banner of a tiger.
+And you go where almost no game has gone: eleventh-century Tamil country,
+then a strange shore, under the banner of a tiger.
 
 ## 3. Pillars
 
 ### Pillar 1: The painting has depth
 
-Every scene is one ink-and-watercolor painting, and play happens inside its
-layers; haze and blur measure distance.
+Every scene is one ink-and-watercolor painting with three depths a person
+can stand in, and the player crosses between them only at painted gates,
+leaving an ink mark each time. Crimson means Chola; nothing else gets it.
 
-Approves: lane switching at the gates. The far path is the painting's
-background, and the ink puff when you cross is the brush.
+Approves: lane switching at the gates.
 
-Rejects: Nagapattinam's green, purple, and teal awnings. Nothing on screen
-may be more saturated than the crimson accent.
+Rejects: Nagapattinam's green and purple awnings; a crimson Chola guard
+standing in for a Srivijayan.
 
-### Pillar 2: A sailor, not a king
+### Pillar 2: One of the crew
 
 The player is an ordinary person of the fleet. Rulers, battles, and treaties
 are seen from the deck and the road, and the player never decides them.
 
-Approves: Rajendra present only as a summons, a banner, and a line of text.
+Approves: a fight the road forces on the player, first in Kadaram.
 
-Rejects: a boss fight against the maharaja of Kadaram, or any ending that
-says the player won the war.
+Rejects: a fight the player could walk past, a named opponent of any rank,
+and any reward for a kill.
 
-### Pillar 3: The sea pulls east
+### Pillar 3: The voyage only goes east
 
-Every level is a leg of one voyage. The player moves forward, toward water
-and then across it, and nothing asks them to turn back or grind.
+Every level is a leg of one voyage east, and the game never counts, ranks,
+or rewards what the player left behind.
 
-Approves: kasu coins that lead the eye along the better route, so the player
-learns a gate by chasing them.
+Approves: kasu that lead the eye to the better route; a stealth stretch, if
+it still moves east.
 
-Rejects: the end screen's kasu tally. A completion count is a reason to go
-back.
+Rejects: any stop that holds the player in place to earn something (a stall,
+a shop, a timed challenge); the tallies of kasu, falls, and minutes.
 
-The pillars conflict on purpose. Pillar 1 wants the player to linger in the
-haze; Pillar 3 wants them moving. Pillar 2 wants a small ending; the current
-end screen wants a triumphant one. When they disagree, the designer writes
-down which pillar won and why.
+### Rulings on six decisions
+
+| Decision | Ruling |
+|---|---|
+| Lane switching at gates | 1 approves. |
+| Coins | 3: trail stays; HUD counter and end tally go. |
+| Chola guard as only enemy | 1 and 2 reject (DECISIONS.md, 3). |
+| A boss fight | 2 rejects, at any rank. |
+| A stealth section | 2 and 3 approve. |
+| A trading mini-game | 3 rejects. |
+
+The pillars conflict on purpose (1 lingers, 3 moves; 2 wants a small ending,
+the title a large one). The designer records which won and why.
 
 ## 4. Audience
 
-Two rings, one game. The core is adults from 25 to 50 who know the Chola name
-from Ponniyin Selvan, a textbook, or a grandparent, and who play short story
-games on a laptop: Gris, Journey, a Rayman level. They have
-never seen Nagapattinam drawn. The outer ring is their kids and nephews, 10
-and up, who play Hollow Knight and Celeste and will tolerate history if the
-jumping is good.
+Settled: history-minded adults first, built so a ten-year-old can finish it
+(DECISIONS.md, 2).
 
-What makes both stop: a cheap death. A fall into water that resets a whole
-stretch, or a guard who hits from off screen, and the painting stops
-mattering.
+Core [assumed]: adults 25 to 50 who watched or read Ponniyin Selvan and own
+a laptop. We have no data on how many play games; the first ten playtests
+will say whether this ring exists. Outer ring [assumed]: their
+children, 10 and up, who play Hollow Knight and Celeste and will tolerate
+history if the jumping is good.
+
+What makes both stop: a cheap death. A fall that resets a whole stretch, or
+a guard who hits from off screen, and the painting stops mattering.
 
 ## 5. Tone and references
 
-**Gris (Nomada Studio).** A world that is almost monochrome, where one color
-carries all the feeling. Our palette is parchment and umber; crimson is the
-only loud thing on screen, and it means Chola: a sash, a banner, a bird, a
-guard's armor. Nothing else gets it.
+**Gris (Nomada Studio).** A world almost monochrome, where one color carries
+all the feeling. Our palette is parchment and umber; crimson is the only
+loud thing on screen, and it means Chola: a sash, a banner, a bird, a
+guard's cloth. Nothing else gets it.
 
 **Ponniyin Selvan (Kalki).** A low-ranking traveler carries messages through
-great events and sees princes only from the far side of a courtyard. Our
-interstitial text is written from that vantage, never from the throne.
+great events and sees princes only from across a courtyard. Interstitials
+speak from that vantage, never from the throne.
 
-**Ōkami (Clover).** Brush and ink as a visible material of the world; the
-stroke belongs to the picture, never a filter laid over it. Our gates, lane
-shifts, and ink clouds should look painted on, with edges that bleed.
+**Ōkami (Clover).** Brush and ink are a visible material of the world; every
+stroke is part of the picture. Gates, lane shifts, and ink clouds should
+look painted on, with edges that bleed.
 
-Not a reference: Son of Thanjai (Ayelet Studio), a 3D cinematic action game
-where you play a Chola king in Thanjavur. We are 2D, painted, a nobody, and
-at sea.
+Not a reference: Son of Thanjai (Ayelet Studio), 3D and cinematic, where you
+play a Chola king in Thanjavur. We are 2D, painted, and one of the crew.
 
 ## 6. Historical stance
 
-Three rules. First, anything shown to the player as fact (interstitials, end
-screen, sources screen) carries the historian's [documented] tag or is
-rewritten as what Ilamaran believes. The end screen's "only great overseas
-naval expedition in Indian history" is the first test case. Second, invention
-is free for people below the rank of commander, every spoken line, and every
-level layout; it is forbidden for places, dates, rulers, dress, weapons,
-coins, and architecture, which follow `docs/RESEARCH.md`. Third, Srivijayans
-are a kingdom with a navy and temples, drawn with the same care as the
-Cholas, never faceless. The hero never harms civilians and never kills Chola
-people. Falls, not gore. A sources screen names the historian's primary
-works.
+Three rules. First, anything shown as fact carries the historian's
+[documented] tag or is rewritten as what Ilamaran believes; the end screen's
+"only great overseas naval expedition" fails and becomes the historian's
+"largest overseas expedition any Indian ruler is known to have sent."
+Second, invention is free for people below the rank of commander, spoken
+lines, and level layouts; it is forbidden for places, dates, rulers, dress,
+weapons, coins, and architecture, which follow `docs/RESEARCH.md`. Third,
+Srivijayans are a kingdom with a navy and temples, drawn with the same care
+as the Cholas, never faceless. The raid is one campaign, after Kulke; the
+sources screen notes the dispute.
+
+Settled (DECISIONS.md, 3 and 4): Ilamaran never harms civilians or kills
+Chola people; the sword is first drawn in Kadaram; the ending adds one line
+of cost. Falls, not gore.
 
 ## 7. Scope for the first release
 
-Three levels, each 4 to 6 minutes for a first-time player, 15 to 20 minutes
-end to end. Browser only: one `index.html` with assets in `assets/`,
-playable on GitHub Pages and locally, keyboard and touch, 1280 by 720 scaled
-to fit. One hero with the five painted poses already in the kit; the sixteen
-asset slots in `ASSETS.md` filled, including the guard and gate slots that
-are still procedural. Three interstitial screens, one ending, one sources
-screen. Three checkpoints per level. One enemy type per level, two at most.
+Three levels, 4 to 6 minutes each, 15 to 20 minutes end to end. Browser
+only: one `index.html`, assets in `assets/`, keyboard and touch, 1280 by 720
+scaled. Levels 1 and 2 are traversal and stealth; the Chola guard is an
+obstacle there and absent from level 3 (DECISIONS.md, 3). One painted
+Srivijayan enemy in two poses, `ASSETS.md` slots 17 and 18 (request in
+`docs/NOTES.md`). Guard, gate, and mid-band slots filled, the guard redrawn
+to the historian's findings. Three interstitials, one ending with its line
+of cost, one sources screen.
 
-Out of scope: saving between sessions, difficulty settings, voice, music
-beyond the current synthesized drone, Tamil localization (title-screen Tamil
-script is a nice-to-have), boss fights, upgrades or unlocks, leaderboards,
-app-store wrapping, a fourth level. Later releases may add a ship-deck level
-between Nagapattinam and Kadaram; the first one does not.
+Out of scope: saving, difficulty settings, voice, music beyond the current
+drone, Tamil localization, boss fights, upgrades, leaderboards, app-store
+wrapping, and the ship-deck level (release two, DECISIONS.md, 1). The name
+Ilamaran stays (DECISIONS.md, 5).
 
 ## 8. Open questions for Gaurav
 
-**1. Lone hero in Thanjavur, or the navy and the expedition?**
-Options: (a) stay a lone fighter in Thanjavur, three levels in and around the
-city; (b) commit to the voyage: temple, port, foreign shore, as the build
-already frames it; (c) the voyage, but a fourth level on the water.
-Recommendation: (b). The title screen already calls Ilamaran a sailor, the
-painted backdrops already tell this story, and Son of Thanjai has taken
-"warrior in Thanjavur." The sea is ours. Keep (c) for release two.
-
-**2. Who is it for?**
-Options: (a) history-minded adults; (b) children 8 to 12; (c) adults first,
-built so a 10-year-old can finish it.
-Recommendation: (c). It costs one rule, no gore and no cheap deaths, and
-doubles the people who will send the link to a cousin.
-
-**3. May Ilamaran kill Chola guards?**
-Today he fells imperial guards in Thanjavur and Nagapattinam, and the same
-crimson guards appear in Srivijaya. Options: (a) keep it and call them
-rebels or bandits; (b) no combat in the Chola levels, which become traversal
-and stealth, and the sword comes out only on the foreign shore; (c) sparring
-partners in Thanjavur who knock you down but are never "felled."
-Recommendation: (b). It makes the first drawn blade in Kadaram land, and it
-keeps Pillar 2 honest.
-
-**4. What does the ending say?**
-Options: (a) keep "The Sea Belongs to the Tiger" and the triumph; (b) keep
-the title, add one line on what the raid cost Kadaram and that the fleet
-went home; (c) end on Ilamaran, not the empire: he sees the shore and the
-screen fades.
-Recommendation: (b). The line is good and historically defensible as a
-Chola boast; one sentence of cost keeps section 6 true.
-
-**5. Keep the name Ilamaran?**
-Options: (a) keep it; (b) let the historian propose a period-attested name;
-(c) leave him unnamed, "the sailor."
-Recommendation: (a) unless the historian objects. It is already on the title
-screen and reads well.
+None. The first draft's five questions were ruled on 2026-10-25; see
+`docs/DECISIONS.md`. New questions go here as they arise.
 
 ## Revision notes
 
-- 2026-10-25: first draft. Written against the build before
-  `docs/RESEARCH.md` existed; section 6 and the end-screen claim need a
-  check when it arrives. Play notes that shaped this: painted backdrops and
-  hero poses load, guards and gates are still procedural; the hero fights
-  Chola guards in Chola cities; Nagapattinam awnings break the palette; the
-  end screen counts coins; the navy is named on the title screen but the
-  player never stands on water except one ship deck in level 2.
+### 2026-10-25, second draft
+
+Gaurav accepted all five recommendations (DECISIONS.md). The open questions
+are removed and their rulings appear in sections 4, 6, and 7 with citations.
+Replies to the critic's eight findings:
+
+1. **Section 6 decided question 3.** Agreed that the draft did. The question
+   is now closed by ruling 3, so section 6 states it as settled and cites
+   DECISIONS.md. The critic's interim wording was not needed.
+2. **Pillars silent on combat, stealth, trade.** Accepted. Pillar 2 took the
+   critic's Approves and Rejects lines; Pillar 3 took the stealth and
+   commerce lines. A six-row rulings table follows the pillars so the test
+   lives in the document. One addition the critic did not ask for: Pillar 1
+   also rules on the enemy, through the crimson rule, since a crimson guard
+   cannot stand in for a Srivijayan.
+3. **Sea pillar with no sea; scope settled 1(c).** Accepted in the second
+   form. Gaurav ruled the ship-deck level into release two, so the crossing
+   stays off screen and the pillar was rewritten to cover what the game
+   does; the pitch no longer says the player sails. The critic's 40-second
+   deck stretch at the end of level 2 is a good idea and goes to the
+   game-designer in NOTES.md as a proposal, since it is a level decision.
+4. **Blur claim and false uniqueness.** Accepted in full; the critic's
+   replacement text is used. Lane-dependent blur goes to the game-designer
+   in NOTES.md, tagged as not built.
+5. **Chola guards shipped as the Srivijayan enemy.** Accepted. Section 7
+   budgets a painted Srivijayan enemy (slots 17 and 18) and confines the
+   Chola guard to levels 1 and 2 as an obstacle, per ruling 3. The request
+   to the art-director is in NOTES.md.
+6. **Pillars 1 and 3 described other games.** Accepted. Both definitions use
+   the critic's wording; Pillar 3 rejects the fall and minute tallies as
+   well as the kasu tally, and its heading changed to match.
+7. **Audience asserted without evidence.** Accepted. Core and outer ring are
+   tagged [assumed] in the critic's wording; "never seen Nagapattinam drawn"
+   and "doubles" are gone.
+8. **No length stated; style rule broken.** Accepted. Budget line added;
+   Pillar 2 is "One of the crew"; the three flagged sentences are rewritten.
+   One clarification: revision notes sit outside the 1,200-word budget,
+   since a point-by-point reply is required and would otherwise crowd out
+   the vision.
+
+From the historian's note (RESEARCH.md, top and section 4): "one oarsman in
+a fleet of hundreds" is unsupported and is now "one soldier on one ship
+among many"; the end-screen claim is replaced with the historian's wording
+in section 6; Ilamaran stays. The historian's question 10 (one campaign or
+several) is ruled in section 6: one campaign, with the disagreement named on
+the sources screen. The guard's crimson now reads "cloth" in section 5,
+since RESEARCH.md finds no lamellar armor in Chola sources.
+
+### 2026-10-25, first draft
+
+Written against the build before `docs/RESEARCH.md` existed. Play notes that
+shaped it: painted backdrops and hero poses load, guards and gates are
+procedural; the hero fought Chola guards in Chola cities; Nagapattinam
+awnings break the palette; the end screen counts coins; the navy is named on
+the title screen but the player never stands on water except one ship deck
+in level 2.
