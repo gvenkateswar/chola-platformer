@@ -269,6 +269,9 @@ const TUNE = {
   SHIELD_OPEN:      1.2,   // §4: a parried shield swings aside 1.2 s for one counter cut
   SHIELD_TURN:      0.8,   // §4: the shield-bearer turns 0.8 s after the hero gets behind him
   CLASH_PUSH:        16,   // §4: a cut into a raised blade pushes both 16 px apart
+  CLUSTER_CUE:      400,   // §6: a detour's cluster glints and sounds once within 400 px
+  NAMED_FLOAT:      1.5,   // §6: a named kasu's name floats 1.5 s
+  KEEP_MAP:        true,   // option (b): the voyage map and cards persist on this device (localStorage)
   FIGHT_DROP:       420,   // §3, §4: engagement ends at this distance (and leaving the lane or band)
   FIRST_STROKE:     0.2,   // §2 sign 4: the first cut sweeps a 0.2 s ink stroke along the blade
   HANG_HANDS:        50,   // hands above feet while hanging (hero is 56 tall, §2)
@@ -318,6 +321,33 @@ const LINE_SEAL_HINT = 'Black ink over his head. Don\'t meet it. Step back.'; //
 const LINE_GUARD = 'Steel on steel. No opening.';                            // SCRIPT §4, mistimed parry that guards
 const LINE_PARRY_GOOD = 'He reels. Cut now.';                                 // SCRIPT §4, good parry, first time
 const hintText = t => IS_TOUCH ? touchLine(t) : t;
+const LINE_FIRST_NAMED = 'An old coin. Its story is kept on the map.';   // SCRIPT §4, first named kasu
+// SCRIPT §4a: the six named kasu, where they lie, and the card each keeps (text verbatim; RESEARCH 6a tags in SCRIPT)
+const NAMED = {
+  nk1:{level:0, detour:1, metal:'gold',   name:"Rajaraja's gold kasu", place:"The masons' lamp-niche, up on the scaffold.",
+       title:"Gold for the Top of the Tower",
+       text:"In the 25th year of his reign, Rajaraja gave a copper pot to crown the great tower, covered with 2,926 and a half karanju of gold plate. The weight is carved in Tamil on the temple wall. The round cap at the very top is what he gilded. Nobody wrote down how they raised the stones, but they recorded the gold."},
+  nk2:{level:0, detour:2, metal:'silver', name:"An older king's tiger silver", place:"The lamp shelf at the inner gateway.",
+       title:"The Guards of the King's Gate",
+       text:"The guards you slipped past had a name. This temple's inscriptions list the \"sacred bodyguard\" of the Keralantaka gate and the inner gate, among about thirty regiments named for the king's titles. Soldiers gave gifts to the temple with their regiment's name carved beside them, so a thousand years later we know who stood here."},
+  nk3:{level:1, detour:3, metal:'copper', name:"Rajaraja's copper, from Lanka", place:"A merchants' loft above the awnings.",
+       title:"A Sumatran King's Monastery",
+       text:"Nagapattinam's tall brick tower was built by a Buddhist king from across the sea. In 1006 his monastery received a whole village, Anaimangalam, from Rajaraja, who worshiped Shiva. The grant, on copper plates under the Chola tiger seal, is now in the Netherlands. The tower stood until 1867, when it was pulled down for its bricks."},
+  nk4:{level:1, detour:4, metal:'bronze', name:"A Chinese coin with a square hole", place:"A Srivijayan ship's stern lantern, in our own port.",
+       title:"Pearls for the Emperor of China",
+       text:"In 1015 a Chola mission of 52 people reached the Song court. The Chinese court history lists its gifts: 21,100 liang of pearls, a coat and a cap of pearls, 60 elephant tusks, and 60 jin of frankincense. That is roughly 800 kilograms of pearls. Ships like Ilamaran's carried them, their planks sewn with coconut-fiber rope."},
+  nk5:{level:2, detour:5, metal:'silver', name:"Rajendra's silver, Ganges title", place:"A small brick shrine on the hill.",
+       title:"The Jeweled Gate",
+       text:"Rajendra's inscription at Thanjavur says his ships took \"the jeweled gate\" of Srivijaya and captured the king of Kadaram, Sangrama Vijayottungavarman, with his elephants. It names thirteen places across the sea. It does not say why the fleet came, and historians still disagree: trade, treasure, or glory. It does not say what became of the captured king."},
+  nk6:{level:2, detour:6, metal:'gold',   name:"A small gold coin with a flower", place:"A porch on stilts, its lamp still lit.",
+       title:"A Kingdom That Endured",
+       text:"The brick shrines along the Merbok river were centuries old when the Chola ships came. Kedah's port had traded with China, India, and Arabia for hundreds of years. Srivijaya was not destroyed. In 1028 its king sent an embassy to the Chinese emperor, and the kingdom went on trading and building for another century and more."},
+};
+// the run (DESIGN §6): the purse, goods bought, named kasu found (cards and map lamps), crew pennants.
+// Never shown during play (VISION pillar 3); the purse appears only at a port's point of trade.
+const RUN = {purse:0, goods:{}, found:{}, firstNamed:false};
+function saveMap(){}   // replaced by the persistence layer below when it is on
+function resetRun(){ RUN.purse = 0; RUN.goods = {}; RUN.firstNamed = false; for(const k in RUN.found) if(!TUNE.KEEP_MAP) delete RUN.found[k]; }
 const IS_TOUCH = 'ontouchstart' in window;
 
 function fit(){
@@ -426,6 +456,9 @@ const sfx = {
   clang:()=> { tone(1320,.18,'triangle',.09,-60); tone(1980,.12,'sine',.06,-200); noiseBurst(.04,.15,3200); },   // metal
   grab: ()=> { noiseBurst(.12,.16,260); tone(140,.10,'triangle',.07,-30); },        // fiber creak and catch
   whoosh:(v)=> noiseBurst(.18, Math.min(.22, .05 + v/3000), 900 + v),               // release, scaled by speed
+  coin: ()=> { tone(1180,.05,'triangle',.035,-200); },                              // §6: a soft clink, not a chime
+  bronze:()=> { tone(196,.6,'sine',.05,-10); tone(294,.5,'sine',.025,-10); },       // §6: the cluster's low bronze note
+  named:()=> { tone(147,.8,'sine',.08,-5); tone(220,.7,'triangle',.04,-5); },       // §6: the named kasu's deeper note
   click: ()=> { noiseBurst(.035,.18,2200); tone(820,.05,'square',.05,-300); },   // wooden click, blade home
   shout: ()=> { tone(230, .12, 'square', .07, 70); setTimeout(()=>tone(300,.14,'square',.06,-40), 110); },
   hurt : ()=> { noiseBurst(.2,.3); tone(160,.25,'sawtooth',.12,-80); },
@@ -897,50 +930,53 @@ function heroPoseTarget(){
 // platform: [x, y, w, h, lane, kind]   kind: 'stone'|'wood'|'stall'
 // guard: [x1, x2, groundY, lane] | coin: [x, y, lane]
 function buildLevel1(){
-  // docs/levels/LEVEL-1.md draft 3, section 9 (builder notes); beats, guards, checkpoints in sections 3 to 6
-  const P = [
-    [-80,620,5640,240,1], [780,420,240,200,1], [1700,280,170,24,1],   // cornice west edge 1590 -> 1700: rope 1 needs a swing (DECISIONS 20, NOTES.md)
-    [2170,300,180,320,1],
-    [2640,492,1460,26,0], [3440,440,90,290,1], [3620,360,90,370,1], [3800,280,200,450,1],   // wall-walk, pillars
-    [4300,656,740,64,2], [5460,514,900,30,0], [5800,420,300,24,0],
-    [5460,656,140,64,2], [5720,656,140,64,2], [5980,656,140,64,2], [6240,656,320,64,2],     // canyon
-    [6200,620,2600,240,1], [7160,420,120,200,1], [6960,656,1100,64,2], [7520,560,200,24,2], // gateway yard
-  ];
-  const G = [   // M1, F1, M2, F2, M3, N3 (section 5)
-    [2860,3260,620,1], [3660,4060,492,0], [4480,4880,620,1], [5600,6000,514,0],
-    [7360,7760,620,1], [7400,7800,656,2],
-  ];
-  const C = [
-    [840,380,1],[900,380,1],[960,380,1],[1180,360,1],[1260,360,1],[1340,360,1],
-    [1560,180,1],[1640,210,1],[1720,240,1],[1960,220,1],[2020,200,1],[2080,220,1],
-    [2820,452,0],[2940,452,0],[3060,452,0],[3180,452,0],[3485,400,1],[3665,320,1],[3900,240,1],
-    [4500,616,2],[4650,616,2],[4800,616,2],[5530,616,2],[5790,616,2],[6050,616,2],
-    [5880,380,0],[5960,380,0],[6040,380,0],[7400,200,1],[7600,200,1],[7800,200,1],[8000,200,1],
-    [7560,520,2],[7620,520,2],[7680,520,2],
-  ];
-  const hint = (x,y,t)=>[x, y, t, touchLine(t)];        // docs/SCRIPT.md section 4
+  // docs/levels/LEVEL-1.md (draft 4), section 9, generated from the doc's arrays (not retyped).
+  // coins: [x,y,lane,'trail'] copper on the route; [..,'cluster',detour]; [..,'named',id] (DESIGN §6)
+  const hint = (x,y,t)=>[x, y, t, touchLine(t)];
   return {
-    name:'Thanjavur', chapter:'Chapter I', width:8800, killY:820,
+    name:'Thanjavur', chapter:'Chapter I', width:9100, killY:820,
     date:'1010 CE · the 25th year of Rajaraja',
     story:'The stone is new. They say the king gave a copper pot plated in gold for '+
           'the top of the tower today, and I believe it; it burns from the far side '+
           'of the paddy. I am to join the muster of Rajendra, the king\'s son and '+
           'general, past the two east gateways. The gate guards want no village boy '+
           'inside the enclosure. I will cross it anyway.',
-    platforms:P, coins:C, guards:G,
-    planks:[[1120,400,260,1], [7240,240,300,1], [7540,240,300,1], [7840,240,300,1]],   // K [x,y,w,lane]
-    poles:[[1100,380,620,1], [7230,220,420,1]],                                          // [x,yTop,yBottom,lane]
-    ropes:[[1490,160,260,1], [8220,200,220,1]],                                          // [x,anchorY,length,lane]
-    blocks:[[460,700,1], [4220,4400,1], [6900,7080,1]],                                  // [startX,trackEndX,lane]
-    npc:[300,620],                                                                       // Adittan, the handover
+    platforms:[
+      [-80,620,5640,240,1,'stone'],[780,420,240,200,1,'stone'],[1700,280,170,24,1,'stone'],[2170,200,180,420,1,'stone'],
+      [1180,290,260,34,1,'wood'],[2640,492,1460,26,0,'stone'],[3440,440,90,290,1,'stone'],[3620,360,90,370,1,'stone'],
+      [3800,280,200,450,1,'stone'],[4300,656,740,64,2,'stone'],[5460,514,900,30,0,'stone'],[5800,420,300,24,0,'stone'],
+      [5460,656,140,64,2,'stone'],[5720,656,140,64,2,'stone'],[5980,656,140,64,2,'stone'],[6240,656,320,64,2,'stone'],
+      [6200,620,2900,240,1,'stone'],[7160,420,120,200,1,'stone'],[6960,656,1100,64,2,'stone'],[7520,560,200,24,2,'stone'],
+    ],
+    planks:[[1120,400,260,1],[860,300,200,1],[820,180,200,1],[7240,240,300,1],[7540,240,300,1],[7840,240,300,1],[8560,260,240,1]], poles:[[1100,380,620,1],[7230,220,420,1]],
+    ropes:[[1490,160,280,1],[8220,200,220,1],[8420,160,300,1]],
+    blocks:[[460,700,1],[4220,4400,1],[6900,7080,1]],
+    npc:[300,620],                                         // Adittan, the handover
+    guards:[
+      [2860,3260,620,1],[3660,4060,492,0],[4480,4880,620,1],
+      [5600,6000,514,0],[7360,7760,620,1],[7400,7800,656,2],
+    ],
+    links:[
+      [2640,120,0,1],[3300,120,0,1],[4320,60,1,2],[4970,60,1,2],[5420,120,0,1],[5450,60,1,2],
+      [6260,120,0,1],[6430,60,1,2],[6970,60,1,2],[7970,60,1,2],
+    ],
     checkpoints:[[1050,620],[2400,620],[3860,280],[5340,620],[6840,620],[8260,620]],
-    links:[[2640,120,0,1],[3300,120,0,1],[4320,60,1,2],[4970,60,1,2],[5420,120,0,1],
-           [5450,60,1,2],[6260,120,0,1],[6430,60,1,2],[6970,60,1,2],[7970,60,1,2]],
+    cpLines:{2:'The tower. I did not know stone went that high.'},
     hints:[hint(500,560,'Stone on rollers. Lean into it to push.'),
+           hint(880,370,'Copper up the scaffold. Somebody went this way.'),
            hint(1100,560,'A scaffold pole. Hold ↑ to climb.'),
            hint(1900,240,'Jump again in the air. The step is high.'),
-           hint(2700,540,'The lamp marks a gate. ↑ the cloister roof.')],
-    goal:{x:8600,y:620}, start:[60,620],
+           hint(2700,600,'The lamp marks a gate. ↑ the wall-walk.')],
+    coins:[
+      [730,500,1,'trail'],[770,440,1,'trail'],[820,390,1,'trail'],[1100,560,1,'trail'],[1100,490,1,'trail'],[1100,420,1,'trail'],
+      [1560,180,1,'trail'],[1640,210,1,'trail'],[1720,240,1,'trail'],[1940,210,1,'trail'],[2020,150,1,'trail'],[2100,140,1,'trail'],
+      [3485,400,1,'trail'],[3575,340,1,'trail'],[3665,320,1,'trail'],[3755,270,1,'trail'],[3900,240,1,'trail'],[4400,600,2,'trail'],
+      [4560,590,2,'trail'],[4720,600,2,'trail'],[5660,590,2,'trail'],[5920,590,2,'trail'],[6180,590,2,'trail'],[8160,220,1,'trail'],
+      [8220,300,1,'trail'],[8220,380,1,'trail'],[880,380,1,'cluster',1],[900,330,1,'cluster',1],[940,260,1,'cluster',1],[900,210,1,'cluster',1],
+      [860,150,1,'cluster',1],[1000,250,1,'cluster',1],[8440,420,1,'cluster',2],[8440,340,1,'cluster',2],[8440,260,1,'cluster',2],[8520,200,1,'cluster',2],
+      [8600,190,1,'cluster',2],[8680,210,1,'cluster',2],[830,140,1,'named','nk1'],[8760,220,1,'named','nk2'],
+    ],
+    goal:{x:8900,y:620}, start:[60,620],
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#7A5F34','#C2954A','#E3BC6A','#F2D894'], sun:{x:.74,y:.28,r:60,c:'#FFF0C4'},
     far:'gopuram', mid:'palms',
@@ -951,14 +987,12 @@ function buildLevel1(){
     motes:'#F6E2A8', banners:false,
   };
 }
-
 function buildLevel2(){
-  // docs/levels/LEVEL-2.md draft 3, section 9 (builder notes); beats, guards, checkpoints in sections 3 to 6.
-  // Hints without a SCRIPT.md line (bounce, hold jump, push, gangplank, climb, gate) wait for the
-  // narrative designer (NOTES.md).
+  // docs/levels/LEVEL-2.md (draft 4), section 9, generated from the doc's arrays (not retyped).
+  // coins: [x,y,lane,'trail'] copper on the route; [..,'cluster',detour]; [..,'named',id] (DESIGN §6)
   const hint = (x,y,t)=>[x, y, t, touchLine(t)];
   return {
-    name:'Nagapattinam', chapter:'Chapter II', width:11600, killY:760,
+    name:'Nagapattinam', chapter:'Chapter II', width:12200, killY:760,
     date:'1025 CE · the sailing season',
     story:'Fifteen years a sevagan and I have never seen so many hulls. Stitched '+
           'planks, coir cord, no iron anywhere. Pearls, cloth and rice go aboard. The '+
@@ -969,33 +1003,45 @@ function buildLevel2(){
     platforms:[
       [-80,620,6520,240,1,'stone'],[720,360,320,260,1,'stone'],[1400,320,300,300,1,'stone'],[2100,420,360,200,1,'stone'],
       [2960,440,640,180,1,'wood'],[3600,-400,600,1020,1,'stone'],[3700,200,420,26,0,'wood'],[4120,320,300,26,0,'wood'],
-      [4420,480,400,26,0,'wood'],[5340,524,830,24,1,'stone'],[5180,656,700,64,2,'stall'],[6360,524,800,26,0,'wood'],
-      [7280,524,320,26,0,'wood'],[6720,430,300,24,0,'wood'],[6360,640,760,72,2,'stall'],[7360,640,400,72,2,'stall'],
-      [6700,548,220,24,2,'stall'],[7360,620,1200,240,1,'stone'],[8180,524,280,24,1,'stall'],[7980,536,840,26,0,'wood'],
-      [8380,442,240,24,0,'wood'],[8560,430,640,330,1,'wood'],[9880,430,1720,330,1,'wood'],[10180,520,1020,140,2,'wood'],
+      [5340,524,830,24,1,'stone'],[5180,656,700,64,2,'stall'],[6360,524,800,26,0,'wood'],[7280,524,320,26,0,'wood'],
+      [6720,430,300,24,0,'wood'],[6360,640,760,72,2,'stall'],[7360,640,400,72,2,'stall'],[6700,548,220,24,2,'stall'],
+      [7360,620,1200,240,1,'stone'],[8180,524,280,24,1,'stall'],[7980,536,840,26,0,'wood'],[8380,442,240,24,0,'wood'],
+      [8560,430,640,330,1,'wood'],[10180,520,1020,140,2,'wood'],[4420,480,640,26,0,'wood'],[9880,430,2220,330,1,'wood'],
+      [11500,470,500,26,0,'wood'],[11480,-400,20,1160,0,'wood'],[12000,-400,20,1160,0,'wood'],
     ],
-    planks:[[3220,140,320,1],[10580,40,400,1]], poles:[[3200,140,440,1,'mast'],[10570,40,130,1,'line'],[11000,40,430,1,'mast']],
-    ropes:[[3560,100,100,1,0,3760],[9450,70,300,1]],                     // [x,anchorY,len,lane,(toLane,landX)]: R1 is marked
-    awnings:[[480,540,160,1],[1160,560,160,1],[10380,270,160,1]], bales:[[1800,1],[10160,1]], slopes:[[2560,620,2960,440,1,'gangplank']],
+    planks:[[3220,140,320,1],[10580,40,400,1],[4800,100,240,0]], poles:[[3200,140,440,1,'mast'],[10570,40,130,1,'line'],[11000,40,430,1,'mast']],
+    ropes:[[3560,100,100,1,0,3760],[9540,100,320,1],[11360,220,160,1,0,11560]],
+    awnings:[[480,540,160,1],[1160,560,160,1],[10380,270,160,1],[4440,400,120,0],[4720,260,120,0]],
+    bales:[[1800,1],[10160,1]],
+    slopes:[[2560,620,2960,440,1,'gangplank']],
     guards:[
-      [5300,5700,620,1],[6560,7060,524,0],[6560,6960,640,2],[8130,8530,620,1],[8260,8660,536,0],[10540,10940,430,1],
+      [5300,5700,620,1],[6560,7060,524,0],[6560,6960,640,2],
+      [8130,8530,620,1],[8260,8660,536,0],[10540,10940,430,1],
     ],
     links:[
       [4640,120,0,1],[5210,60,1,2],[5810,60,1,2],[6320,120,0,1],[6360,60,1,2],[7460,120,0,1],
-      [7540,60,1,2],[7980,120,0,1],[8700,120,0,1],[10220,60,1,2],[11070,60,1,2],
+      [7540,60,1,2],[7980,120,0,1],[8700,120,0,1],[10220,60,1,2],[11070,60,1,2],[11920,120,0,1],
     ],
     checkpoints:[[1100,620],[2300,420],[3400,440],[4780,620],[6200,620],[7590,620],[8900,430],[10040,430]],
-    cpLines:{3:'A foreign king\'s house of monks. Nobody minds it.'},   // SCRIPT §4, at LEVEL-2 §8's mid hook (4780)
-    hints:[hint(3500,100,'Lamplit again. ↑ the warehouse ledge.')],
+    cpLines:{3:'A foreign king\'s house of monks. Nobody minds it.'},
+    hints:[hint(560,500,'Undyed cloth, stretched tight. Land on it.'),
+           hint(1240,520,'Hold the jump as you land. Higher.'),
+           hint(1860,560,'A bale of cloth. Push it to the dock.'),
+           hint(2600,560,'The gangplank. Up onto the hull.'),
+           hint(3260,400,'Climb the mast by the lashings.'),
+           hint(3500,100,'A lamp on the rope. Grab it, then ↑.'),
+           hint(4700,540,'Lamplit again. ↓ back down to the quay.'),
+           hint(8900,430,'Water to the next ship. No way but over.')],
     coins:[
-      [560,480,1],[640,420,1],[760,320,1],[860,320,1],[960,320,1],[1240,500,1],[1320,420,1],[1460,280,1],
-      [1560,280,1],[1660,280,1],[2180,380,1],[2280,380,1],[2380,380,1],[2700,520,1],[2800,490,1],[2900,460,1],
-      [3300,100,1],[3400,100,1],[3500,100,1],[3800,160,0],[3900,160,0],[4000,160,0],[5400,484,1],[5600,484,1],
-      [5800,484,1],[6000,484,1],[5300,616,2],[5500,616,2],[5700,616,2],[6760,390,0],[6860,390,0],[6960,390,0],
-      [6740,508,2],[6810,508,2],[6880,508,2],[8220,484,1],[8320,484,1],[8420,484,1],[9200,330,1],[9300,300,1],
-      [9400,330,1],[10620,0,1],[10760,0,1],[10900,0,1],[10300,480,2],[10600,480,2],[10900,480,2],
+      [520,500,1,'trail'],[600,400,1,'trail'],[680,340,1,'trail'],[1200,500,1,'trail'],[1300,380,1,'trail'],[1380,300,1,'trail'],
+      [2640,560,1,'trail'],[2760,510,1,'trail'],[2880,460,1,'trail'],[3200,380,1,'trail'],[3200,300,1,'trail'],[3200,220,1,'trail'],
+      [6700,400,0,'trail'],[6780,370,0,'trail'],[6860,390,0,'trail'],[8490,500,1,'trail'],[8540,440,1,'trail'],[8600,400,1,'trail'],
+      [9640,340,1,'trail'],[9740,320,1,'trail'],[9840,360,1,'trail'],[10350,310,1,'trail'],[10460,200,1,'trail'],[10560,110,1,'trail'],
+      [4360,280,0,'cluster',3],[4440,350,0,'cluster',3],[4500,250,0,'cluster',3],[4640,220,0,'cluster',3],[4760,160,0,'cluster',3],[4880,60,0,'cluster',3],
+      [11280,380,1,'cluster',4],[11360,330,1,'cluster',4],[11560,420,0,'cluster',4],[11640,420,0,'cluster',4],[11720,410,0,'cluster',4],[11800,400,0,'cluster',4],
+      [5000,60,0,'named','nk3'],[11860,430,0,'named','nk4'],
     ],
-    goal:{x:11400,y:430}, start:[40,620], castOffAtGoal:true,   // ship 2 casts off after the goal
+    goal:{x:12040,y:430}, start:[40,620], castOffAtGoal:true,
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#2F5E6E','#5E8F94','#A9C4B4','#E6D9A8'], sun:{x:.28,y:.32,r:70,c:'#FFF3D0'},
     far:'ships', mid:'docks',
@@ -1006,13 +1052,12 @@ function buildLevel2(){
     motes:'#E8F0E6', water:660, banners:false,
   };
 }
-
 function buildLevel3(){
-  // docs/levels/LEVEL-3.md third draft (final), section 9; no killY: shallow water never kills.
-  // Hints without a SCRIPT.md line (vine, slide, marked vine) wait for the narrative designer.
+  // docs/levels/LEVEL-3.md (draft 4), section 9, generated from the doc's arrays (not retyped).
+  // coins: [x,y,lane,'trail'] copper on the route; [..,'cluster',detour]; [..,'named',id] (DESIGN §6)
   const hint = (x,y,t)=>[x, y, t, touchLine(t)];
   return {
-    name:'Kadaram · Srivijaya', chapter:'Chapter III', width:13400, killY:1000,   // below every wading bed (NOTES.md)
+    name:'Kadaram · Srivijaya', chapter:'Chapter III', width:13500, killY:1000,   // below every wading bed (NOTES.md)
     date:'1025 CE · the Kadaram shore',
     story:'Rain. The river is flat and brown and the houses stand in it on legs. One '+
           'mountain behind, in cloud. They say the king of Kadaram keeps elephants '+
@@ -1023,29 +1068,41 @@ function buildLevel3(){
       [-80,620,680,240,1,'sand'],[1500,480,400,280,1,'mud'],[2840,480,360,280,1,'mud'],[3200,-400,900,1160,1,'roots'],
       [3260,480,240,26,0,'wood'],[4140,480,300,26,0,'wood'],[4100,620,3900,240,1,'stone'],[5000,536,960,26,0,'wood'],
       [6840,524,830,24,1,'stone'],[6440,480,240,26,0,'wood'],[6680,480,560,26,0,'wood'],[7600,480,420,26,0,'wood'],
-      [8400,420,200,26,1,'wood'],[8920,420,720,26,1,'wood'],[9660,320,500,440,1,'mud'],[11080,620,2320,240,1,'stone'],
+      [8400,420,200,26,1,'wood'],[8920,420,720,26,1,'wood'],[9660,320,500,440,1,'mud'],[11080,620,2420,240,1,'stone'],
+      [1700,180,120,26,1,'roots'],[1840,140,260,26,1,'roots'],[11180,360,200,26,1,'wood'],
     ],
-    planks:[[1340,620,80,1],[1420,550,70,1],[2660,620,80,1],[2760,550,60,1],[11000,620,80,1]], poles:[[4140,480,680,0,'ladder']],
+    planks:[[1340,620,80,1],[1420,550,70,1],[2660,620,80,1],[2760,550,60,1],[11000,620,80,1],[10720,620,70,1],[10800,560,60,1],[10880,500,60,1]], poles:[[4140,480,680,0,'ladder']],
     vines:[
       [720,200,240,1],[1020,180,240,1],[1320,200,240,1],[3120,220,210,1,0,3320],[6980,160,220,0],
-      [7330,160,220,0],[8150,200,240,1],[9390,140,220,1],[9740,140,220,1],
+      [7330,160,220,0],[8150,200,240,1],[9390,140,220,1],[9740,140,220,1],[1620,120,240,1],
     ],
-    slopes:[[1900,480,2246,680,1,'mud'],[10160,320,10680,620,1,'mud']], wades:[[600,680,900,1],[2246,680,414,1],[3260,680,1200,0],[8000,680,400,1],[10680,680,400,1]], sways:[[3580,480,200,0,0],[3860,480,200,0,1],[7320,480,200,0,0],[8680,420,160,1,0]],
+    slopes:[[1900,480,2246,680,1,'mud'],[10160,320,10680,620,1,'mud']],
+    wades:[[600,680,900,1],[2246,680,414,1],[3260,680,1200,0],[8000,680,400,1],[10680,680,400,1]],
+    sways:[[3580,480,200,0,0],[3860,480,200,0,1],[7320,480,200,0,0],[8680,420,160,1,0],[10960,440,140,1,0]],
     guards:[
-      [5340,5740,620,1,'fighter',null,{pattern:'gold',teach:'gold'}],[6800,7200,620,1,'fighter',null,{teach:'seal'}],[6760,7160,480,0,'fighter'],
-      [9220,9620,420,1,'fighter'],[11750,11750,620,1,'fighter','stand'],[12750,12750,620,1,'shield','stand'],
+      [5340,5740,620,1,'fighter',null,{'pattern':'gold','teach':'gold'}],[6800,7200,620,1,'fighter',null,{'teach':'seal'}],[6760,7160,480,0,'fighter'],
+      [9220,9620,420,1,'fighter'],[11850,11850,620,1,'fighter','stand'],[12850,12850,620,1,'shield','stand'],
     ],
-    links:[[4260,120,0,1],[5000,120,0,1],[5800,120,0,1],[6500,120,0,1],[7640,120,0,1]],
-    checkpoints:[[1700,480],[3190,480],[4690,620],[6190,620],[7350,524],[8520,420],[9800,320],[11250,620],[12250,620]],
-    cpLines:{6:'A wall of timber. Men in front. No way round.'},   // SCRIPT §4, at LEVEL-3 §8's mid hook (9800)
-    hints:[hint(4800,560,'Here the sword comes out. J or X.'), hint(5060,540,'A lamp in the rain. ↑ the stilt walk.')],
+    links:[
+      [4260,120,0,1],[5000,120,0,1],[5800,120,0,1],[6500,120,0,1],[7640,120,0,1],
+    ],
+    checkpoints:[[1700,480],[3190,480],[4690,620],[6190,620],[7350,524],[8520,420],[9800,320],[11250,620],[12350,620]],
+    cpLines:{6:'A wall of timber. Men in front. No way round.'},
+    hints:[hint(640,560,'Vines over the water. Let go on the forward swing.'),
+           hint(1960,420,'Mud. Lean back to slow down.'),
+           hint(3040,420,'A ring on the vine. Grab it, then ↑.'),
+           hint(4800,560,'Here the sword comes out. J or X.'),
+           hint(5060,540,'A lamp in the rain. ↑ the stilt walk.')],
     coins:[
-      [820,380,1],[1020,330,1],[1220,380,1],[1600,440,1],[1700,440,1],[1800,440,1],[2000,500,1],[2100,560,1],
-      [2200,620,1],[3600,440,0],[3760,440,0],[3940,440,0],[5100,496,0],[5300,496,0],[5500,496,0],[5700,496,0],
-      [6900,484,1],[7100,484,1],[7300,484,1],[7500,484,1],[7000,360,0],[7150,340,0],[7300,360,0],[8250,380,1],
-      [8350,380,1],[9490,240,1],[9640,220,1],[9900,280,1],[10000,280,1],[10300,400,1],[10450,480,1],[10600,560,1],
+      [840,350,1,'trail'],[900,320,1,'trail'],[960,340,1,'trail'],[1140,330,1,'trail'],[1200,300,1,'trail'],[1260,320,1,'trail'],
+      [1960,470,1,'trail'],[2050,520,1,'trail'],[2140,570,1,'trail'],[3540,440,0,'trail'],[3820,440,0,'trail'],[4100,440,0,'trail'],
+      [6790,500,1,'trail'],[6830,470,1,'trail'],[6880,484,1,'trail'],[7100,360,0,'trail'],[7200,330,0,'trail'],[7480,380,0,'trail'],
+      [9500,260,1,'trail'],[9600,240,1,'trail'],[9850,260,1,'trail'],[10250,340,1,'trail'],[10400,420,1,'trail'],[10550,510,1,'trail'],
+      [1560,420,1,'cluster',5],[1600,360,1,'cluster',5],[1680,260,1,'cluster',5],[1740,140,1,'cluster',5],[1880,100,1,'cluster',5],[1960,100,1,'cluster',5],
+      [10720,580,1,'cluster',6],[10800,520,1,'cluster',6],[10880,460,1,'cluster',6],[11000,400,1,'cluster',6],[11120,340,1,'cluster',6],[11220,320,1,'cluster',6],
+      [2060,100,1,'named','nk5'],[11340,320,1,'named','nk6'],
     ],
-    goal:{x:13200,y:620}, start:[50,620],
+    goal:{x:13300,y:620}, start:[50,620],
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#2E3A52','#4F6A6A','#86A08A','#C9D3B0'], sun:{x:.80,y:.22,r:52,c:'#F2F6DA'},
     far:'stupas', mid:'jungle',
@@ -1214,7 +1271,9 @@ function loadLevel(i){
   player.vx = player.vy = 0; player.hp = 3; player.jumps = 0; player.lane = 1;
   player.checkpoint = [level.start[0], level.start[1]];
   player.hurtT = 0; player.attackT = 0; player.shiftFx = 0;
-  level.coins = level.coins.map(c=>({x:c[0], y:c[1], lane:c[2]??1, taken:false, spin:hash(c[0])*6}));
+  level.coins = level.coins.map(c=>({x:c[0], y:c[1], lane:c[2]??1, kind:c[3]||'trail', detour:c[3]==='cluster'?c[4]:null,
+                                      nk:c[3]==='named'?c[4]:null, taken: c[3]==='named' && !!RUN.found[c[4]], spin:hash(c[0])*6}));
+  level.cued = {};
   level.guards = level.guards.map(makeGuard);
   level.checkpoints = level.checkpoints.map(c=>({x:c[0], y:c[1], lit:false}));
   prepTraversal(level);
@@ -1251,7 +1310,7 @@ function showInter(i){
 $('startBtn').onclick = ()=>{
   audioInit();
   $('titleScreen').hidden = true;
-  totalCoins = 0; coinsTaken = 0; deaths = 0; runStart = performance.now();
+  totalCoins = 0; coinsTaken = 0; deaths = 0; runStart = performance.now(); resetRun();
   showInter(0);
 };
 $('interBtn').onclick = ()=>{
@@ -1261,7 +1320,7 @@ $('interBtn').onclick = ()=>{
 };
 $('againBtn').onclick = ()=>{
   $('endScreen').hidden = true;
-  levelIdx = 0; totalCoins = 0; coinsTaken = 0; deaths = 0; runStart = performance.now();
+  levelIdx = 0; totalCoins = 0; coinsTaken = 0; deaths = 0; runStart = performance.now(); resetRun();
   showInter(0);
 };
 function queueLevel(i){ levelIdx = i; showInter(i); }
@@ -2053,9 +2112,19 @@ function updateWorld(dt){
   for(const c of level.coins){
     if(c.taken) continue;
     c.spin += dt*4;
+    // §6: a cluster cues itself once, a faint glint and a low bronze note, when he comes within 400 px
+    if(c.kind === 'cluster' && !level.cued[c.detour] && Math.abs(c.x - p.x) < TUNE.CLUSTER_CUE && c.lane === p.lane){
+      level.cued[c.detour] = true; sfx.bronze(); c.glintT = 0.8;
+    }
+    c.glintT = Math.max(0, (c.glintT||0) - dt);
     if(c.lane === p.lane && rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, c.x-12, c.y-12, 24, 24)){
-      c.taken = true; coinsTaken++;          // §6: never counted; report #14: its own soft gold bloom
+      c.taken = true; coinsTaken++;          // §6: never counted on screen
       spawnGoldLeaf(c.x, c.y, c.lane);
+      if(c.kind === 'named'){                 // §6: its name floats 1.5 s; its card is kept; its lamp lights
+        const n = NAMED[c.nk]; RUN.found[c.nk] = true; saveMap(); sfx.named();
+        floats.push({x:c.x, y:c.y-30, t:TUNE.NAMED_FLOAT, text:n.name});
+        if(!RUN.firstNamed){ RUN.firstNamed = true; floats.push({x:c.x, y:c.y-56, t:TUNE.NAMED_FLOAT+1.2, text:LINE_FIRST_NAMED}); }
+      } else { RUN.purse += 1; sfx.coin(); }   // copper into the purse, a soft clink (not a chime)
     }
   }
 
@@ -2700,22 +2769,35 @@ function drawSwordGlyph(x, y){               // §2 sign 2: an ink sword after t
 // standing figure beside a lamp stand, no lettering; it turns slowly (the engine spins it by scaling).
 // The painted kasu.png is used when it exists. Report #14: drawn as a coin of the period, not an arcade reward.
 const KASU_EDGE = Array.from({length:14}, (_, i)=> 1 + (hash(i*7.3)-0.5)*0.12);
+const COIN_METAL = {   // RESEARCH 6a: trail kasu copper; named kasu gold, silver, copper or bronze
+  copper:{rim:'#8A4E2A', face:'#B8754A', light:'#D59A6E', shadow:'#4A2A16'},
+  gold:  {rim:'#C9A55E', face:'#D9C69A', light:'#F0E2B4', shadow:'#6B4E33'},
+  silver:{rim:'#A8A8A0', face:'#CFCFC6', light:'#ECECE4', shadow:'#55554E'},
+  bronze:{rim:'#7E6A3C', face:'#A08A52', light:'#C4AE72', shadow:'#40341C'},
+};
 function drawCoin(c){
   if(c.taken) return;
+  const metal = c.kind === 'named' ? NAMED[c.nk].metal : 'copper', M = COIN_METAL[metal], big = c.kind === 'named' ? 1.35 : 1;
+  if(c.glintT > 0 || c.kind === 'named'){      // a cluster's cue, or a named kasu's own steady glint
+    const a = c.kind === 'named' ? 0.35 + 0.25*Math.sin(time*3 + c.x) : c.glintT;
+    ctx.fillStyle = 'rgba(240,220,160,'+(0.5*a)+')';
+    ctx.beginPath(); ctx.moveTo(c.x, c.y-22); ctx.lineTo(c.x+3, c.y); ctx.lineTo(c.x, c.y+22); ctx.lineTo(c.x-3, c.y); ctx.closePath(); ctx.fill();
+  }
   const sx = 0.35 + 0.65*Math.abs(Math.cos(c.spin*0.5)), bob = Math.sin(c.spin*0.35)*2;
-  ctx.save(); ctx.translate(c.x, c.y + bob);
+  ctx.save(); ctx.translate(c.x, c.y + bob); ctx.scale(big, big);
   const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 16);           // a faint warmth, not a glow
   g.addColorStop(0,'rgba(232,201,121,0.16)'); g.addColorStop(1,'rgba(232,201,121,0)');
   ctx.fillStyle = g; ctx.fillRect(-16, -16, 32, 32);
   ctx.scale(sx, 1);
-  const im = IMGS.kasu;
+  const im = metal === 'gold' && c.kind !== 'named' ? IMGS.kasu : null;
   if(im){ ctx.drawImage(im, -11, -11, 22, 22); ctx.restore(); return; }
   const lumpy = (r)=>{ ctx.beginPath(); for(let i=0;i<14;i++){ const a = i/14*Math.PI*2, rr = r*KASU_EDGE[i];
     i ? ctx.lineTo(Math.cos(a)*rr, Math.sin(a)*rr) : ctx.moveTo(Math.cos(a)*rr, Math.sin(a)*rr); } ctx.closePath(); };
-  ctx.fillStyle = '#6B4E33'; ctx.save(); ctx.translate(0.8, 1.6); lumpy(10); ctx.fill(); ctx.restore();   // thick rim, warm shadow below
-  ctx.fillStyle = '#C9A55E'; lumpy(10); ctx.fill();
-  ctx.fillStyle = '#D9C69A'; lumpy(7.8); ctx.fill();                                                        // the struck face
-  ctx.fillStyle = 'rgba(107,78,51,0.55)';                                                                   // a worn standing figure
+  ctx.fillStyle = M.shadow; ctx.save(); ctx.translate(0.8, 1.6); lumpy(10); ctx.fill(); ctx.restore();   // thick rim, warm shadow below
+  ctx.fillStyle = M.rim; lumpy(10); ctx.fill();
+  ctx.fillStyle = M.face; lumpy(7.8); ctx.fill();                                                           // the struck face
+  if(c.nk === 'nk4'){ ctx.fillStyle = M.shadow; ctx.fillRect(-2.6, -2.6, 5.2, 5.2); ctx.restore(); return; }   // square hole
+  ctx.fillStyle = 'rgba(60,40,24,0.5)';                                                                     // a worn standing figure
   ctx.beginPath(); ctx.arc(-1.2, -4.6, 1.4, 0, 7); ctx.fill();
   ctx.fillRect(-2.2, -3.2, 2.2, 3.4); ctx.fillRect(-2.8, 0, 3.4, 2.6); ctx.fillRect(-2.4, 2.4, 1, 2.6); ctx.fillRect(-0.6, 2.4, 1, 2.6);
   ctx.fillRect(2.4, -4, 0.9, 8.4); ctx.fillRect(1.6, -4.6, 2.4, 1);                                       // the lamp stand
@@ -3437,7 +3519,8 @@ function renderTitleBG(){
   if(!level){
     level = LEVELS[0]();
     applyGrade(level);
-    level.coins = level.coins.map(c=>({x:c[0],y:c[1],lane:c[2]??1,taken:false,spin:hash(c[0])*6}));
+    level.coins = level.coins.map(c=>({x:c[0],y:c[1],lane:c[2]??1,kind:c[3]||'trail',nk:c[3]==='named'?c[4]:null,taken:false,spin:hash(c[0])*6}));
+    level.cued = {};
     level.guards = level.guards.map(makeGuard);
     level.checkpoints = level.checkpoints.map(c=>({x:c[0],y:c[1],lit:false}));
     prepLinks(); prepTraversal(level); placeHints();
