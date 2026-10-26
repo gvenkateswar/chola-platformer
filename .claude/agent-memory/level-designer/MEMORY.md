@@ -27,6 +27,35 @@
   arrays in the level files if needed (gate footing, patrol 400 to 800,
   checkpoint spacing and cone margin, gap and step limits).
 
+## Levels 2 and 3, third drafts (2026-10-26)
+
+- Level 1 draft 3 approved by Gaurav and merged to main. The builder moved
+  the level 1 cornice west edge 1590 -> 1700 to force a swing, and found
+  the plinth climbable by jump + wall jump + double jump (about 394 px
+  total), which made the scaffold optional. Any wall under ~400 px with a
+  face is climbable; block a lane with a wall whose top is off-screen
+  (y -400).
+- Engine rope physics (TUNE): pendulum period 2 s, max 50 degrees, pump
+  2.4 rad/s^2, grab keeps 0.8 of run speed (about 19 degrees from a run),
+  release speed 1.3 x r x angV along the tangent plus hop -420, and the
+  release spends the double jump. Measured from the rope's x, a swing
+  lands 465 px at 40 degrees and 550 to 640 at 45 to 50 (L 300); a
+  running double jump covers about 530 from an edge. So a swing-only
+  route needs the rope about 250 px out from the launch edge and the
+  target about 680 px from the edge, over water (killY) so no wall-jump
+  reaches the far face. L2's R2 is built that way.
+- tryShift: target lane footing within 150 above or 250 below. Keep far
+  decks at most 140 above the ground they link to.
+- Scripts in scratchpad: swing.py (pendulum and flight), levels23.py
+  (source of truth for L2/L3 arrays), check23.py (all checks), render.py
+  (builder blocks). Rebuild from the doc blocks if lost.
+- L2: six guards, 11,600 px, forced beat = 190 px hull side of ship 1.
+  L3: six fighters, 13,300 px, S1 is the telegraph teacher, sentinels
+  1,000 apart with a checkpoint between.
+- Open with the designer: vine hop -300 vs -420; rule 10 vs fighters on
+  walkways; widths over the DESIGN 7 targets; rule 5 for optional
+  step-offs (from draft 3 of level 1).
+
 ## Third draft of level 1 (2026-10-25), after Gaurav's playtest
 
 - Gaurav played the draft 2 build: "short and too simple, a shell of a
@@ -109,5 +138,6 @@
   The design-critic's verdict was "ready with fixes" (eight findings, all
   taken in the second draft).
 - Level 1 draft 2, played as a build: too short and simple; wants
-  traversal variety. Levels 2 and 3 still at draft 2, to be reworked the
-  same way.
+  traversal variety. Level 1 draft 3 approved and merged (2026-10-26).
+- Owner, round 3 to 4 of level 1: ropes should swing with momentum
+  (DECISIONS 20); climb animation still feels like pre-viz.

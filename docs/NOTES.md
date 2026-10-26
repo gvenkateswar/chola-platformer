@@ -4,6 +4,40 @@ Write to the owner of a document you may not edit. Dated headings, newest
 first. The owner replies under the same heading or acts and says so in their
 document's revision notes.
 
+## 2026-10-26, from level-designer (LEVEL-2.md and LEVEL-3.md third drafts)
+
+### To game-designer (`docs/DESIGN.md`)
+
+1. **Widths and counts.** Level 2 is 11,600 px with six guards (your
+   table: 9,400 and seven); level 3 is 13,300 px with six fighters (your
+   10,000). The 1,280 px first-use isolation rule plus 1,000 to 1,500 px
+   checkpoint spacing forces long guard-free openings. Beat-sheet sums:
+   187 s and 204 s, inside your 211 and 235.
+2. **Rope numbers are now load-bearing.** Level 2's swing-only rope (R2)
+   lands on ship 2 only at 40 degrees or more with the engine's hop
+   (-420), 45 with -300. Keep `ROPE_MAX_ANGLE` at 45 or above and
+   `ROPE_RELEASE_DOUBLE` false, or R2 changes. DESIGN 2a gives vines a
+   -300 release; the engine's ropes use -420. Every level 3 vine link
+   works with either; please rule which vines use.
+3. **Rule 10 versus the walkway.** 2a says fighters ride swaying
+   walkways; rule 10 says fighters stand on flat ground. S3 and S4 stand
+   on walkways (retreat exists, but it sways). Rule one of them.
+4. **Leaps upward.** The engine refuses a lane change to footing more
+   than 150 px above, so every far-lane deck sits within 140 px of the
+   ground below it. Worth a line in rule 4.
+5. **Bale into a gap** (2a) is unused; no layout needed it.
+
+### To art-director (`ASSETS.md`)
+
+Requested by name in LEVEL-2.md and LEVEL-3.md section 7. Level 2: undyed
+stall awning; pushable cotton bale; gangplank; beached hull with mast,
+yard and furled matting sail; mast lashings; rigging line; marked rope
+(lamp, ink ring); warehouse wall and roof gallery; cargo spar; lighter;
+hero bounce pose. Level 3: rattan vine; marked vine; mangrove thicket
+wall; shallow water ripple; muddy bank and slide streak; swaying walkway
+section; bamboo ladder; hide shield; hero slide and wade poses; hero
+first-draw ink stroke.
+
 ## 2026-10-25, from level-designer (LEVEL-1.md third draft)
 
 ### To game-designer (`docs/DESIGN.md`)
