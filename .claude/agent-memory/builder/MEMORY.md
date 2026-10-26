@@ -95,6 +95,21 @@ grep the function names.
 
 ## Not yet built
 
-- Hearts refill at checkpoints (DESIGN 5); "Banner planted",
+- (Hearts refill at checkpoints: built on build/systems.) "Banner planted",
   "no crossing here", CP2 line still old; touch button sizes (DESIGN 8).
 - Plank and rope hints (no positions in LEVEL-1.md).
+
+## build/systems (2026-10-26, worktree /home/claude/wt-sys)
+
+- Commits: 34af086 parry, 64c1090 layouts + kasu, 0e28381 ports/map/cards,
+  1666fac persistence (localStorage key `chola-voyage-map-v1`, flag
+  `TUNE.KEEP_MAP`), aade384 NOTES.
+- Flow: finishLevel -> showPort('market'|'quay') -> queueLevel -> inter;
+  level 3 -> showEnd(). Overlays #portScreen/#mapScreen/#cardScreen;
+  `[data-map]` buttons open the map; menu keys in a second keydown listener.
+- maxHearts() gives 4 with ghee (L2) / offering (L3); detourLamps() draws
+  lamps at `level.detourAt`.
+- To test past the bot's gaps without editing tests/: copy smoke.js to the
+  scratchpad, replace __dirname with the tests path, patch, run.
+- Smoke still fails: L1 rope 1 (bot grip ~190 px), L3 shield-bearer, and
+  the bot needs to click #portBtn.
