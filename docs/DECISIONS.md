@@ -72,3 +72,11 @@ note in docs/NOTES.md addressed to Gaurav.
 18. **Animation is improved later by cut-out animation** (painted
     characters split into parts and moved in code), after the levels are
     laid out. Not now.
+19. **Cut-out animation from existing art; decision 6 retired.** Characters
+    are animated by splitting one painted image into parts and rotating
+    them in code. The hero is rigged from the existing hero_idle.png now;
+    its sandals and sash are fixed later by editing that one image, never
+    by regenerating poses. The guard, Adittan, and the Srivijayan fighter
+    each get one rig-sheet image, generated once. No character is redrawn
+    pose by pose again. Decision 6 (regenerate all five hero poses) is
+    withdrawn.
