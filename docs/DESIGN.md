@@ -1,12 +1,11 @@
 # Chola: Tides of Bronze — Design
 
-Owner: game-designer. Readers: builder, level-designer, tester. Third
-draft, 2026-10-25, written under `docs/VISION.md` (fourth draft) and
-`docs/DECISIONS.md` (rulings 1 to 16), from the build on `build/level-1`,
-`docs/RESEARCH.md` sections 3.4 to 6, the design and levels reviews, and
-the level designer's notes.
+Owner: game-designer. Readers: builder, level-designer, tester. Fourth
+draft, 2026-10-26, under `docs/VISION.md`, `docs/DECISIONS.md` (rulings 1
+to 26), `docs/RESEARCH.md`, and `docs/research/game-feel-deep-dive.md`
+("the report").
 
-Budget: 3,200 words for sections 1 to 10, counting prose and table cells.
+Budget: 4,000 words for sections 1 to 10, counting prose and table cells.
 Revision notes sit outside it.
 
 Units: pixels at the 1280 by 720 canvas, seconds, px/s. "Lane" is the
@@ -44,9 +43,7 @@ Playwright:
 - Coyote 0.10 s, jump buffer 0.13 s. Hero hitbox 26 by 56.
 - Lane shift only inside a gate (`links` x-range plus 14 px), needs footing
   in the target lane within 150 px above or 250 below, cooldown 0.3 s.
-  `build/level-1` adds `GATE_STAND 0.5`, which becomes the leap below.
-- Attack: 0.28 s, hitbox 52 wide, hero-high, 30 px ahead; movement locked
-  while `attackT > 0.12`, so 0.16 s.
+- Attack: 0.28 s, movement locked 0.16 s; reach in section 4.
 
 | Verb | Input | What it does | Cost | First taught |
 |---|---|---|---|---|
@@ -69,24 +66,19 @@ a guard in the target lane can catch the leap.
 
 **The sheathed sword (Decision 10).** Four signs:
 
-1. **Handover.** Level 1 opens with Ilamaran unarmed beside an older man of
-   his company [invented, below commander rank]. Walking into him plays a
-   2 s scene, skippable: he hands over the sheathed sword with one line.
-2. **HUD glyph.** An ink sword after the hearts: sheathed in levels 1 and
-   2, drawn after the first cut in level 3. A sign, never a count.
+1. **Handover.** Level 1 opens with an older man of his company
+   [invented, below commander rank] handing Ilamaran the sheathed sword:
+   a short skippable scene.
+2. **HUD glyph.** An ink sword after the hearts, sheathed until the first
+   cut in level 3. A sign, never a count.
 3. **Press in levels 1 and 2.** A hand on the hilt pushes the blade home
-   (0.3 s, no movement lock), a wooden click, the glyph pulses. A line
-   floats on the first press of each level and after 30 s without one. The
-   ⚔ touch button shows dimmed, never hidden.
-4. **Kadaram.** The hint before the first fighter is the draw prompt; the
-   first cut sweeps a 0.2 s ink stroke along the blade. The title key list
-   says the sword is sheathed until Kadaram.
+   (0.3 s, no lock), a click, the glyph pulses; a line floats on the first
+   press of each level and after 30 s without one. ⚔ shows dimmed.
+4. **Kadaram.** A draw prompt before the first fighter; the first cut
+   sweeps an ink stroke along the blade.
 
-Sprites: hero idle unarmed, the older man, hand on hilt (new).
-
-**How levels 1 and 2 play without a sword.** The guard is terrain that
-moves: a facing, a patrol, a band. The kit (lane, height, speed, timing,
-section 2a) is for getting past a thing that sees (Pillar 2).
+**Without a sword,** the guard is terrain that moves, and the kit is for
+getting past a thing that sees (Pillar 2).
 
 ## 2a. Traversal kit
 
@@ -103,13 +95,17 @@ feet in a guard's band counts as stopped; climbing or swinging is moving.
 Grab a pole, rope, or line by touching it airborne or holding ↑; jump
 leaves a pole with `vy -700`, `vx 300` away.
 
-**Rope and vine swing (Decision 20; the builder's numbers, ruled).** A
-pumped pendulum: period 2.0 s; limit 50°, never below 45 (LEVEL-2's R2
-needs it); ← or → with the swing adds 2.4 rad/s²; damping 0.12/s; a
-running grab keeps 0.8 of run speed. Jump releases along the tangent at
-1.3 × hand speed plus `vy -420`, vines included, and spends the double
-jump, so the swing is the aim. Speed above 385 bleeds off at 300 px/s².
-A swinging hero is never caught.
+**Rope and vine swing (Decisions 20, 25).** A pumped pendulum whose
+rhythm follows its length, replacing `ROPE_PERIOD`: ω² = 2300 / r, r from
+anchor to hands (at least 120 px), so the period is 2π√(r/2300): 1.66 s
+at 160 px, 1.94 at 220, 2.27 at 300 (report item 12). Gravity at the
+hands is the game's 2,300 at any grip, which removes the float of a high
+grip; idle sway uses the full length. Limit 50°, never below 45 (LEVEL-2's
+R2), by an energy cap with a safety clamp at 70° (item 8). Pump 2.4
+rad/s²; damping 0.12/s; a running grab keeps 0.8 of run speed. Jump
+releases along the tangent at 1.3 × hand speed plus `vy -420` and spends
+the double jump; speed above 385 bleeds off at 300 px/s². A swinging hero
+is never caught.
 
 | Piece | Lvl | Does | Numbers | With guards |
 |---|---|---|---|---|
@@ -135,17 +131,13 @@ checkpoint return, so no layout can lock.
 or vine (level 3) carries the gate's lamp at its anchor, an ink ring at
 grab height, and the gate's arrow glyph (black in level 3, Decision 7).
 Unmarked ones never cross. Grab it, then press ↑ (far) or ↓ (near): a
-1.0 s swing on a 60 px arc, scale tweening as in the leap, landing on
+half period of its length on a 60 px sine arc, scale tweening as in the leap, landing on
 target-lane footing at the rope's set landing x (0 to 300 px east). The
 lane changes at release. The swing is moving, so it cannot be caught.
 
-**By level.** Level 1 introduces climbing (pole, plank, rope) and pushing
-(block), and ends pushing the block under a pole to climb above a guard.
-Level 2 introduces bouncing and rigging (line, mast, yard, gangplank, the
-first marked rope), reuses pushing with bales, and ends bale, awning,
-rigging, yard, deck. Level 3 introduces swinging and sliding; roots,
-water, and walkways are terrain on known verbs. It ends vine, walkway,
-slide, then the gateway.
+**By level.** Level 1 teaches climbing and pushing; level 2 bouncing and
+rigging, with bales; level 3 swinging and sliding, roots, water, and
+walkways being terrain on known verbs. Each ends on a combination.
 
 **Sprites** (new): hero climb (two frames), push, hang, slide, wade; one
 prop per row above.
@@ -171,16 +163,13 @@ Chase ends when the player leaves the lane, is 420 px away, is out of band
 for 1 s, or 3 s pass; he stands 1 s with a "?" and walks back. No alarm
 (Decision 2).
 
-**Caught (Decision 8).** A moving Ilamaran is never caught; a guard's body
-does not block him. He is caught when stopped inside reach: within 40 px of the guard's front edge
-while his speed is under 100 px/s for 0.2 s, while wall-sliding, hanging
-still in the band, or during a gate leap. Then the guard grabs a shoulder
-(sprite: guard reach, NOTES.md slot 22), one heart goes, Ilamaran is shoved
-200 px back the way he came (`vx 260`, `vy -380`), and the burst is black
-ink, never crimson. The guard scolds for 1.5 s, then resumes his patrol.
-Invulnerable 1.2 s. No checkpoint reset on a catch (Pillar 3; VISION 4).
-Losing the third heart ends in a 1 s ink-wash fade to the last checkpoint
-with hearts refilled.
+**Caught (Decision 8).** A moving Ilamaran is never caught. He is caught
+when stopped within 40 px of the guard's front edge: under 100 px/s for
+0.2 s, wall-sliding, hanging still in the band, or in a gate leap. The
+guard grabs a shoulder, one heart goes, Ilamaran is shoved 200 px back
+(`vx 260`, `vy -380`), black ink, never crimson. The guard scolds 1.5 s,
+then patrols. Invulnerable 1.2 s. No checkpoint reset (VISION 4). The
+third heart lost: a 1 s ink-wash to the last checkpoint.
 
 **What forces a stop.** A forced stealth beat is a stop inside a chasing
 guard's 300 px leash: a wall-jump climb, a landing that needs a stop, or a
@@ -207,25 +196,53 @@ One enemy type, one variant, no Chola guard in level 3 (Decision 3). Slots
 17 and 18, no crimson (Pillar 1). Dress and weapon per RESEARCH.md 3.3:
 waist cloth, bare chest, head cloth, a straight short sword or spear.
 
+Frames at 60 fps; the report's windows and stuns are inference, to tune.
+
 **The fighter.** Patrols and sees like a guard. Seen: he advances at 180
-px/s and stops 90 px from the hero. Telegraph: 0.5 s with the weapon raised
-and an ink flare at the tip. Thrust: hitbox 70 px ahead of his front edge,
-hero-high, 0.15 s, one heart. Recovery: 0.7 s, when a cut lands. Then
-telegraph again. Leash 300 px, never changes lane, never follows onto a
-vine, root, or slide. Two cuts defeat him; the hero's cut lands within 56
-px ahead.
+px/s and stops 60 px off (report item 1). He repeats thrust, thrust,
+overhead cut:
 
-**The sentinel.** A fighter with no patrol: stands facing west, wakes when
-his cone is entered. Gateway only. The build cannot stand a guard still
-(`x1 = x2` flips his facing every frame), so a `stand` flag is a builder
-task.
+| Attack | Telegraph | Strike | Recovery | Counter |
+|---|---|---|---|---|
+| Thrust (gold) | 0.5 s raise, gold glint on the blade | 70 px past his front edge, 0.15 s, one heart | 0.7 s | Parry, or step back 120 px or jump 60, then cut |
+| Overhead cut (black seal) | 0.6 s, black ink seal on a pale halo over his head | 80 px past his front edge, 0.15 s, one heart | 1.0 s | Cannot be guarded: step back or jump, then cut |
 
-**Reading it.** The half-second raise lets a child step back 120 px or
-jump (60 px clears the thrust).
+Gold means "parry this," black ink "avoid this" (Decision 24); never
+crimson, and black because indigo sinks into Kadaram's palette (Decision
+17). A cut into his raised blade during a telegraph clashes: spark, both
+pushed 16 px apart, no harm. The hero's cut reaches 64 px past his front
+edge (item 1); two cuts defeat him. Leash 300 px; he never changes lane or
+follows onto a vine, root, or slide.
 
-**The shield-bearer (variant).** Same numbers, plus a hide shield held
-forward: a cut from the front outside his 0.7 s recovery is an ink puff on
-the shield. Gateway only, after the first sentinel.
+**The parry (Decision 24).** J/X or ⚔ pressed against a gold thrust.
+- **Window:** 10 frames (0.17 s), 7 before the strike to 3 after (item
+  16: 0.15 to 0.2 s); 14 frames for S1.
+- **Good parry:** hitstop 14 frames, gold ink ring, clang; a 0.3 s beat at
+  40 percent speed, camera 8 percent closer; he reels, stunned 0.9 s (item
+  16: 0.6 to 1.0). A cut in the stun is the counter and counts two.
+- **Mistimed** (8 to 18 frames early, 4 to 9 late): a guard. Dull clink,
+  Ilamaran slides back 24 px, no heart lost, no stun.
+- No second parry for 0.4 s after either, so mashing guards at best. A
+  press against a black seal does nothing.
+
+Hitstop on hits: 5 frames, 10 on the defeating cut (item 2).
+
+**The sentinel.** No patrol: stands facing west, wakes when his cone is
+entered, full pattern. Gateway only; a `stand` flag is a builder task.
+
+**The shield-bearer (variant).** Shield held forward; he alternates a gold
+thrust and a black-seal bash (0.6 s, 60 px, recovery 1.0 s). Any other
+front cut sparks on the shield and recoils Ilamaran 10 px (item 7). Two
+ways in: **parry** his thrust and the shield swings aside 1.2 s (item 16)
+for one counter cut, counting one; or **get behind** him, jumping his 54 px
+height during the bash recovery, and cut his back before he turns 0.8 s
+later. Two hits defeat him. After the first sentinel only.
+
+**Teaching, before the gateway.** S1 (5340 to 5740) thrusts gold only, with
+the wide window; his first telegraph runs 0.75 s under a parry prompt. S2
+adds the black seal every third attack, prompted once. S3 and S4 are
+optional practice. Step back and cut still beats every fighter; only the
+shield-bearer asks for a parry or a jump.
 
 **Where it is forced.** Pillar 2 wins at the gateway, Pillar 1 elsewhere
 (VISION 3). Every fighter before it has a lane, vine, or walkway around
@@ -234,8 +251,9 @@ closes all three lanes: a sentinel, a checkpoint, the shield-bearer. No
 reward.
 
 **Sprites beyond slots 17 and 18** (NOTES.md slots): fighter raise,
-thrust, shield walk, kneel and wash-out (30 to 33); guard reach (22); the
-kasu coin per section 6 (new).
+thrust, overhead cut, reel, shield walk, bash, kneel and wash-out; hero
+parry and guard poses; guard reach (22); the kasu and named kasu
+(section 6).
 
 **Violence rule (Decision 2).** Every hit, given or taken, is a black ink
 splash; no red on any body. A defeated fighter drops to one knee, raises
@@ -257,28 +275,81 @@ banner (builder task; the engine checks lane 1 within 30 px).
 
 **Cost in time.** A catch: 3 s. A fall or three hearts gone: 5 to 15 s.
 
-## 6. Collectibles
+## 6. Kasu (Decision 26)
 
-Kasu stay as a trail (VISION 3): a line of three to five shows a jump arc,
-a swing's release, the safer lane, or the way a guard's back opens. Pickup
-is an ink bloom and nothing else: no float, chime, HUD counter, or tally.
-The end screen carries no numbers; in place of the tally it carries the
-one line of cost (Decision 4). Sprite per RESEARCH 6: thick, irregular,
-pale gold, a standing figure, no lettering.
+One loop: kasu lead the eye and fill a purse spent at ports; clusters lead
+to detours that mark the voyage map and hold named kasu, which open
+history cards. Never a score: no counter in a level, no end tally, no "x
+of y," no empty slots (Pillar 3).
+
+**Trail kasu.** Lines of three to five tracing a jump, a release, the safer
+lane, or a guard's open back; about 24 a level. Pickup: a pale gold-leaf
+bloom, distinct from the lane-change ink, and a soft clink, not a chime
+(report item 14). Sprite per RESEARCH 6. They never respawn: nothing to
+grind.
+
+**Detours.** A cluster of five to seven kasu fans off the route; a faint
+glint and a low bronze note within 400 px cue it. The detour is 300 to 800
+px, 15 to 30 s, one piece of the level's kit with a small twist, no guard,
+no `killY`, rejoining the route farther east. At its end, a lit place (a
+wayside shrine, a guild storeroom, a stilt-house porch) and a named kasu.
+Two a level.
+
+**Named kasu.** Six, one per detour: a heavier coin, its own glint and
+deeper note. Pickup floats its name for 1.5 s, writes its card, and lights
+a lamp on the voyage map. Play never pauses.
+
+**History cards.** Six slots, two per level: title, 60 to 90 words, one
+image, RESEARCH tags kept; topics and text from the historian and
+narrative designer (NOTES.md). Only found cards show.
+
+**The voyage map.** One painted map, Thanjavur to Nagapattinam to Kadaram,
+after each interstitial, at ports, and from the title; the cards are read
+here. Each found detour lights a lamp by its stop, as DKC marks its map
+(report). Unfound detours show nothing.
+
+**Ports.** Two scenes of about 45 s: Nagapattinam's market between levels
+1 and 2, and the quay the night before sailing between 2 and 3 (the
+historian may name a better last port). Only here is the purse shown: a
+heap and its number at the point of trade (Decision 26). Each good is
+bought once:
+
+| Port | Good | Price | What it does |
+|---|---|---|---|
+| Market | Ghee for a temple lamp | 12 | A fourth heart in level 2 |
+| Market | A boatman's word | 10 | Level 2's detour entrances get a lamp |
+| Market | Rice and fish for the crew | 6 | A crew line; a pennant on the map |
+| Quay | An offering before sailing | 12 | A fourth heart in level 3 |
+| Quay | A pilot for the Merbok river | 10 | Level 3's detour entrances get a lamp |
+| Quay | Provisions for the crossing | 6 | A crew line; a pennant on the map |
+
+The main trail (about 24) buys two market goods; with the clusters (about
+12) all three. Unspent kasu carry over. No good opens the road, and
+"Onward" always leaves; a player short of a price hears one line and keeps
+his coins. Nothing persists past the run (saving is out of scope).
+
+**How it is learned.** Level 1's first trail leads into rope 1's release;
+its first cluster sits in the first 1,500 px with a hint; the seller's
+first line explains the purse; the first named kasu's float says a card
+is kept.
+
+**The builder adds:** the port scene (two instances: backdrop, three
+goods, purse, buy, Onward; keys, mouse, touch); the voyage map; the card
+viewer; the three pickups and the cluster cue; the fourth heart; detour
+lamps; the run's purse, goods, marks, and cards held in memory.
 
 ## 7. Difficulty curve
 
-| Level | Target time | Width | Guards or fighters | Forced stealth beats | Combat beats | New ideas |
-|---|---|---|---|---|---|---|
-| 1 Thanjavur | 2 min 58 s | 8,800 px | 6 guards | 1 (the pillar wall at 3440) | 0 | Gate leap and forward sight; climbing and pushing |
-| 2 Nagapattinam | 3 min 7 s | 11,600 px | 6 guards | 1 (the deck wall-jump) | 0 | Height hides; bouncing and rigging; the first marked rope |
-| 3 Kadaram | 3 min 24 s | 13,300 px | 6 fighters (4 patrols, 2 gateway sentinels, one a shield-bearer) | 0 | 1 forced, up to 4 optional | The sword and its telegraph; swinging and sliding |
+| Level | Target time | Width | Guards or fighters | Forced stealth beats | Combat beats | Detours | New ideas |
+|---|---|---|---|---|---|---|---|
+| 1 Thanjavur | 2 min 58 s | 8,800 px | 6 guards | 1 (the pillar wall at 3440) | 0 | 2 | Gate leap and forward sight; climbing and pushing; kasu lead off the road |
+| 2 Nagapattinam | 3 min 7 s | 11,600 px | 6 guards | 1 (the deck wall-jump) | 0 | 2 | Height hides; bouncing and rigging; the first marked rope |
+| 3 Kadaram | 3 min 24 s | 13,300 px | 6 fighters (4 patrols, 2 gateway sentinels, one a shield-bearer) | 0 | 1 forced, up to 4 optional | 2 | The sword, the parry, the black seal; swinging and sliding |
 
-**Arithmetic (Decision 12).** Widths, counts, and times come from the
-level files' third drafts; each time is the beat-sheet sum: 178 + 187 +
-204 = 569 s, 9 min 29 s of play, about 10.5 with the cards. Draft 3's
-per-beat estimate (193, 211, 235 s) is the ceiling. Level 1 sits 2 s
-under three minutes; the playtest decides.
+**Arithmetic (Decision 12).** From the level files' beat-sheet sums: 178 +
+187 + 204 = 569 s of play. Detours add up to 60 s a level if taken, ports
+90 s in all: 11 to 14 minutes with the cards; VISION 7's 10 to 12 holds if
+detours are skipped. Parry teaching sits inside S1 and S2's beats.
 
 **The ten-year-old check.** Hardest skill: the pillar wall. Hardest
 timing: a walkway gap. Hardest read: the shield-bearer. Worst case: a
@@ -291,7 +362,8 @@ Six round buttons when `ontouchstart` exists: ◀ ▶ bottom left; ⤒ jump and
 with the sheathed glyph in levels 1 and 2, full in level 3; ▲ ▼ glow at
 a gate or a marked rope and also climb poles and ropes; hints read "tap ▲
 far, ▼ near" on touch. Jump hold works, so bounce height and plank drops
-(▼ plus ⤒) work. Landscape.
+(▼ plus ⤒) work. ⚔ also parries. Port and map screens take taps.
+Landscape.
 
 ## 9. Rules for the level designer
 
@@ -319,12 +391,16 @@ far, ▼ near" on touch. Jump hold works, so bounce height and plank drops
    first use follows section 2a's common rules. No pole or rope inside a
    gate's x-range (↑ would mean two things). `killY` only under a visible
    drop.
-9. **Kasu** in lines of three to five on the better line; never into a
-   cone, never off the route.
+9. **Kasu and detours**: trail kasu in lines of three to five on the
+   better line, never into a cone, about 24 a level. Two detours a level,
+   each a cluster of five to seven leaving the route, 300 to 800 px, no
+   guard, no `killY`, rejoining the route farther east, never mid-chain
+   or mid-fight; level 1's first within its first 1,500 px.
 10. **Level 3**: the gateway is the only place all three lanes close and
     the only place a sentinel stands. Fighters at least 400 px apart in a
     lane, never two awake at once, on ground that does not move (a fixed
     walkway counts) with 300 px of retreat. No fight on a swaying section.
+    S1 gold thrusts only; the black seal from S2 on (section 4).
 
 ## 10. Open questions for Gaurav
 
@@ -339,6 +415,24 @@ never kills.
 
 ## Revision notes
 
+- 2026-10-26, fourth draft, after Gaurav played all three levels, the
+  game-feel report, and Decisions 24 to 26. Budget raised from 3,200 to
+  4,000 words for the parry and kasu systems, per the coordinator.
+  Section 4: parry on the attack key (10-frame window, 14 for S1),
+  good parry 14-frame hitstop, 0.3 s slow beat, 0.9 s stun, counter
+  counts two; mistimed presses guard; gold and black-seal telegraphs (black
+  over indigo for contrast on Kadaram's palette); fighter pattern gains an
+  unguardable overhead cut; shield-bearer opened by a parry or by getting
+  behind; fighter stop 60 px and cut reach 64 per report item 1. Section
+  2a: rope period follows grip length, 2π√(r/2300), with the energy cap
+  (Decision 25). Section 6 rewritten as the kasu loop: trail, detours,
+  named kasu, six cards, voyage map, two ports with six priced goods, no
+  dead end, no score (Decision 26). Table gains a detours column; rule 9
+  covers detours, rule 10 the S1/S2 teaching. Cut for budget: the sword
+  section's detail, by-level combinations, and the old physics attack
+  line, which the report found contradicted section 4. Risks: windows,
+  stun, and prices are untested; the period-by-grip rule changes swing
+  speeds, so LEVEL-1 to LEVEL-3's swing flights need a re-check.
 - 2026-10-26, third draft, ruling pass on the level designer's LEVEL-2
   and LEVEL-3 notes and the builder's rope numbers. Section 7 now takes
   the level files' widths, counts, and beat-sheet times (178, 187, 204 s).

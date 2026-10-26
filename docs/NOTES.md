@@ -4,6 +4,69 @@ Write to the owner of a document you may not edit. Dated headings, newest
 first. The owner replies under the same heading or acts and says so in their
 document's revision notes.
 
+## 2026-10-26, from game-designer (DESIGN.md fourth draft: parry, rope period, kasu)
+
+### To level-designer (`docs/levels/LEVEL-1.md` to `LEVEL-3.md`)
+
+1. **Detours** (DESIGN 6, rule 9): two per level, six in all. Each is a
+   cluster of five to seven kasu fanning off the route, then 300 to 800 px
+   of side space (15 to 30 s), one kit piece with a twist, no guard, no
+   `killY`, rejoining the route farther east, never mid-chain or mid-fight.
+   A lit place and a named kasu at the end. Level 1's first sits in its
+   first 1,500 px with a hint. Name each detour's place for the historian.
+2. **Trail kasu**: about 24 a level, lines of three to five that trace
+   something; delete flat rows on open floor (report item 14).
+3. **Rope period now follows grip length**, 2π√(r/2300) (DESIGN 2a).
+   Swing speed rises below a 233 px grip and falls above it. Please
+   re-check R2 and every swing flight you verified by script.
+4. **Level 3 fighters**: S1 gold thrusts only, with a 0.75 s first
+   telegraph and a parry prompt; S2 adds the black seal every third
+   attack. The shield-bearer needs clear ground behind him for a player
+   who jumps over (at least 200 px).
+
+### To narrative-designer (`SCRIPT.md`)
+
+1. Ports: each seller's opening line (the market one explains the purse),
+   a line for each of the six goods, and a "not enough" line per port.
+   Three crew lines for the crew goods, shown on the next card.
+2. Prompts: S1's parry prompt (gold), S2's seal prompt (black), keyboard
+   and touch versions; the first detour's hint in level 1; the first named
+   kasu's float ("a card is kept," in your words).
+3. History cards: six, 60 to 90 words each, from the historian's topics.
+
+### To art-director (`ASSETS.md`)
+
+1. Port scenes: the Nagapattinam market and the quay at night, each with
+   three sellers or stalls (lamp ghee, boatman or pilot, rice and fish).
+2. Voyage map: one painted map, Thanjavur to Nagapattinam to Kadaram; a
+   lamp mark and a pennant mark to place on it.
+3. Kasu: the trail kasu to RESEARCH 6 (thick, irregular, pale gold, a
+   standing figure, no lettering); six named kasu, each its own coin type
+   from the historian; a pale gold-leaf pickup bloom.
+4. Combat: fighter overhead cut, reel, shield bash; hero parry and guard
+   poses; the gold glint and the black ink seal on a pale halo. No crimson.
+5. Card frame: one frame for six history cards with an image slot.
+
+### To historian (`docs/RESEARCH.md`)
+
+1. **Six card topics**, two per level, each tied to one named kasu and a
+   detour place the level designer names. Suggestions only: Rajaraja's
+   gold kasu (lamp-stand type) and gold gifts to the temple (level 1); the
+   Chudamani vihara at Nagapattinam and the Ayyavole guild (level 2); the
+   Bujang Valley candi and the 1028 Srivijayan embassy to China (level 3).
+2. **The six named kasu:** which coin types a soldier might carry or find
+   in 1010 to 1025, so each can be drawn.
+3. **What a sailor could buy:** check lamp ghee as a temple offering, a
+   boatman or pilot, rice and fish, provisions; replace any that fail.
+4. **The second port:** is Nagapattinam's quay before sailing the least
+   wrong last call, or is there a defensible stop on the way?
+
+### To builder (`index.html`)
+
+Spec is DESIGN.md 2a (rope period by grip length, energy cap), 4 (parry,
+guard, clash, seal, shield-bearer, hitstop), and 6 (screens and state).
+Port scenes slot after the interstitial before levels 2 and 3.
+
 ## 2026-10-26, from game-designer (rulings on the LEVEL-2 and LEVEL-3 notes)
 
 ### To level-designer (`docs/levels/LEVEL-3.md`)
@@ -243,7 +306,9 @@ it is ruled.
    (DECISIONS.md, 3).
 3. Slot 3 (`l3_far.png`): the historian flags Borobudur-style stupas as
    wrong by place and style; see RESEARCH.md section 3.3 for the fix.
-4. Slots 6 to 10 (hero, all five poses): Gaurav ruled (DECISIONS.md, 6)
+4. [Withdrawn 2026-10-26: DECISIONS.md 19 retires decision 6; the hero is
+   cut-out rigged from hero_idle.png, fixes made by editing that one image.]
+   Original request: slots 6 to 10 (hero, all five poses): Gaurav ruled (DECISIONS.md, 6)
    that all five are regenerated to RESEARCH.md sections 4 and 5: a
    straight, broad, double-edged sword with a bronze or brass grip and disc
    pommel in a wooden scabbard; a crimson cotton sash, not silk; bare feet
