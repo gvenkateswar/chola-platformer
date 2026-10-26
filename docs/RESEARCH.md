@@ -244,9 +244,8 @@ monuments are brick and the early city was largely wood on stilts and on
 the river. [documented] Zhao Rugua; Bukit Seguntang (Coedes 1968). The
 `l3_far.png` "stupa sanctuaries in the manner of Borobudur" is wrong by
 place and style: Borobudur is central Java, a different kingdom.
-[documented] Fix: "low square brick shrines on stepped plinths and one
-tall tiered brick tower, plastered white, among stilt houses on a mangrove
-river." The level's "stupa terraces" can stay as a ruined brick plinth. The
+[documented] Fix: "low square brick and laterite shrines on stepped
+plinths among stilt houses on a mangrove river"; no tall towers. The level's "stupa terraces" can stay as a ruined brick plinth. The
 "citadel of the maharaja" is [invented]; a timber palisade with a carved
 gateway (the inscription's own torana) is least wrong and justifies the
 gate prop. The "monsoon jungle," "steep jungle ridges" and "ravine" with a
@@ -529,3 +528,5 @@ origin of several Thanjavur figures, now re-sourced or retagged.
   and 12: each proposed climbing and traversal piece tagged; the
   Sarapallam ramp marked as folklore, cargo nets and crates as invented,
   push blocks and push cargo (DECISIONS.md 14) added.
+- 2026-10-26, 3.3: withdrew my own unsourced "tall tiered brick tower" for
+  Kadaram; Bujang Valley candi were small. Found in the backdrop review.
