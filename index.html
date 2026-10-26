@@ -206,12 +206,31 @@ const TUNE = {
   FIGHT_CUT_REACH:   64,   // report #1 (was 56): cut lands within 64 px past his edge, 77 px center to center
   ATTACK_BUFFER:   0.13,   // report #3: a press during a swing is kept this long (same as the jump buffer)
   CUT_TIME:        0.28,   // §2: one cut lasts 0.28 s
-  CUT_ACTIVE_START:0.07,   // report #4: the hitbox is live only while the blade is forward...
-  CUT_ACTIVE_END:  0.14,   // ...from 0.07 to 0.14 s into the cut (frames 4 to 8)
+  CUT_ACTIVE_START:0.085,  // report #4: the hitbox is live only while the blade is forward (frames 5 to 9
+  CUT_ACTIVE_END:  0.16,   // of this animation's strike and overshoot), so the freeze shows the blade through him
   HITSTOP_HIT:   5/60,     // report #2: both fighters freeze 5 frames on a hit...
   HITSTOP_KILL: 10/60,     // ...9 to 10 on the defeating hit
   HITSTOP_BLOCK: 3/60,     // report #7 (inference): a short freeze when the shield takes the cut
-  HITSTOP_SHAKE:      5,   // report #2 (Sakurai): victim shakes side to side, px, shrinking over the freeze
+  HITSTOP_SHAKE:      5,
+  CUT_KEYS: [            // report #5: the cut as keyframes [u s, front arm, elbow, wrist rad, torso, head, step px]
+    [0.00,  -40, -30,  0.3,  0,  0,   0],   // ready
+    [0.06, -170, -55,  0.9, -8,  4, -30],   // anticipation reaches its wind-up (3 to 6 frames)
+    [0.13,   30,  -5, -0.5, 14, -4, 200],   // the strike: fast, edge first, hip turned, a step in (~14 px)
+    [0.16,   40,   0, -0.65,16, -5, 215],   // overshoot
+    [0.24,   34,  -4, -0.6, 13, -4, 205],   // held follow-through (4 to 6 frames)
+    [0.28,    0, -20,  0.0,  4,  0,  60],   // ease back out
+  ],
+  BLADE_LEN:      520,   // report #5: blade, source px (about 36 px on screen)...
+  BLADE_W:         40,   // ...about 2.8 px wide on screen, with a light edge
+  BLADE_STRETCH:  1.1,   // ...and 10% longer at full extension
+  SMEAR_LIFE:    0.10,   // report #5: the slash trail (one smear) fades over this long
+  KNOCK_DIST:      24,   // report #7: a hit slides him 24 px...
+  KNOCK_TIME:    0.12,   // ...over 0.12 s (no teleport)
+  HURT_POSE:     0.30,   // report #7: his flinch pose lasts this long after the freeze
+  FLASH_TIME:    2/60,   // report #7: a 1 to 2 frame flash on the hit enemy
+  BLOCK_RECOIL:    10,   // report #7: the hero recoils 8 to 12 px off a shield
+  HIT_SHAKE:      3.5,   // report #7: one shared, directional screen kick, 3 to 4 px, only on hits
+  POSE_RATE:     0.35,   // report #6: pose blend per 1/60 s, applied as 1-(1-r)^(dt*60) on any display   // report #2 (Sakurai): victim shakes side to side, px, shrinking over the freeze
   FIGHT_KNOCK:      120,   // builder's number: a thrust staggers the hero back this far (§4 "a stagger")
   FIGHT_KNEEL:      1.5,   // §4: a defeated fighter kneels, raises an open hand, washes out in 1.5 s
   FIGHT_DROP:       420,   // §3, §4: engagement ends at this distance (and leaving the lane or band)
@@ -361,6 +380,8 @@ const sfx = {
   deny : ()=> tone(150, .12, 'square', .06, -30),
   bounce: ()=> tone(220, .14, 'triangle', .1, 240),
   block: ()=> { noiseBurst(.06,.2,700); tone(180,.08,'square',.06,-40); },
+  thud: ()=> { noiseBurst(.10,.32,320); tone(110,.14,'triangle',.16,-40); },       // cloth and body, low
+  clang:()=> { tone(1320,.18,'triangle',.09,-60); tone(1980,.12,'sine',.06,-200); noiseBurst(.04,.15,3200); },   // metal
   click: ()=> { noiseBurst(.035,.18,2200); tone(820,.05,'square',.05,-300); },   // wooden click, blade home
   shout: ()=> { tone(230, .12, 'square', .07, 70); setTimeout(()=>tone(300,.14,'square',.06,-40), 110); },
   hurt : ()=> { noiseBurst(.2,.3); tone(160,.25,'sawtooth',.12,-80); },
@@ -641,12 +662,19 @@ function drawRig(name, x, y, face, pose, h, opts={}){
     }
     const P = R.parts[k];
     ctx.drawImage(P.cv, P.x0, P.y0, P.w, P.h);
-    if(k === 'ffa' && opts.blade){             // level 3: the drawn blade, straight and double-edged
-      const hand = [870, 840];
-      ctx.save(); ctx.translate(hand[0], hand[1]); ctx.rotate(-0.35);
-      ctx.fillStyle = '#D8D4C8'; ctx.beginPath();
-      ctx.moveTo(-9, 0); ctx.lineTo(-7, 430); ctx.lineTo(0, 470); ctx.lineTo(7, 430); ctx.lineTo(9, 0); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#C9A24A'; ctx.fillRect(-28, -10, 56, 14);
+    if(k === 'ffa' && opts.blade){             // level 3: the drawn blade, straight, broad, double-edged
+      const hand = [870, 840], L = TUNE.BLADE_LEN*(pose.bladeLen||1), Wb = TUNE.BLADE_W;
+      ctx.save(); ctx.translate(hand[0], hand[1]); ctx.rotate(-0.35 + (pose.blade||0));   // the wrist turns the blade
+      ctx.fillStyle = '#2A2622'; ctx.beginPath();        // ink outline
+      ctx.moveTo(-Wb/2-6, 0); ctx.lineTo(-Wb/2-4, L*0.9); ctx.lineTo(0, L+8); ctx.lineTo(Wb/2+4, L*0.9); ctx.lineTo(Wb/2+6, 0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#DCD8CC'; ctx.beginPath();
+      ctx.moveTo(-Wb/2, 0); ctx.lineTo(-Wb/2+2, L*0.9); ctx.lineTo(0, L); ctx.lineTo(Wb/2-2, L*0.9); ctx.lineTo(Wb/2, 0); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,250,0.85)'; ctx.lineWidth = 7;   // the light edge
+      ctx.beginPath(); ctx.moveTo(Wb/2-4, 10); ctx.lineTo(Wb/2-5, L*0.88); ctx.stroke();
+      ctx.fillStyle = 'rgba(120,116,106,0.6)'; ctx.fillRect(-4, 20, 8, L*0.8);   // fuller
+      ctx.fillStyle = '#C9A24A'; ctx.fillRect(-44, -14, 88, 22);          // guard
+      ctx.beginPath(); ctx.arc(0, -70, 20, 0, 7); ctx.fill();             // disc pommel
+      ctx.fillStyle = '#6B4E31'; ctx.fillRect(-12, -62, 24, 50);          // grip
       ctx.restore();
     }
     ctx.restore();
@@ -694,6 +722,7 @@ function heroSecondary(st, target, dt){
 // after the blend: the sprung parts, and on a rope the palms pinned to his grip
 function heroPin(st, target){
   const p = player, c = p.climb;
+
   st.ang.sash = st.sashA; st.ang.head = st.headA;
   // hanging: pin the posed palms to his grip, and tilt about them with the rope
   if(c && c.kind === 'rope'){
@@ -708,6 +737,18 @@ function heroPin(st, target){
 
 // ---- hero poses, all from the one cut image. Angles in degrees, + is clockwise in the right-facing
 // image: a hanging limb swings back, an upright part leans forward.
+// the cut's keyframes, eased: a quick lift into the wind-up, a fast strike, then overshoot and hold
+function cutPose(u){
+  const K = TUNE.CUT_KEYS;
+  let i = 0; while(i < K.length-2 && u > K[i+1][0]) i++;
+  const a = K[i], b = K[i+1], t = clamp((u - a[0])/(b[0] - a[0]), 0, 1);
+  const e = i === 0 ? 1 - (1-t)*(1-t)            // anticipation: out of the gate quickly
+          : i === 1 ? t*t*(3 - 2*t)              // strike: short, so smoothstep is all speed
+          : t*t*(3 - 2*t);
+  const L = (j)=>lerp(a[j], b[j], e);
+  const ext = i === 1 ? Math.sin(Math.PI*e) : i === 2 ? 1 - e : 0;   // longest at full extension
+  return {fua:L(1), ffa:L(2), wrist:L(3), torso:L(4), head:L(5), step:L(6), stretch:1 + (TUNE.BLADE_STRETCH-1)*ext};
+}
 function heroPoseTarget(){
   const p = player, A = {};
   const run = (ph, amp)=>{
@@ -773,9 +814,13 @@ function heroPoseTarget(){
   if(p.hurtT > 0.9){                           // the first 0.3 s of a hit: recoil
     A.torso = -14; A.head = -12; A.fua = -60; A.bua = 50; A.ffa = -30; A.bfa = -30; tag = 'hurt';
   }
-  if(p.attackT > 0){                           // level 3 cut: the front arm sweeps
-    const t = 1 - p.attackT/0.28;
-    A.fua = lerp(-150, 15, Math.min(1, t*1.6)); A.ffa = -20; A.torso = (A.torso||0) + 8; tag = 'attack';
+  if(p.attackT > 0){                           // level 3 cut: a real slash (report #5)
+    const c = cutPose(TUNE.CUT_TIME - p.attackT);
+    A.fua = c.fua; A.ffa = c.ffa; A.torso = c.torso; A.head = c.head;
+    A.bua = 30 - 0.15*c.fua; A.bfa = -30;                 // the back arm counters the cut
+    A.fth = -0.14*c.step; A.fsh = 8 + 0.04*c.step; A.bth = 0.11*c.step; A.bsh = 0.06*c.step;   // the step in
+    dy = 0; tag = 'attack';
+    return {ang:A, dy, rot, tag, dx:c.step, blade:c.wrist, bladeLen:c.stretch, cut:true};
   } else if(p.sheathT > 0){                    // hand on the hilt pushes the blade home
     const t = Math.sin(Math.PI * p.sheathT / TUNE.SHEATH_PUSH);
     const e = t*t*(3 - 2*t);                   // ease into the hilt and out again
@@ -1689,7 +1734,8 @@ function fighterHitsHero(g){
 }
 function updateFighter(g, dt){
   const p = player;
-  g.hitT = Math.max(0, g.hitT - dt); g.puffT = Math.max(0, g.puffT - dt);
+  g.hitT = Math.max(0, g.hitT - dt); g.puffT = Math.max(0, g.puffT - dt); g.flashT = Math.max(0, (g.flashT||0) - dt);
+  if(g.kbT > 0){ const d = Math.min(dt, g.kbT); g.x += g.kbV*d; g.kbT -= d; }   // the knockback slide
   if(g.mode === 'kneel'){                    // drops to one knee, raises an open hand, washes out
     g.kneelT -= dt; if(g.kneelT <= 0) g.dead = true;
     return;
@@ -1743,12 +1789,17 @@ function updateFighter(g, dt){
       g.cutBy = p.swingId;
       const fromFront = Math.sign(p.x - g.x) === g.dir;
       if(g.type === 'shield' && fromFront && g.atk !== 'recover'){   // §4: an ink puff on the shield
-        g.puffT = 0.3; sfx.block(); spawnInk(g.x + g.dir*16, g.y - 34, g.lane);
+        // blocked: metal spark and a ring, the hero recoils, no flash on him (report #7)
+        g.puffT = 0.3; sfx.clang(); spawnSparks(g.x + g.dir*16, g.y - 40, g.lane, p.face);
+        p.shoveDir = -p.face; p.shoveLeft = TUNE.BLOCK_RECOIL;
         startHitstop(TUNE.HITSTOP_BLOCK, null);
       } else {
-        g.hp -= 1; g.hitT = 0.25; shake = 6; sfx.kill();
-        spawnBurst(g.x, g.y - 30, INK, 14, g.lane);
-        g.x += Math.sign(g.x - p.x)*24;
+        // a hit: flash, flinch, a knockback slide, an ink streak along the cut and torn cloth (report #7)
+        g.hp -= 1; g.hitT = TUNE.HURT_POSE; g.flashT = TUNE.FLASH_TIME; sfx.thud();
+        kick(p.face);
+        spawnHitInk(g.x - p.face*4, g.y - 40, g.lane, p.face);
+        spawnCloth(g.x, g.y - 36, g.lane, p.face);
+        g.kbV = Math.sign(g.x - p.x)*TUNE.KNOCK_DIST/TUNE.KNOCK_TIME; g.kbT = TUNE.KNOCK_TIME;
         if(g.mode !== 'engage'){ g.mode = 'engage'; g.outBandT = 0; }
         g.atk = 'recover'; g.atkT = TUNE.FIGHT_RECOVER;
         if(g.hp <= 0){ g.mode = 'kneel'; g.kneelT = TUNE.FIGHT_KNEEL; g.atk = null; }
@@ -1925,6 +1976,22 @@ function spawnBurst(x,y,c,n,lane){
     particles.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s-60, t:.5+Math.random()*.4, r:2+Math.random()*3, col:c, grav:300, lane:lane??1});
   }
 }
+// hit: an indigo-black ink streak along the cut with gold flecks; never red (report #7)
+function spawnHitInk(x, y, lane, dir){
+  for(let i=0;i<12;i++){ const s = 120+Math.random()*260, a = (Math.random()-0.5)*0.9;
+    particles.push({x, y:y+Math.random()*16-8, vx:dir*Math.cos(a)*s, vy:Math.sin(a)*s-40, t:.25+Math.random()*.2, r:2+Math.random()*3,
+      col: Math.random() < 0.25 ? '#C9A24A' : (Math.random() < 0.5 ? '#1E1A2A' : '#2B3350'), grav:200, lane, kind:'streak'}); }
+}
+function spawnCloth(x, y, lane, dir){        // scraps of his indigo and ochre cloth
+  for(let i=0;i<5;i++) particles.push({x, y:y+Math.random()*20-10, vx:dir*(60+Math.random()*120), vy:-80-Math.random()*120,
+    t:.6+Math.random()*.3, r:4+Math.random()*3, col: i%2 ? '#4B5E9A' : '#C9A24A', grav:500, lane, kind:'cloth', spin:Math.random()*6});
+}
+function spawnSparks(x, y, lane, dir){       // blocked: pale metal sparks, quick and bright
+  for(let i=0;i<10;i++){ const a = Math.PI + (Math.random()-0.5)*1.6, s = 200+Math.random()*300;
+    particles.push({x, y, vx:Math.cos(a)*s*dir, vy:Math.sin(a)*s, t:.12+Math.random()*.12, r:1.5, col: Math.random()<0.5 ? '#FFF6D8' : '#E8C979', grav:600, lane, kind:'spark'}); }
+}
+let kickX = 0;
+function kick(dir){ kickX = dir*TUNE.HIT_SHAKE; }
 function spawnRing(x,y){
   for(let i=0;i<10;i++){
     const a = i/10*Math.PI*2;
@@ -1939,14 +2006,14 @@ function spawnInk(x,y,lane){                      // plane-shift ink puff
 }
 
 // ============================================================ lane transforms
+let shakeOff = [0, 0];
 function laneBegin(l){
   const s = LANES[l].s;
   ctx.save();
   ctx.translate(W/2, HORIZON);
   ctx.scale(s, s);
   ctx.translate(-W/2 - cam.x - (l === 0 ? (level.drift||0) : 0), -HORIZON - cam.y);   // the quay slides away in the cast-off
-  const shx = (Math.random()*2-1)*shake, shy = (Math.random()*2-1)*shake;
-  ctx.translate(shx, shy);
+  ctx.translate(shakeOff[0], shakeOff[1]);   // one shared offset for every layer (report #7)
 }
 function laneEnd(){ ctx.restore(); }
 
@@ -2530,6 +2597,35 @@ function drawGate(cx, gy){
   ctx.beginPath(); ctx.moveTo(cx, gy-90); ctx.lineTo(cx-7, gy-98); ctx.lineTo(cx+7, gy-98); ctx.closePath(); ctx.fill();
 }
 
+// the slash trail (report #5): an ink-brush crescent swept by the blade over the last ~0.06 s of the
+// strike, computed from the cut's own keyframes so it is a smooth arc at any frame rate
+function bladeAt(u){
+  const p = player, c = cutPose(u), S = 106/HERO_RIG.frameH, hand = [870, 840], a = -0.35 + c.wrist;
+  const ang = {fua:c.fua, ffa:c.ffa, torso:c.torso}, len = TUNE.BLADE_LEN*c.stretch;
+  const loc = (d)=>rigPoint('hero', ang, 'ffa', [hand[0] - Math.sin(a)*d, hand[1] + Math.cos(a)*d]);
+  const w = (q)=>[p.x + p.face*S*(q[0] - HERO_RIG.anchor[0] + c.step), p.y + S*(q[1] - HERO_RIG.anchor[1])];
+  return [w(loc(len)), w(loc(len*0.45))];
+}
+function drawSmear(){
+  const p = player; if(p.attackT <= 0 || levelIdx < TUNE.SWORD_FROM_LEVEL) return;
+  const K = TUNE.CUT_KEYS, u = TUNE.CUT_TIME - p.attackT;
+  const u1 = Math.min(u, K[3][0]), u0 = Math.max(K[1][0], u1 - 0.06);
+  if(u1 - u0 < 0.004) return;
+  const fade = u <= K[3][0] ? 1 : clamp(1 - (u - K[3][0])/TUNE.SMEAR_LIFE, 0, 1);
+  if(fade <= 0) return;
+  const N = 12, tips = [], mids = [];
+  for(let i = 0; i <= N; i++){ const [t, m] = bladeAt(u0 + (u1 - u0)*i/N); tips.push(t); mids.push(m); }
+  ctx.save();
+  // tapered: the tail end of the crescent pinches to the tip path
+  ctx.beginPath(); ctx.moveTo(tips[0][0], tips[0][1]);
+  for(const t of tips) ctx.lineTo(t[0], t[1]);
+  for(let i = N; i >= 0; i--){ const k = i/N; ctx.lineTo(lerp(tips[i][0], mids[i][0], k), lerp(tips[i][1], mids[i][1], k)); }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(22,20,30,'+(0.45*fade)+')'; ctx.fill();               // ink wash
+  ctx.strokeStyle = 'rgba(240,236,222,'+(0.6*fade)+')'; ctx.lineWidth = 2.4;   // the edge's bright streak
+  ctx.beginPath(); ctx.moveTo(tips[0][0], tips[0][1]); for(const t of tips) ctx.lineTo(t[0], t[1]); ctx.stroke();
+  ctx.restore();
+}
 // Srivijayan fighter (DESIGN.md §4): indigo waist cloth, ochre head cloth, a short straight sword; the
 // shield-bearer carries an oblong hide shield. Procedural until rig sheet 39 exists. No red anywhere.
 function drawFighter(g){
@@ -2538,7 +2634,11 @@ function drawFighter(g){
   if(g.mode === 'kneel'){                    // one knee, an open hand raised, washing out to paper
     const a = clamp(g.kneelT/TUNE.FIGHT_KNEEL, 0, 1);
     ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(1, 0.78); ctx.translate(-x, -y);
-  } else if(g.hitT > 0 && (time*30|0)%2) ctx.globalAlpha = 0.6;
+  } else if(g.hitT > 0){                      // flinch: he rocks back from the cut
+    const k = g.hitT/TUNE.HURT_POSE;
+    ctx.translate(x, y); ctx.rotate(-f*0.22*k); ctx.translate(-x, -y);
+  }
+  if(hitstopT > 0 && hitstopVictim === g && hitstopT > hitstopLen - TUNE.FLASH_TIME) ctx.filter = 'brightness(2.6)';   // 1 to 2 frames
   const moving = g.mode === 'patrol' || g.mode === 'return' || (g.mode === 'engage' && g.atk === 'approach');
   drawFigure(x, y, f, g.phase, {skin:'#7A5236', cloth:'#4B5E9A', sashC:'#C9A24A', isGuard:true, noSpear:true,
     vx: moving ? 95 : 0, onGround:true, procedural:true});
@@ -2557,6 +2657,7 @@ function drawFighter(g){
   } else {
     ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(hx, hy+4); ctx.lineTo(hx + f*26, y - 16); ctx.stroke();
   }
+  ctx.filter = 'none';
   if(g.type === 'shield' && g.mode !== 'kneel'){                    // oblong hide shield, held forward
     ctx.fillStyle = '#6B4E31'; ctx.beginPath(); ctx.ellipse(x + f*15, y - 40, 9, 26, 0, 0, 7); ctx.fill();
     ctx.strokeStyle = 'rgba(30,22,14,0.8)'; ctx.lineWidth = 2; ctx.stroke();
@@ -2897,6 +2998,7 @@ function drawLaneContents(l){
       onGround:player.onGround || !!player.climb, hurt:player.hurtT>0, unarmed:!player.hasSword,
       rig:'hero', pose:player.rigS,
     });
+    drawSmear();
     if(player.strokeT > 0){                  // §2 sign 4: the first cut leaves an ink stroke along the blade
       const t = 1 - player.strokeT/TUNE.FIRST_STROKE, f = player.face;
       ctx.strokeStyle = 'rgba(20,14,10,'+(0.85*(1-t*0.6))+')'; ctx.lineWidth = 7*(1-t*0.5); ctx.lineCap = 'round';
@@ -2911,6 +3013,14 @@ function drawLaneContents(l){
   }
   for(const q of particles){
     if((q.lane??1) !== l) continue;
+    if(q.kind === 'streak' || q.kind === 'spark'){
+      ctx.strokeStyle = q.col; ctx.globalAlpha = clamp(q.t*4, 0, 1); ctx.lineWidth = q.kind === 'spark' ? 1.6 : q.r;
+      ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - q.vx*0.04, q.y - q.vy*0.04); ctx.stroke(); ctx.globalAlpha = 1; continue;
+    }
+    if(q.kind === 'cloth'){
+      ctx.save(); ctx.translate(q.x, q.y); ctx.rotate((q.spin||0) + q.t*9); ctx.globalAlpha = clamp(q.t*2, 0, 1);
+      ctx.fillStyle = q.col; ctx.fillRect(-q.r, -q.r*0.4, q.r*2, q.r*0.8); ctx.restore(); continue;
+    }
     ctx.fillStyle = q.col || (q.c + clamp(q.t*2,0,0.8) + ')');
     if(q.col) ctx.globalAlpha = clamp(q.t*1.6, 0, 1);
     ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, 7); ctx.fill();
@@ -2967,6 +3077,9 @@ function drawHUD(){
 }
 
 function render(){
+  // one shared shake per frame, plus a directional kick on hits that decays quickly
+  shakeOff = [(Math.random()*2-1)*shake + kickX, (Math.random()*2-1)*shake];
+  if(frameDt > 0) kickX *= Math.pow(0.0005, frameDt);
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = skyGrad(); ctx.fillRect(0,0,W,H);
   drawSun();
@@ -2987,7 +3100,11 @@ function render(){
   if(state === 'play' && RIGS.hero){
     const tgt = heroPoseTarget(), st = player.rigS || (player.rigS = {ang:{}});
     heroSecondary(st, tgt, frameDt);
-    rigBlend(st, tgt, 0.35);
+    rigBlend(st, tgt, 1 - Math.pow(1 - TUNE.POSE_RATE, frameDt*60));   // report #6: same feel on any display
+    if(tgt.cut){                              // the cut bypasses the blend so its middle stays fast
+      for(const k of ['fua','ffa','torso','head','bua','bfa','fth','fsh','bth','bsh']) st.ang[k] = tgt.ang[k];
+      st.dx = tgt.dx; st.dy = 0; st.blade = tgt.blade; st.bladeLen = tgt.bladeLen;
+    } else { st.blade = 0; st.bladeLen = 1; }
     heroPin(st, tgt);
   }
 
