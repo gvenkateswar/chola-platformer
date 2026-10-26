@@ -80,3 +80,16 @@ note in docs/NOTES.md addressed to Gaurav.
     each get one rig-sheet image, generated once. No character is redrawn
     pose by pose again. Decision 6 (regenerate all five hero poses) is
     withdrawn.
+
+## 2026-10-26, after playtest of level 1 round 3
+
+20. **Ropes swing with momentum.** Hanging on a rope, the player pumps
+    left and right to build the swing; letting go launches him along the
+    swing's direction and speed, so the release point aims the jump. Applies
+    to ropes and vines in every level.
+21. **Climb animation needs work.** The pole climb "looks better but still
+    feels like storyboard pre-viz." Animation polish on climb, hang, and
+    swing is a standing task for the builder, judged by the owner.
+22. **Repaint the three far backdrops through Canva** from the corrected
+    prompts in ASSETS.md (per-place palette, no Borobudur, no non-Chola
+    red), owner approving each before it goes in.
