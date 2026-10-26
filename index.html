@@ -76,6 +76,26 @@
   #mapCanvas{max-width:92vw; height:auto; border-radius:4px;}
   #cardImage{margin:10px auto;}
   .mapInfo{min-height:3em;}
+  /* DECISIONS 27: ports and cards sit on an opaque parchment sheet; the dimmed level shows only at the edges */
+  .sheet{position:relative; display:flex; flex-direction:column; align-items:center; text-align:center;
+    width:min(760px, calc(100vw - 32px)); max-height:calc(100vh - 48px); overflow:auto; box-sizing:border-box;
+    padding:30px 34px 28px; border-radius:6px; color:#3A2A1C;
+    background:#E6D8B6 radial-gradient(ellipse at 50% 35%, #EFE4C8 0%, #E6D8B6 55%, #D6C397 100%);
+    box-shadow:0 0 0 1px #8A6A3A, inset 0 0 0 6px #E6D8B6, inset 0 0 0 7px rgba(122,83,38,.55),
+      inset 0 0 60px rgba(120,84,40,.28), 0 18px 60px rgba(0,0,0,.6);}
+  .sheet .eyebrow{color:#7A5A34;}
+  .sheet h1{color:#5A3A1E; text-shadow:none;}
+  .sheet .rule{margin:18px auto 16px; background:linear-gradient(90deg,transparent,#8A6A3A,transparent);}
+  .sheet .story, .sheet .portMsg{color:#3A2A1C;}
+  .sheet .crew{color:#5A3A1E;}
+  .sheet .purse{color:#7A3F1E;}
+  .sheet .good{background:rgba(255,248,230,.55); border-color:rgba(122,83,38,.45);}
+  .sheet .good .who{color:#7A4E1A;}
+  .sheet .good .line{color:#3A2A1C;}
+  .sheet .good button:disabled{background:#CDBB92; color:#7A6A4A;}
+  .sheet .btn{margin-top:22px;}
+  .sheet .btn2{color:#6B4A22; box-shadow:0 0 0 1px #8A6A3A;}
+  #cardImage{background:#2A2016; border-radius:4px; box-shadow:0 0 0 1px #8A6A3A;}
   .btn:focus-visible{outline:2px solid var(--parchment); outline-offset:3px;}
   #touchui{position:absolute; inset:0; pointer-events:none; z-index:4; display:none;}
   #touchui.on{display:block;}
@@ -135,7 +155,7 @@
   </div>
 
   <!-- DESIGN §6 ports: the only place the purse is shown, at the point of trade -->
-  <div class="overlay" id="portScreen" hidden>
+  <div class="overlay" id="portScreen" hidden><div class="sheet">
     <div class="eyebrow" id="portSetting"></div>
     <h1 style="font-size:clamp(28px,4.5vw,48px)" id="portTitle"></h1>
     <div class="rule"></div>
@@ -145,7 +165,7 @@
     <p class="story portMsg" id="portMsg"></p>
     <button class="btn" id="portBtn">Onward</button>
     <button class="btn btn2" data-map>Voyage map</button>
-  </div>
+  </div></div>
   <!-- DESIGN §6 the voyage map: lamps for found detours, pennants for the crew; the cards are read here -->
   <div class="overlay" id="mapScreen" hidden>
     <canvas id="mapCanvas" width="900" height="520"></canvas>
@@ -153,14 +173,14 @@
     <button class="btn btn2" id="mapRead" hidden>Read the card.</button>
     <button class="btn" id="mapBack">Back</button>
   </div>
-  <div class="overlay" id="cardScreen" hidden>
+  <div class="overlay" id="cardScreen" hidden><div class="sheet">
     <div class="eyebrow">A card kept on the voyage</div>
     <h1 style="font-size:clamp(24px,3.8vw,40px)" id="cardTitle"></h1>
     <canvas id="cardImage" width="220" height="140"></canvas>
     <div class="eyebrow" id="cardKept"></div>
     <p class="story" id="cardText"></p>
     <button class="btn" id="cardBack">Back to the map.</button>
-  </div>
+  </div></div>
 
   <div id="touchui">
     <div class="tbtn" id="tL">◀</div><div class="tbtn" id="tR">▶</div>
@@ -321,6 +341,17 @@ const TUNE = {
   PRICE_HEART:       12,   // §6 ports: ghee / the offering: a fourth heart in the next level
   PRICE_LAMPS:       10,   // §6: the boatman / the pilot: lamps at the next level's detour entrances
   PRICE_CREW:         6,   // §6: rice and fish / provisions: a crew line and a pennant on the map
+  // DECISIONS 27 (playtest: "hard to see"): the parry cue must be the brightest thing on screen
+  TELE_FLARE:        38,   // ruling 27: the gold flare's arm length at full wind-up, px (was ~12: over 3x)
+  TELE_FLARE_MIN:    22,   // ruling 27: its arm length as the wind-up starts
+  TELE_GLOW:         70,   // ruling 27: radius of the additive glow behind the flare / seal halo, px
+  TELE_RING_TIME:   0.35,  // ruling 27: the ring that expands from the fighter as the wind-up starts, s
+  TELE_RING_R:      150,   // ruling 27: the ring's final radius, px
+  TELE_OUTLINE_TIME:0.3,   // ruling 27: the fighter's outline brightens this long at the start of the wind-up, s
+  TELE_SEAL:         24,   // ruling 27: half-size of the black seal, matched to the flare (was 9)
+  // DECISIONS 27: each detour entrance carries a marker (chalk-marked stake, gold thread) seen from 400 px
+  DETOUR_STAKE:     104,   // ruling 27: the stake's height, px
+  DETOUR_SHIMMER:   1.6,   // ruling 27: period of the gold shimmer on a detour's first piece, s
   LAMP_POST:         70,   // §6 the boatman's lamp: post height above the floor where a detour leaves
   CLUSTER_CUE:      400,   // §6: a detour's cluster glints and sounds once within 400 px
   NAMED_FLOAT:      1.5,   // §6: a named kasu's name floats 1.5 s
@@ -1049,6 +1080,7 @@ function buildLevel1(){
       [8600,190,1,'cluster',2],[8680,210,1,'cluster',2],[830,140,1,'named','nk1'],[8760,220,1,'named','nk2'],
     ],
     goal:{x:8900,y:620}, start:[60,620],
+    detours:[{at:[800,1,420], first:['plank',860,300,200]}, {at:[8300,1], first:['rope',8420]}],   // LEVEL-1 D1 the course top, D2 after CP5 (rope R3)
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#7A5F34','#C2954A','#E3BC6A','#F2D894'], sun:{x:.74,y:.28,r:60,c:'#FFF0C4'},
     far:'gopuram', mid:'palms',
@@ -1114,6 +1146,7 @@ function buildLevel2(){
       [5000,60,0,'named','nk3'],[11860,430,0,'named','nk4'],
     ],
     goal:{x:12040,y:430}, start:[40,620], castOffAtGoal:true,
+    detours:[{at:[4400,0], first:['plank',4440,400,120]}, {at:[11360,1], first:['rope',11360]}],   // LEVEL-2 D3 awning, D4 the second marked rope
     detourAt:[[4400,0],[11360,1]],   // LEVEL-2 D3 gallery step 2 (far lane), D4 ship 2's deck: the boatman's lamps
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#2F5E6E','#5E8F94','#A9C4B4','#E6D9A8'], sun:{x:.28,y:.32,r:70,c:'#FFF3D0'},
@@ -1176,6 +1209,7 @@ function buildLevel3(){
       [2060,100,1,'named','nk5'],[11340,320,1,'named','nk6'],
     ],
     goal:{x:13300,y:620}, start:[50,620],
+    detours:[{at:[1560,1], first:['rope',1620]}, {at:[10720,1], first:['plank',10720,620,70]}],   // LEVEL-3 D5 the vine, D6 the first root
     detourAt:[[1560,1],[10720,1]],   // LEVEL-3 D5 bank B1, D6 the wade after slide 2: the pilot's lamps
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#2E3A52','#4F6A6A','#86A08A','#C9D3B0'], sun:{x:.80,y:.22,r:52,c:'#F2F6DA'},
@@ -1288,6 +1322,8 @@ function textObstacles(cxRef, opts={}){
   for(const o of level.ropes){ const s = o.len*Math.sin(TUNE.ROPE_MAX_ANGLE*Math.PI/180);   // the whole swing
     B.push(box(o.x-s-12, o.ay-12, o.x+s+12, o.ay+o.len+8, o.lane)); }
   for(const c of level.checkpoints) B.push(box(c.x-6, c.y-124, c.x+62, c.y, 1));            // kodi on its staff
+  for(const d of level.detours || []){ const y = d.at[2] ?? topAt(d.at[1], d.at[0]);   // ruling 27: the detour stake
+    B.push(box(d.at[0]-10, y-TUNE.DETOUR_STAKE-16, d.at[0]+46, y, d.at[1])); }
   for(const lk of level.links) for(const l of [lk.a, lk.b]) B.push(box(lk.cx-46, lk.gy[l]-112, lk.cx+46, lk.gy[l], l));
   if(level.npc && !opts.noNpc) B.push(box(level.npc.x-26, level.npc.y-112, level.npc.x+26, level.npc.y, 1));
   B.push(box(level.goal.x-8, level.goal.y-205, level.goal.x+100, level.goal.y, 1));
@@ -3053,6 +3089,59 @@ function drawCoin(c){
   ctx.strokeStyle = 'rgba(60,44,28,0.5)'; ctx.lineWidth = 0.9; lumpy(10); ctx.stroke();
   ctx.restore();
 }
+// DECISIONS 27: a detour entrance is marked in the world: a stake with a white chalk mark and a gold
+// thread tied at the top (no coin shape, no crimson), and its first plank or rope shimmers gold
+function drawDetourSign(d){
+  const [x, ln] = d.at, y = d.at[2] ?? topAt(ln, x), H = TUNE.DETOUR_STAKE;
+  if(Math.abs(x - cam.x - W/2) > W) return;
+  const pulse = 0.5 + 0.5*Math.sin(time*2*Math.PI/TUNE.DETOUR_SHIMMER);
+  // the shimmer on the detour's first piece
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  const F = d.first;
+  if(F[0] === 'plank'){
+    const [, fx, fy, fw] = F;
+    ctx.strokeStyle = 'rgba(255,214,120,'+(0.25 + 0.45*pulse)+')'; ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.moveTo(fx + 6, fy - 1); ctx.lineTo(fx + fw - 6, fy - 1); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,240,190,'+(0.4 + 0.5*pulse)+')'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(fx + 6, fy - 1); ctx.lineTo(fx + fw - 6, fy - 1); ctx.stroke();
+    const sx = fx + 10 + ((time*90) % Math.max(1, fw - 20));                  // a glint that runs along it
+    ctx.fillStyle = 'rgba(255,240,190,'+(0.5 + 0.4*pulse)+')'; ctx.beginPath(); ctx.ellipse(sx, fy - 1, 9, 3, 0, 0, 7); ctx.fill();
+  } else {
+    const o = level.ropes.find(r=>r.x === F[1] && r.lane === ln);
+    if(o && o.pts){
+      ctx.strokeStyle = 'rgba(255,214,120,'+(0.2 + 0.4*pulse)+')'; ctx.lineWidth = 9;
+      ctx.beginPath(); o.pts.forEach((q, i)=> i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.stroke();
+      const q = o.pts[Math.floor(((time/TUNE.DETOUR_SHIMMER) % 1)*(o.pts.length-1))];   // a glint sliding down it
+      ctx.fillStyle = 'rgba(255,240,190,0.75)'; ctx.beginPath(); ctx.ellipse(q.x, q.y, 4, 9, 0, 0, 7); ctx.fill();
+    }
+  }
+  ctx.restore();
+  // the stake, leaning a little, its tip cut to a point
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-0.08);
+  ctx.fillStyle = '#2A1C10'; ctx.fillRect(-8, -H-1, 16, H+1);                      // ink outline
+  ctx.fillStyle = '#6A4A2A'; ctx.fillRect(-6, -H, 12, H);
+  ctx.beginPath(); ctx.moveTo(-6, -H); ctx.lineTo(0, -H - 12); ctx.lineTo(6, -H); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fillRect(2, -H, 4, H);
+  ctx.fillStyle = 'rgba(244,240,226,0.9)'; ctx.fillRect(-6, -H*0.7, 12, H*0.48);   // a chalk-whitened band
+  // a white chalk mark: three bars and an arrow-head pointing the way (the detour leaves forward and up)
+  ctx.strokeStyle = '#2A1C10'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';      // charcoal strokes on the chalk
+  ctx.beginPath();
+  for(let i = 0; i < 3; i++){ const yy = -H*0.64 + i*9; ctx.moveTo(-4, yy); ctx.lineTo(4, yy); }
+  ctx.moveTo(-4, -H*0.3); ctx.lineTo(0, -H*0.38); ctx.lineTo(4, -H*0.3);
+  ctx.stroke();
+  // the gold thread, knotted near the top, its loose ends lifting in the wind
+  ctx.strokeStyle = '#F2CC6A'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-7, -H + 8); ctx.lineTo(7, -H + 12); ctx.moveTo(-7, -H + 14); ctx.lineTo(7, -H + 18); ctx.stroke();
+  const wv = Math.sin(time*3.2 + x)*6, wv2 = Math.sin(time*2.6 + x + 1)*7;
+  ctx.lineWidth = 2.6;
+  ctx.beginPath(); ctx.moveTo(7, -H + 12); ctx.quadraticCurveTo(24, -H + 6 + wv, 44, -H + 12 + wv2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(7, -H + 17); ctx.quadraticCurveTo(22, -H + 20 + wv2, 38, -H + 26 + wv); ctx.stroke();
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const tg = ctx.createRadialGradient(10, -H + 14, 0, 10, -H + 14, 28);
+  tg.addColorStop(0, 'rgba(255,210,110,'+(0.18 + 0.22*pulse)+')'); tg.addColorStop(1, 'rgba(255,210,110,0)');
+  ctx.fillStyle = tg; ctx.fillRect(-18, -H - 14, 56, 56); ctx.restore();
+  ctx.restore();
+}
 // the boatman's / pilot's lamp on a post where a side way starts (DESIGN §6)
 function drawDetourLamp(x, y){
   ctx.fillStyle = '#3A2A1C'; ctx.fillRect(x-2, y-TUNE.LAMP_POST, 4, TUNE.LAMP_POST);
@@ -3180,6 +3269,14 @@ function drawSmear(){
   ctx.beginPath(); ctx.moveTo(tips[0][0], tips[0][1]); for(const t of tips) ctx.lineTo(t[0], t[1]); ctx.stroke();
   ctx.restore();
 }
+// DECISIONS 27: a short ring expands from the fighter as a wind-up starts (gold: parry; ink: avoid)
+function teleRing(g, cx, cy, rgb){
+  const el = attackSpec(g.atkKind).tele - g.atkT;
+  if(el < 0 || el > TUNE.TELE_RING_TIME) return;
+  const k = el/TUNE.TELE_RING_TIME, r = 20 + (TUNE.TELE_RING_R - 20)*Math.sqrt(k);
+  ctx.save(); ctx.strokeStyle = 'rgba('+rgb+','+(0.95*(1-k))+')'; ctx.lineWidth = 7*(1-k) + 2;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke(); ctx.restore();
+}
 // Srivijayan fighter (DESIGN.md §4): indigo waist cloth, ochre head cloth, a short straight sword; the
 // shield-bearer carries an oblong hide shield. Procedural until rig sheet 39 exists. No red anywhere.
 function drawFighter(g){
@@ -3195,6 +3292,12 @@ function drawFighter(g){
     ctx.translate(x, y); ctx.rotate(-f*0.22*k); ctx.translate(-x, -y);
   }
   if(hitstopT > 0 && hitstopVictim === g && hitstopT > hitstopLen - TUNE.FLASH_TIME) ctx.filter = 'brightness(2.6)';   // 1 to 2 frames
+  // DECISIONS 27: as a wind-up starts, the fighter's outline brightens (gold for parry, pale for the seal)
+  const teleEl = g.atk === 'raise' ? attackSpec(g.atkKind).tele - g.atkT : -1;
+  if(teleEl >= 0 && teleEl < TUNE.TELE_OUTLINE_TIME && ctx.filter === 'none'){
+    const k = 1 - teleEl/TUNE.TELE_OUTLINE_TIME, col = g.atkKind === 'thrust' ? '255,214,110' : '246,240,220';
+    ctx.filter = 'brightness('+(1 + 0.2*k).toFixed(2)+') drop-shadow(0 0 '+(1.5 + 2.5*k).toFixed(1)+'px rgba('+col+','+(0.5 + 0.5*k).toFixed(2)+'))';
+  }
   const moving = g.mode === 'patrol' || g.mode === 'return' || (g.mode === 'engage' && g.atk === 'approach');
   drawFigure(x, y, f, g.phase, {skin:'#7A5236', cloth:'#4B5E9A', sashC:'#C9A24A', isGuard:true, noSpear:true,
     vx: moving ? 95 : 0, onGround:true, procedural:true});
@@ -3207,19 +3310,33 @@ function drawFighter(g){
     // §4 / DECISIONS 24: the thrust is drawn back with a GOLD glint on the blade: parry this
     tip = [x + f*34, y - 52];
     ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(x - f*8, y-50); ctx.lineTo(tip[0], tip[1]); ctx.stroke();
-    const fl = 1 - g.atkT/attackSpec('thrust').tele, gl = 4 + 7*fl + 2*Math.sin(time*40);
-    ctx.fillStyle = 'rgba(240,206,120,'+(0.55+0.4*fl)+')';
+    ctx.filter = 'none';
+    teleRing(g, x, y - 50, '255,210,110');
+    const fl = 1 - g.atkT/attackSpec('thrust').tele;
+    const gl = lerp(TUNE.TELE_FLARE_MIN, TUNE.TELE_FLARE, fl) + 3*Math.sin(time*40);   // ruling 27: over 3x the old glint
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const gg = ctx.createRadialGradient(tip[0], tip[1], 0, tip[0], tip[1], TUNE.TELE_GLOW);
+    gg.addColorStop(0, 'rgba(255,226,150,'+(0.55+0.35*fl)+')'); gg.addColorStop(0.35, 'rgba(240,190,90,0.25)'); gg.addColorStop(1, 'rgba(240,190,90,0)');
+    ctx.fillStyle = gg; ctx.fillRect(tip[0]-TUNE.TELE_GLOW, tip[1]-TUNE.TELE_GLOW, TUNE.TELE_GLOW*2, TUNE.TELE_GLOW*2);
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,224,140,'+(0.8+0.2*fl)+')';
     ctx.beginPath();                          // a four-point glint
     ctx.moveTo(tip[0], tip[1]-gl*1.8); ctx.lineTo(tip[0]+gl*0.35, tip[1]); ctx.lineTo(tip[0], tip[1]+gl*1.8); ctx.lineTo(tip[0]-gl*0.35, tip[1]); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(tip[0]-gl*1.8, tip[1]); ctx.lineTo(tip[0], tip[1]+gl*0.35); ctx.lineTo(tip[0]+gl*1.8, tip[1]); ctx.lineTo(tip[0], tip[1]-gl*0.35); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FFF6DC'; ctx.beginPath(); ctx.arc(tip[0], tip[1], 4 + 2*fl, 0, 7); ctx.fill();   // white-hot core
   } else if(g.atk === 'raise'){
     // §4: the overhead cut or bash: a BLACK ink seal on a pale halo over his head: avoid this
-    const fl = 1 - g.atkT/attackSpec(g.atkKind).tele, sy = y - 124;
+    // ruling 27: the seal is as large as the gold flare, so the two read as a pair
+    const fl = 1 - g.atkT/attackSpec(g.atkKind).tele, S = TUNE.TELE_SEAL*(0.85 + 0.15*fl), sy = y - 112 - S;
     if(g.atkKind === 'overhead'){ ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(x+f*2, y-80); ctx.lineTo(x - f*10, y-112); ctx.stroke(); }
-    ctx.fillStyle = 'rgba(246,240,220,'+(0.45+0.3*fl)+')'; ctx.beginPath(); ctx.arc(x, sy, 15 + 3*fl, 0, 7); ctx.fill();
-    ctx.fillStyle = 'rgba(14,12,10,'+(0.6+0.4*fl)+')'; ctx.fillRect(x-9, sy-9, 18, 18);
-    ctx.strokeStyle = 'rgba(246,240,220,0.85)'; ctx.lineWidth = 2; ctx.beginPath();
-    ctx.moveTo(x-5, sy-4); ctx.lineTo(x+5, sy-4); ctx.moveTo(x, sy-4); ctx.lineTo(x, sy+6); ctx.moveTo(x-5, sy+6); ctx.lineTo(x+5, sy+6); ctx.stroke();
+    ctx.filter = 'none';
+    teleRing(g, x, sy, '20,16,34');
+    const hg = ctx.createRadialGradient(x, sy, S*0.8, x, sy, S*2.2);
+    hg.addColorStop(0, 'rgba(250,246,230,'+(0.8+0.15*fl)+')'); hg.addColorStop(1, 'rgba(250,246,230,0)');
+    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(x, sy, S*2.2, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(12,10,16,'+(0.85+0.15*fl)+')'; ctx.fillRect(x-S, sy-S, S*2, S*2);
+    ctx.strokeStyle = 'rgba(246,240,220,0.9)'; ctx.lineWidth = S*0.2; const u = S*0.55; ctx.beginPath();
+    ctx.moveTo(x-u, sy-u*0.8); ctx.lineTo(x+u, sy-u*0.8); ctx.moveTo(x, sy-u*0.8); ctx.lineTo(x, sy+u); ctx.moveTo(x-u, sy+u); ctx.lineTo(x+u, sy+u); ctx.stroke();
   } else if(g.atk === 'stun'){                // he reels from the parry; a shield-bearer's shield swings aside
     ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(x - f*4, y-60); ctx.lineTo(x - f*30, y-90); ctx.stroke();
   } else if(g.atk === 'thrust'){
@@ -3524,6 +3641,7 @@ function drawLaneContents(l){
     }
     ctx.textAlign='left';
   }
+  if(level.detours) for(const d of level.detours) if(d.at[1] === l) drawDetourSign(d);
   if(detourLamps() && level.detourAt) for(const [dx, dl] of level.detourAt) if(dl === l) drawDetourLamp(dx, topAt(dl, dx));
   for(const c of level.coins) if(c.lane===l) drawCoin(c);
   for(const g of level.guards){
