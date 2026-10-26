@@ -512,6 +512,86 @@ with a square hole. [plausible] (5) Rajendra silver, struck after his
 Gangaikonda title. [documented] coins.lakdiva.org. (6) A small Malay gold
 coin stamped with a flower. [plausible] No Kedah find verified.
 
+## 6b. Navigation and the voyage map (outside the word limit)
+
+**How sailors found their way, c. 1000–1030.** Nothing Chola describes
+navigation. [documented] silence of the Chola records I have read. The
+best witness is Chinese: the *Song Shi* gives the 1015 Chola envoys'
+voyage to China as legs counted in days, each past named mountains or
+islands. It took 77 days to the first port, 61 to the next, 71 to
+Srivijaya (三佛齊), 18 more, then 20 to Guangzhou. [documented] *Song Shi*
+489, Zhunian entry, read through a summary. The legs add up to 247 days, but
+the text gives 1,150 in all. Waits for the monsoon would explain that.
+[plausible] One early landmark, 娑里西蘭山, contains "Xilan," the usual Chinese
+name for Sri Lanka. [plausible] So the period's own way of describing a
+voyage is a list of headlands and days. Distances and bearings were not
+part of it.
+
+Pilots steered by landmarks, depth soundings, the color of the water and
+birds near the coast. Out at sea they used stars and the timing of the
+monsoon. [plausible] This is standard for the Indian Ocean in all later
+sources. For this period, though, it rests on later texts and on story
+collections such as Buzurg ibn Shahriyar's *Wonders of India* (c. 950),
+which I did not open this session. Measuring a star's height by "fingers"
+(isba) with the kamal, a knotted cord and a small board, is securely
+attested only around 1500. Ibn Majid wrote in the 1490s, and an Indian
+pilot used a kamal for Vasco da Gama in 1498. [documented] Nielbock
+2017, citing Launer 2009. The claim that the kamal goes back to the 9th
+century rests on McGrail (2001), which I have not seen. [plausible] The
+oldest surviving Arabic sailing directions are Ibn Majid's (c. 1490) and
+Sulayman al-Mahri's (early 16th century). [plausible] standard dates, not verified. Ibn Majid names three earlier authors whose
+works are lost. [plausible] No Indian sailing text or sea chart survives
+from anywhere near 1025. The earliest known Indian nautical charts are
+Gujarati, from the 17th century or later. [plausible] Schwartzberg in
+*History of Cartography* 2.1 (1992), not opened. The game should not
+show a Chola sea chart as if one existed.
+
+The monsoon set the calendar. The southwest winds (about May to
+September) carry ships east across the Bay of Bengal, and the northeast
+winds (about December to March) bring them home. [plausible] No source gives
+the 1025 fleet's season.
+
+**Indian ways of picturing space.** Grants define land by its four
+boundaries in turn: east, south, west, north. [plausible] This is the
+usual form of Chola grants; I have not read the Leiden boundary clause
+itself. The Tamil words for the directions are kizhakku (east), terku
+(south), merku (west) and vadakku (north). [documented] standard Tamil.
+Cosmographic maps of Jambudvipa, a ring-shaped world around Mount Meru,
+are old in the texts. The surviving painted ones are mostly Jain and late.
+[plausible] Schwartzberg 1992. Rajendra's birth star was Tiruvadirai
+(Ardra). [documented] Sastri 1955. Palm-leaf manuscripts are long narrow
+strips, written across, bound with a cord through holes. [documented]
+the general form of South Indian manuscripts.
+
+**True geography.** A straight line from Nagapattinam (10.8°N, 79.8°E)
+to the Merbok estuary in Kedah (5.7°N, 100.4°E) is about 2,300 km, or
+1,250 nautical miles. A course by the Nicobars (Manakkavaram in Rajendra's
+list) is barely longer: about 1,600 km to Great Nicobar, then 750 km to
+Kedah. [plausible] my calculation from coordinates. Kedah to Palembang,
+down the Strait of Malacca, is another 1,100 to 1,300 km. [plausible]
+same. At 3 to 5 knots, the open crossing is about 10 to 17 days of
+sailing. [plausible] Sri Lanka lies south of the direct line. Passing it
+fits the 1015 envoys' route but is not needed to reach Kedah.
+[plausible] On a true-scale map, Kedah is about three times as far from
+Nagapattinam as Nagapattinam is from Sri Lanka's northern tip, and
+Thanjavur sits only about 80 km inland. [plausible]
+
+**Options for the map.**
+1. *A true-geography map in the painted style.* Real coastlines of South
+   India, Sri Lanka, the Nicobars, the Malay peninsula and Sumatra, with
+   ink labels and a dotted course. Defensible as modern knowledge drawn
+   in period colors; the map itself is [invented].
+2. *A pilot's strip in an Indian manner.* A palm-leaf strip read left to
+   right. Each stage is a landmark drawn small (the temple tower, the
+   brick tower at Nagapattinam, the Nicobar hills, Gunung Jerai), with
+   the days between written beneath, as in the 1015 Song Shi itinerary.
+   The form of the stages is [documented]. A palm-leaf version is
+   [invented], since no such Indian text survives.
+3. *Both.* A true map as the background, with the strip of landmarks and
+   days along its lower edge. Detour lamps go on the strip. [invented]
+   in format; each half is honest about what it is. My
+   recommendation; the designers decide.
+
 ## 7. Things to avoid
 
 - **Later gopurams and Nayak color.** Soaring painted gopurams, Nayak
@@ -608,3 +688,7 @@ origin of several Thanjavur figures, now re-sourced or retagged.
 - 2026-10-26, added 6a "Cards and port goods" (DECISIONS.md 26): six
   history cards, port goods checked, copper versus gold kasu, six named
   coin types. Outside the 4,500-word limit, as the coordinator allowed.
+- 2026-10-26, added 6b "Navigation and the voyage map" after Gaurav found
+  the map out of scale: the 1015 Song Shi itinerary, the late kamal
+  evidence, no surviving Indian sea chart, true distances, three map
+  options. Outside the word limit.
