@@ -246,6 +246,29 @@ const TUNE = {
   POSE_RATE:     0.35,   // report #6: pose blend per 1/60 s, applied as 1-(1-r)^(dt*60) on any display   // report #2 (Sakurai): victim shakes side to side, px, shrinking over the freeze
   FIGHT_KNOCK:      120,   // builder's number: a thrust staggers the hero back this far (§4 "a stagger")
   FIGHT_KNEEL:      1.5,   // §4: a defeated fighter kneels, raises an open hand, washes out in 1.5 s
+  OVERHEAD_TELE:    0.6,   // §4 draft 4: overhead cut, black ink seal on a pale halo, 0.6 s...
+  OVERHEAD_REACH:    80,   // ...strikes 80 px past his front edge...
+  OVERHEAD_RECOVER: 1.0,   // ...recovers 1.0 s; cannot be guarded
+  BASH_TELE:        0.6,   // §4: the shield-bearer's black-seal bash, 0.6 s...
+  BASH_REACH:        60,   // ...60 px...
+  BASH_RECOVER:     1.0,   // ...recovery 1.0 s (the time to jump over him)
+  TEACH_TELE:      0.75,   // §4: S1's first telegraph runs 0.75 s under the parry prompt
+  PARRY_RANGE:      110,   // builder's number: a parry needs him in front, within this (his thrust reaches 96)
+  PARRY_WIN:     [7, 3],   // §4: the parry window, 10 frames: 7 before the strike to 3 after (report #16)
+  PARRY_WIN_WIDE:[10, 4],  // §4: 14 frames for S1
+  GUARD_EARLY_MAX:   18,   // §4: a press 8 to 18 frames early...
+  GUARD_LATE_MAX:     9,   // ...or 4 to 9 late is a guard: no heart lost, no stun
+  GUARD_SLIDE:       24,   // §4: the guard slides Ilamaran back 24 px
+  PARRY_COOL:       0.4,   // §4: no second parry for 0.4 s, so mashing guards at best
+  PARRY_POSE:      0.25,   // builder's number: the hero's blade-up parry pose
+  HITSTOP_PARRY: 14/60,    // §4: a good parry freezes 14 frames...
+  PARRY_SLOWMO:     0.3,   // ...then 0.3 s at 40 percent speed...
+  SLOWMO_SCALE:     0.4,
+  PARRY_ZOOM:      0.08,   // ...with the camera 8 percent closer
+  PARRY_STUN:       0.9,   // §4: he reels, stunned 0.9 s; a cut in the stun counts two
+  SHIELD_OPEN:      1.2,   // §4: a parried shield swings aside 1.2 s for one counter cut
+  SHIELD_TURN:      0.8,   // §4: the shield-bearer turns 0.8 s after the hero gets behind him
+  CLASH_PUSH:        16,   // §4: a cut into a raised blade pushes both 16 px apart
   FIGHT_DROP:       420,   // §3, §4: engagement ends at this distance (and leaving the lane or band)
   FIRST_STROKE:     0.2,   // §2 sign 4: the first cut sweeps a 0.2 s ink stroke along the blade
   HANG_HANDS:        50,   // hands above feet while hanging (hero is 56 tall, §2)
@@ -290,6 +313,11 @@ const LINE_SHOUT = 'Hoi! You there!';
 const LINE_FIRST_CUT = 'My father\'s blade, out for the first time.';
 const LINE_CHECKPOINT = 'The banner is planted. Breathe.';
 const LINE_NO_GATE = 'No gate here. Find the lamp.';
+const LINE_PARRY_HINT = 'Gold on his blade. Meet it as it comes: J or X.';   // SCRIPT §4, S1's first telegraph
+const LINE_SEAL_HINT = 'Black ink over his head. Don\'t meet it. Step back.'; // SCRIPT §4, S2's first black seal
+const LINE_GUARD = 'Steel on steel. No opening.';                            // SCRIPT §4, mistimed parry that guards
+const LINE_PARRY_GOOD = 'He reels. Cut now.';                                 // SCRIPT §4, good parry, first time
+const hintText = t => IS_TOUCH ? touchLine(t) : t;
 const IS_TOUCH = 'ontouchstart' in window;
 
 function fit(){
@@ -393,6 +421,7 @@ const sfx = {
   deny : ()=> tone(150, .12, 'square', .06, -30),
   bounce: ()=> tone(220, .14, 'triangle', .1, 240),
   block: ()=> { noiseBurst(.06,.2,700); tone(180,.08,'square',.06,-40); },
+  clink:()=> { tone(900,.07,'triangle',.07,-120); noiseBurst(.03,.10,2600); },      // a dull clink: guard, clash
   thud: ()=> { noiseBurst(.10,.32,320); tone(110,.14,'triangle',.16,-40); },       // cloth and body, low
   clang:()=> { tone(1320,.18,'triangle',.09,-60); tone(1980,.12,'sine',.06,-200); noiseBurst(.04,.15,3200); },   // metal
   grab: ()=> { noiseBurst(.12,.16,260); tone(140,.10,'triangle',.07,-30); },        // fiber creak and catch
@@ -844,6 +873,10 @@ function heroPoseTarget(){
   if(p.hurtT > 0.9){                           // the first 0.3 s of a hit: recoil
     A.torso = -14; A.head = -12; A.fua = -60; A.bua = 50; A.ffa = -30; A.bfa = -30; tag = 'hurt';
   }
+  if(p.parryT > 0 && p.attackT <= 0){          // DECISIONS 24: blade up and across to meet the thrust
+    A.fua = -95; A.ffa = -60; A.torso = -4; A.head = 2; A.bua = 20; A.fth = -10; A.bth = 14;
+    return {ang:A, dy:0, rot:0, tag:'parry', dx:-20, blade:1.2, bladeLen:1, cut:true};
+  }
   if(p.attackT > 0){                           // level 3 cut: a real slash (report #5)
     const c = cutPose(TUNE.CUT_TIME - p.attackT);
     A.fua = c.fua; A.ffa = c.ffa; A.torso = c.torso; A.head = c.head;
@@ -999,7 +1032,7 @@ function buildLevel3(){
     ],
     slopes:[[1900,480,2246,680,1,'mud'],[10160,320,10680,620,1,'mud']], wades:[[600,680,900,1],[2246,680,414,1],[3260,680,1200,0],[8000,680,400,1],[10680,680,400,1]], sways:[[3580,480,200,0,0],[3860,480,200,0,1],[7320,480,200,0,0],[8680,420,160,1,0]],
     guards:[
-      [5340,5740,620,1,'fighter'],[6800,7200,620,1,'fighter'],[6760,7160,480,0,'fighter'],
+      [5340,5740,620,1,'fighter',null,{pattern:'gold',teach:'gold'}],[6800,7200,620,1,'fighter',null,{teach:'seal'}],[6760,7160,480,0,'fighter'],
       [9220,9620,420,1,'fighter'],[11750,11750,620,1,'fighter','stand'],[12750,12750,620,1,'shield','stand'],
     ],
     links:[[4260,120,0,1],[5000,120,0,1],[5800,120,0,1],[6500,120,0,1],[7640,120,0,1]],
@@ -1041,6 +1074,7 @@ const player = {
   runPhase:0, shiftFx:0, shiftCool:0,
   stillT:0, sliding:false, shoveDir:0, shoveLeft:0,             // DESIGN.md §3
   leap:null, climb:null, grabCool:0, onPlank:false, dropT:0, pushT:0,   // §2, §2a
+  parryCool:0, parryT:0, guardT:0,
   hasSword:true, sheathT:0, scene:null, fadeT:0, fadeRefill:false, fadeDone:false,
   overV:0, climbPhase:0, pumping:0,
 };
@@ -1097,7 +1131,8 @@ function makeGuard(g){
   const type = g[4] || 'guard', stand = g[5] === 'stand' || g[0] === g[1] && type !== 'guard';
   return {x: stand ? g[0] : g[0]+30, x1:g[0], x2:g[1], y:g[2], lane:g[3]??1, dir: stand ? -1 : 1, dead:false, w:26, h:54,
           phase:hash(g[0])*6, mode: stand ? 'stand' : 'patrol', modeT:0, seeT:0, chaseT:0, outBandT:0,
-          type, stand, hp:TUNE.FIGHT_HP, atk:null, atkT:0, hitT:0, kneelT:0, cutBy:-1, puffT:0};
+          type, stand, hp:TUNE.FIGHT_HP, atk:null, atkT:0, hitT:0, kneelT:0, cutBy:-1, puffT:0,
+          atkIdx:0, atkKind:'thrust', pattern:(g[6]&&g[6].pattern)||'full', teach:(g[6]&&g[6].teach)||null};
 }
 
 function topAt(ln, cx){
@@ -1465,6 +1500,7 @@ function fighterBlock(x0){
   for(const g of level.guards){
     if(g.type === 'guard' || g.dead || g.mode === 'kneel' || g.lane !== p.lane) continue;
     if(!g.stand && Math.abs(p.y - g.y) > TUNE.SIGHT_BAND) continue;
+    if(g.type === 'shield' && p.y < g.y - g.h - 4) continue;   // §4: jump his 54 px height to get behind him
     const side = Math.sign(x0 - g.x) || -g.dir, lim = g.x + side*(g.w/2 + p.w/2);
     if(side < 0 ? p.x > lim : p.x < lim){ p.x = lim; p.vx = 0; }
   }
@@ -1496,6 +1532,8 @@ function movePlayer(dt){
   p.shiftCool = Math.max(0, p.shiftCool - dt);
   p.grabCool = Math.max(0, p.grabCool - dt);
   p.grabJolt = Math.max(0, (p.grabJolt||0) - dt);
+  p.parryCool = Math.max(0, (p.parryCool||0) - dt); p.parryT = Math.max(0, (p.parryT||0) - dt);
+  p.guardT = Math.max(0, (p.guardT||0) - dt);
   p.sheathT = Math.max(0, p.sheathT - dt);
 
   if(level.castOff){ p.vx = 0; jumpQueued = 0; shiftQueued = 0; attackQueued = 0; return; }
@@ -1542,8 +1580,10 @@ function movePlayer(dt){
         floats.push({x:p.x, y:p.y-88, t:1.8, text:line});
       }
     }
+  } else if(attackQueued > 0 && p.attackT <= 0 && tryParry()){
+    attackQueued = 0;                       // DECISIONS 24: the press became a parry or a guard
   } else if(attackQueued > 0 && p.attackT <= 0){
-    attackQueued = 0;
+    attackQueued = 0; p.parryT = 0;         // a cut out of the parry pose: the counter
     p.attackT = TUNE.CUT_TIME; sfx.slash(); level.swordDrawn = true; p.swingId = (p.swingId||0) + 1;
     if(!level.firstCut){                    // §2 sign 4: the first cut sweeps an ink stroke along the blade
       level.firstCut = true; p.strokeT = TUNE.FIRST_STROKE;
@@ -1794,18 +1834,68 @@ function catchHero(g){
   p.shoveDir = g.dir; p.shoveLeft = TUNE.SHOVE_DIST;      // away from him: back the way he came
   p.vy = TUNE.SHOVE_VY; p.onGround = false;
 }
-// ---- Srivijayan fighters (DESIGN.md §4): they patrol and see like a guard, or stand as sentinels facing
-// west; seen, they advance, raise for half a second, thrust, and recover. Two cuts and he kneels.
+// ---- Srivijayan fighters (DESIGN.md §4 draft 4): they patrol and see like a guard, or stand as sentinels;
+// seen, they advance to 60 px and repeat an attack pattern. Each attack: telegraph, strike, recovery.
+//   thrust (gold glint: parry this) | overhead cut (black ink seal: avoid this) | bash (shield-bearer, black seal)
+function attackSpec(kind){
+  return kind === 'overhead' ? {tele:TUNE.OVERHEAD_TELE, reach:TUNE.OVERHEAD_REACH, rec:TUNE.OVERHEAD_RECOVER, gold:false}
+       : kind === 'bash'     ? {tele:TUNE.BASH_TELE, reach:TUNE.BASH_REACH, rec:TUNE.BASH_RECOVER, gold:false}
+       :                       {tele:TUNE.FIGHT_RAISE, reach:TUNE.FIGHT_REACH, rec:TUNE.FIGHT_RECOVER, gold:true};
+}
+function nextAttack(g){
+  const pat = g.type === 'shield' ? ['thrust','bash'] : g.pattern === 'gold' ? ['thrust'] : ['thrust','thrust','overhead'];
+  const kind = pat[(g.atkIdx++) % pat.length], sp = attackSpec(kind);
+  g.atk = 'raise'; g.atkKind = kind; g.atkT = sp.tele;
+  if(g.teach === 'gold' && !g.taught){ g.taught = true; g.atkT = TUNE.TEACH_TELE; floats.push({x:g.x, y:g.y-120, t:2.6, text:hintText(LINE_PARRY_HINT)}); }
+  if(g.teach === 'seal' && kind === 'overhead' && !g.taught){ g.taught = true; floats.push({x:g.x, y:g.y-120, t:2.4, text:LINE_SEAL_HINT}); }
+}
 function fighterHitsHero(g){
   const p = player;
-  if(p.hurtT > 0 || p.fadeT > 0 || (p.leap && p.leap.moving) || p.lane !== g.lane) return;
-  const front = g.x + g.dir*g.w/2, x0 = Math.min(front, front + g.dir*TUNE.FIGHT_REACH), x1 = Math.max(front, front + g.dir*TUNE.FIGHT_REACH);
+  if(p.hurtT > 0 || p.fadeT > 0 || (p.leap && p.leap.moving) || p.lane !== g.lane || g.guardedThis) return;
+  const reach = attackSpec(g.atkKind).reach;
+  const front = g.x + g.dir*g.w/2, x0 = Math.min(front, front + g.dir*reach), x1 = Math.max(front, front + g.dir*reach);
   if(!rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, x0, g.y-g.h, x1-x0, g.h)) return;
+  if(p.guardT > 0 && g.atkKind === 'thrust'){            // §4 mistimed parry: a guard. No heart, no stun.
+    if(!g.guardedThis){ g.guardedThis = true; sfx.clink(); spawnSparks(p.x + p.face*16, p.y - 44, p.lane, -p.face);
+      p.shoveDir = -p.face; p.shoveLeft = TUNE.GUARD_SLIDE; p.guardT = 0;
+      if(!level.guardLineShown){ level.guardLineShown = true; floats.push({x:p.x, y:p.y-96, t:1.6, text:LINE_GUARD}); } }
+    return;
+  }
   p.hp -= 1; p.hurtT = TUNE.INVULN; shake = 9; sfx.hurt();
   spawnBurst(p.x, p.y - 30, INK, 14, p.lane);               // black ink, never red (§4 violence rule)
   if(p.climb){ p.climb = null; p.grabCool = TUNE.GRAB_COOL; }
   if(p.hp <= 0){ deaths++; startBackToBanner(true); return; }
   p.shoveDir = g.dir; p.shoveLeft = TUNE.FIGHT_KNOCK; p.vy = TUNE.SHOVE_VY; p.onGround = false;   // a stagger
+}
+// the press against a gold thrust (DECISIONS 24): parry, guard, or (outside both) just a cut
+function tryParry(){
+  const p = player;
+  if(levelIdx < TUNE.SWORD_FROM_LEVEL || p.parryCool > 0) return false;
+  for(const g of level.guards){
+    if(g.type === 'guard' || g.dead || g.mode !== 'engage' || g.lane !== p.lane || g.atkKind !== 'thrust') continue;
+    if(Math.sign(g.x - p.x) !== p.face || Math.abs(g.x - p.x) > TUNE.PARRY_RANGE) continue;
+    const wide = g.teach === 'gold', W = wide ? TUNE.PARRY_WIN_WIDE : TUNE.PARRY_WIN;   // [frames early, frames late]
+    let early = null, late = null;
+    if(g.atk === 'raise') early = g.atkT*60;
+    else if(g.atk === 'thrust') late = (TUNE.FIGHT_THRUST - g.atkT)*60;
+    else continue;
+    const good = (early !== null && early <= W[0]) || (late !== null && late <= W[1]);
+    const guard = !good && ((early !== null && early <= TUNE.GUARD_EARLY_MAX + (W[0]-TUNE.PARRY_WIN[0])) ||
+                            (late !== null && late <= TUNE.GUARD_LATE_MAX + (W[1]-TUNE.PARRY_WIN[1])));
+    if(!good && !guard) continue;
+    p.parryCool = TUNE.PARRY_COOL; p.parryT = TUNE.PARRY_POSE;
+    if(good){
+      // a good parry: freeze, a gold ink ring, a clang; then a beat of slow motion, the camera closer, he reels
+      sfx.clang(); spawnGoldRing(g.x - g.dir*14, g.y - 48, g.lane);
+      startHitstop(TUNE.HITSTOP_PARRY, g); slowmoT = TUNE.PARRY_SLOWMO;
+      g.atk = 'stun'; g.atkT = g.type === 'shield' ? TUNE.SHIELD_OPEN : TUNE.PARRY_STUN; g.parried = true;
+      if(!level.parryLineShown){ level.parryLineShown = true; floats.push({x:p.x, y:p.y-100, t:1.6, text:LINE_PARRY_GOOD}); }
+    } else {
+      p.guardT = (early !== null ? early/60 : 0) + TUNE.FIGHT_THRUST + 0.05; g.guardedThis = false;
+    }
+    return true;
+  }
+  return false;
 }
 function updateFighter(g, dt){
   const p = player;
@@ -1817,6 +1907,10 @@ function updateFighter(g, dt){
   }
   const dx = p.x - g.x, home = g.stand ? [g.x1, g.x1] : [g.x1, g.x2];
   let speed = 0;
+  // §4: the shield-bearer turns 0.8 s after the hero gets behind him; others face him at once
+  const behind = Math.sign(dx) !== g.dir && Math.abs(dx) > 4;
+  g.turnT = behind ? (g.turnT||0) + dt : 0;
+  const mayTurn = g.type !== 'shield' || g.turnT >= TUNE.SHIELD_TURN;
   if(g.mode === 'engage'){
     g.outBandT = Math.abs(p.y - g.y) > TUNE.SIGHT_BAND ? g.outBandT + dt : 0;
     if(p.lane !== g.lane || Math.abs(dx) > TUNE.FIGHT_DROP || g.outBandT > TUNE.CHASE_OUT_BAND || p.fadeT > 0){
@@ -1824,23 +1918,25 @@ function updateFighter(g, dt){
     } else {
       if(!g.atk || g.atk === 'approach'){
         g.atk = 'approach';
-        if(Math.abs(dx) > 4) g.dir = Math.sign(dx);
+        if(Math.abs(dx) > 4 && mayTurn) g.dir = Math.sign(dx);
         if(Math.abs(dx) > TUNE.FIGHT_STOP){
           speed = TUNE.FIGHT_ADVANCE;
           g.x = clamp(g.x + g.dir*speed*dt, home[0] - TUNE.CHASE_LEASH, home[1] + TUNE.CHASE_LEASH);
-        } else { g.atk = 'raise'; g.atkT = TUNE.FIGHT_RAISE; }
+        } else nextAttack(g);
       } else {
         g.atkT -= dt;
-        if(g.atk === 'raise' && g.atkT <= 0){ g.atk = 'thrust'; g.atkT = TUNE.FIGHT_THRUST; sfx.slash(); }
-        else if(g.atk === 'thrust'){ fighterHitsHero(g); if(g.atkT <= 0){ g.atk = 'recover'; g.atkT = TUNE.FIGHT_RECOVER; } }
-        else if(g.atk === 'recover' && g.atkT <= 0){
-          if(Math.abs(dx) > 4) g.dir = Math.sign(dx);
-          if(Math.abs(dx) > TUNE.FIGHT_STOP + 10) g.atk = 'approach'; else { g.atk = 'raise'; g.atkT = TUNE.FIGHT_RAISE; }
+        if(g.atk === 'raise' && g.atkT <= 0){ g.atk = 'thrust'; g.atkT = TUNE.FIGHT_THRUST; g.guardedThis = false; sfx.slash(); }
+        else if(g.atk === 'thrust'){ fighterHitsHero(g); if(g.atkT <= 0){ g.atk = 'recover'; g.atkT = attackSpec(g.atkKind).rec; } }
+        else if((g.atk === 'recover' || g.atk === 'stun') && g.atkT <= 0){
+          g.parried = false;
+          if(Math.abs(dx) > 4 && mayTurn) g.dir = Math.sign(dx);
+          if(Math.abs(dx) > TUNE.FIGHT_STOP + 10) g.atk = 'approach'; else nextAttack(g);
         }
+        if(behind && mayTurn && g.atk === 'recover') g.dir = Math.sign(dx);
       }
     }
   } else if(g.mode === 'look'){
-    if(g.modeT <= 0) g.mode = g.stand ? 'return' : 'return';
+    if(g.modeT <= 0) g.mode = 'return';
   } else if(g.mode === 'return'){
     const tx = g.stand ? g.x1 : clamp(g.x, g.x1, g.x2);
     if(Math.abs(g.x - tx) < 3){ g.x = tx; g.mode = g.stand ? 'stand' : 'patrol'; if(g.stand) g.dir = -1; }
@@ -1863,20 +1959,27 @@ function updateFighter(g, dt){
     if(ahead > -g.w/2 && ahead - g.w/2 <= TUNE.FIGHT_CUT_REACH){
       g.cutBy = p.swingId;
       const fromFront = Math.sign(p.x - g.x) === g.dir;
-      if(g.type === 'shield' && fromFront && g.atk !== 'recover'){   // §4: an ink puff on the shield
-        // blocked: metal spark and a ring, the hero recoils, no flash on him (report #7)
+      const shieldOpen = g.atk === 'stun';
+      if(g.type === 'shield' && fromFront && !shieldOpen){   // §4: a front cut sparks on the shield
         g.puffT = 0.3; sfx.clang(); spawnSparks(g.x + g.dir*16, g.y - 40, g.lane, p.face);
         p.shoveDir = -p.face; p.shoveLeft = TUNE.BLOCK_RECOIL;
         startHitstop(TUNE.HITSTOP_BLOCK, null);
+      } else if(g.atk === 'raise' && fromFront && g.type !== 'shield'){
+        // §4: a cut into his raised blade clashes: spark, both pushed 16 px apart, no harm
+        sfx.clink(); spawnSparks((g.x + p.x)/2, g.y - 56, g.lane, p.face);
+        p.shoveDir = -p.face; p.shoveLeft = TUNE.CLASH_PUSH;
+        g.kbV = Math.sign(g.x - p.x)*TUNE.CLASH_PUSH/TUNE.KNOCK_TIME; g.kbT = TUNE.KNOCK_TIME;
+        startHitstop(TUNE.HITSTOP_BLOCK, null);
       } else {
         // a hit: flash, flinch, a knockback slide, an ink streak along the cut and torn cloth (report #7)
-        g.hp -= 1; g.hitT = TUNE.HURT_POSE; g.flashT = TUNE.FLASH_TIME; sfx.thud();
+        const counter = shieldOpen && g.parried && g.type !== 'shield';   // §4: the counter counts two
+        g.hp -= counter ? 2 : 1; g.hitT = TUNE.HURT_POSE; g.flashT = TUNE.FLASH_TIME; sfx.thud();
         kick(p.face);
         spawnHitInk(g.x - p.face*4, g.y - 40, g.lane, p.face);
         spawnCloth(g.x, g.y - 36, g.lane, p.face);
         g.kbV = Math.sign(g.x - p.x)*TUNE.KNOCK_DIST/TUNE.KNOCK_TIME; g.kbT = TUNE.KNOCK_TIME;
         if(g.mode !== 'engage'){ g.mode = 'engage'; g.outBandT = 0; }
-        g.atk = 'recover'; g.atkT = TUNE.FIGHT_RECOVER;
+        g.atk = 'recover'; g.atkT = TUNE.FIGHT_RECOVER; g.parried = false;
         if(g.hp <= 0){ g.mode = 'kneel'; g.kneelT = TUNE.FIGHT_KNEEL; g.atk = null; }
         startHitstop(g.hp <= 0 ? TUNE.HITSTOP_KILL : TUNE.HITSTOP_HIT, g);
       }
@@ -1885,7 +1988,7 @@ function updateFighter(g, dt){
 }
 // ---- hitstop (report #2): both fighters, and the world, freeze for a few frames on contact; the
 // victim shakes side to side with a shrinking amplitude, his hurtbox unmoved (only his drawing shakes)
-let hitstopT = 0, hitstopLen = 0, hitstopVictim = null, hitstopFrame = 0;
+let hitstopT = 0, hitstopLen = 0, hitstopVictim = null, hitstopFrame = 0, slowmoT = 0, camZoom = 0;
 function startHitstop(len, victim){ hitstopT = hitstopLen = len; hitstopVictim = victim; }
 function hitstopOffset(g){
   if(hitstopT <= 0 || g !== hitstopVictim) return 0;
@@ -2060,6 +2163,11 @@ function spawnHitInk(x, y, lane, dir){
 function spawnCloth(x, y, lane, dir){        // scraps of his indigo and ochre cloth
   for(let i=0;i<5;i++) particles.push({x, y:y+Math.random()*20-10, vx:dir*(60+Math.random()*120), vy:-80-Math.random()*120,
     t:.6+Math.random()*.3, r:4+Math.random()*3, col: i%2 ? '#4B5E9A' : '#C9A24A', grav:500, lane, kind:'cloth', spin:Math.random()*6});
+}
+function spawnGoldRing(x, y, lane){         // a good parry: a ring of gold ink (DECISIONS 24: gold means parry)
+  particles.push({x, y, vx:0, vy:0, t:.4, r:8, col:'#E8C979', lane, kind:'ringGold', t0:.4});
+  for(let i=0;i<12;i++){ const a = i/12*Math.PI*2;
+    particles.push({x, y, vx:Math.cos(a)*220, vy:Math.sin(a)*220, t:.22, r:2, col:'#E8C979', grav:0, lane, kind:'spark'}); }
 }
 function spawnSparks(x, y, lane, dir){       // blocked: pale metal sparks, quick and bright
   for(let i=0;i<10;i++){ const a = Math.PI + (Math.random()-0.5)*1.6, s = 200+Math.random()*300;
@@ -2738,6 +2846,8 @@ function drawFighter(g){
   if(g.mode === 'kneel'){                    // one knee, an open hand raised, washing out to paper
     const a = clamp(g.kneelT/TUNE.FIGHT_KNEEL, 0, 1);
     ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(1, 0.78); ctx.translate(-x, -y);
+  } else if(g.atk === 'stun'){                // reeling: rocked back, swaying
+    ctx.translate(x, y); ctx.rotate(-f*(0.18 + 0.05*Math.sin(time*14))); ctx.translate(-x, -y);
   } else if(g.hitT > 0){                      // flinch: he rocks back from the cut
     const k = g.hitT/TUNE.HURT_POSE;
     ctx.translate(x, y); ctx.rotate(-f*0.22*k); ctx.translate(-x, -y);
@@ -2751,19 +2861,34 @@ function drawFighter(g){
   let tip;
   if(g.mode === 'kneel'){
     ctx.strokeStyle = '#7A5236'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x+f*4, y-56); ctx.lineTo(x+f*16, y-84); ctx.stroke();
+  } else if(g.atk === 'raise' && g.atkKind === 'thrust'){
+    // §4 / DECISIONS 24: the thrust is drawn back with a GOLD glint on the blade: parry this
+    tip = [x + f*34, y - 52];
+    ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(x - f*8, y-50); ctx.lineTo(tip[0], tip[1]); ctx.stroke();
+    const fl = 1 - g.atkT/attackSpec('thrust').tele, gl = 4 + 7*fl + 2*Math.sin(time*40);
+    ctx.fillStyle = 'rgba(240,206,120,'+(0.55+0.4*fl)+')';
+    ctx.beginPath();                          // a four-point glint
+    ctx.moveTo(tip[0], tip[1]-gl*1.8); ctx.lineTo(tip[0]+gl*0.35, tip[1]); ctx.lineTo(tip[0], tip[1]+gl*1.8); ctx.lineTo(tip[0]-gl*0.35, tip[1]); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(tip[0]-gl*1.8, tip[1]); ctx.lineTo(tip[0], tip[1]+gl*0.35); ctx.lineTo(tip[0]+gl*1.8, tip[1]); ctx.lineTo(tip[0], tip[1]-gl*0.35); ctx.closePath(); ctx.fill();
   } else if(g.atk === 'raise'){
-    tip = [x - f*6, y - 118];
-    ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(x+f*4, y-78); ctx.lineTo(tip[0], tip[1]); ctx.stroke();
-    const fl = 1 - g.atkT/TUNE.FIGHT_RAISE;                        // §4: an ink flare at the tip
-    ctx.fillStyle = 'rgba(20,14,10,'+(0.3+0.6*fl)+')'; ctx.beginPath(); ctx.arc(tip[0], tip[1], 5 + 9*fl, 0, 7); ctx.fill();
+    // §4: the overhead cut or bash: a BLACK ink seal on a pale halo over his head: avoid this
+    const fl = 1 - g.atkT/attackSpec(g.atkKind).tele, sy = y - 124;
+    if(g.atkKind === 'overhead'){ ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(x+f*2, y-80); ctx.lineTo(x - f*10, y-112); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(246,240,220,'+(0.45+0.3*fl)+')'; ctx.beginPath(); ctx.arc(x, sy, 15 + 3*fl, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(14,12,10,'+(0.6+0.4*fl)+')'; ctx.fillRect(x-9, sy-9, 18, 18);
+    ctx.strokeStyle = 'rgba(246,240,220,0.85)'; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(x-5, sy-4); ctx.lineTo(x+5, sy-4); ctx.moveTo(x, sy-4); ctx.lineTo(x, sy+6); ctx.moveTo(x-5, sy+6); ctx.lineTo(x+5, sy+6); ctx.stroke();
+  } else if(g.atk === 'stun'){                // he reels from the parry; a shield-bearer's shield swings aside
+    ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(x - f*4, y-60); ctx.lineTo(x - f*30, y-90); ctx.stroke();
   } else if(g.atk === 'thrust'){
     ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(x + f*(g.w/2 + TUNE.FIGHT_REACH), hy - 4); ctx.stroke();
   } else {
     ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(hx, hy+4); ctx.lineTo(hx + f*26, y - 16); ctx.stroke();
   }
   ctx.filter = 'none';
-  if(g.type === 'shield' && g.mode !== 'kneel'){                    // oblong hide shield, held forward
-    ctx.fillStyle = '#6B4E31'; ctx.beginPath(); ctx.ellipse(x + f*15, y - 40, 9, 26, 0, 0, 7); ctx.fill();
+  if(g.type === 'shield' && g.mode !== 'kneel'){                    // oblong hide shield, held forward (aside when parried)
+    const open = g.atk === 'stun', sxo = open ? x - f*16 : x + f*15, rot = open ? -f*0.7 : 0;
+    ctx.fillStyle = '#6B4E31'; ctx.beginPath(); ctx.ellipse(sxo, y - 40, 9, 26, rot, 0, 7); ctx.fill();
     ctx.strokeStyle = 'rgba(30,22,14,0.8)'; ctx.lineWidth = 2; ctx.stroke();
     if(g.puffT > 0){ ctx.fillStyle = 'rgba(20,14,10,'+(g.puffT*2)+')'; ctx.beginPath(); ctx.arc(x + f*22, y - 44, 10 + (0.3-g.puffT)*30, 0, 7); ctx.fill(); }
   }
@@ -2795,7 +2920,7 @@ function drawFigure(x, y, face, phase, opts){
   const {skin, cloth, sashC, isGuard, attackT=0, vy=0, onGround=true, hurt=false, vx=0, procedural=false, unarmed=false, elder=false} = opts;
   if(opts.rig && RIGS[opts.rig] && !procedural){
     drawRig(opts.rig, x, y, face, opts.pose || {}, 106,
-            {alpha: hurt && (time*20|0)%2 ? 0.45 : 1, blade: attackT > 0, shadow: opts.shadow});
+            {alpha: hurt && (time*20|0)%2 ? 0.45 : 1, blade: attackT > 0 || player.parryT > 0 && opts.rig === 'hero', shadow: opts.shadow});
     return;
   }
   // painted sprite path: pose picked from the asset slots, procedural rig as fallback
@@ -3192,7 +3317,15 @@ function render(){
   // one shared shake per frame, plus a directional kick on hits that decays quickly
   shakeOff = [(Math.random()*2-1)*shake + kickX, (Math.random()*2-1)*shake];
   if(frameDt > 0) kickX *= Math.pow(0.0005, frameDt);
+  ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,W,H);
+  // §4: on a good parry the camera comes 8 percent closer for the slow beat, centered on the hero
+  const zt = (slowmoT > 0 || (hitstopT > 0 && hitstopLen >= TUNE.HITSTOP_PARRY - 1e-6)) ? TUNE.PARRY_ZOOM : 0;
+  camZoom += (zt - camZoom)*0.25;
+  if(camZoom > 0.002 && state === 'play'){
+    const z = 1 + camZoom, cx = player.x - cam.x, cy = player.y - cam.y - 40;
+    ctx.setTransform(z, 0, 0, z, cx*(1-z), cy*(1-z));
+  }
   ctx.fillStyle = skyGrad(); ctx.fillRect(0,0,W,H);
   drawSun();
   drawInkClouds();
@@ -3287,6 +3420,7 @@ function render(){
   }
   ctx.globalAlpha = 1;
 
+  ctx.setTransform(1,0,0,1,0,0);             // the HUD never zooms
   drawHUD();
 
   if(player.fadeT > 0){                       // §3, §5: 1 s ink-wash to the last checkpoint
@@ -3325,6 +3459,7 @@ function frame(now){
     requestAnimationFrame(frame);
     return;
   }
+  if(slowmoT > 0){ slowmoT -= dt; dt *= TUNE.SLOWMO_SCALE; }   // §4: a good parry's beat at 40 percent
   time += dt; frameDt = dt;
   if(state === 'play'){
     movePlayer(dt);
