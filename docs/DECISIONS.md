@@ -93,3 +93,10 @@ note in docs/NOTES.md addressed to Gaurav.
 22. **Repaint the three far backdrops through Canva** from the corrected
     prompts in ASSETS.md (per-place palette, no Borobudur, no non-Chola
     red), owner approving each before it goes in.
+23. **Backdrop picks.** Thanjavur: option (a), bright non-red color.
+    Nagapattinam: option (c), muted earth reds allowed (terracotta, brick,
+    laterite) alongside the one Chola crimson pennant. Kadaram: option (a).
+    Crimson stays reserved for Chola; muted earth reds are allowed in
+    Nagapattinam's architecture and cargo only, and must read as brown-red,
+    never as crimson. Architecture in every backdrop must be right for the
+    period; the historian reviews each before it goes into the game.
