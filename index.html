@@ -398,9 +398,28 @@ const NAMED = {
 };
 // the run (DESIGN §6): the purse, goods bought, named kasu found (cards and map lamps), crew pennants.
 // Never shown during play (VISION pillar 3); the purse appears only at a port's point of trade.
-const RUN = {purse:0, goods:{}, found:{}, firstNamed:false};
-function saveMap(){}   // replaced by the persistence layer below when it is on
-function resetRun(){ RUN.purse = 0; RUN.goods = {}; RUN.firstNamed = false; for(const k in RUN.found) if(!TUNE.KEEP_MAP) delete RUN.found[k]; }
+const RUN = {purse:0, goods:{}, found:{}, pennants:{}, firstNamed:false};
+// Persistence, option (b): the browser remembers the map (found kasu, crew pennants) and so the cards, on
+// this device only. One flag, TUNE.KEEP_MAP, turns it off. Storage can be missing or throw (private
+// windows, files opened from disk in some browsers, blocked site data): then the game simply forgets.
+const MAP_KEY = 'chola-voyage-map-v1';
+function saveMap(){
+  if(!TUNE.KEEP_MAP) return;
+  try{ localStorage.setItem(MAP_KEY, JSON.stringify({found:RUN.found, pennants:RUN.pennants})); }catch(e){}
+}
+function loadMap(){
+  if(!TUNE.KEEP_MAP) return;
+  try{
+    const d = JSON.parse(localStorage.getItem(MAP_KEY) || 'null');
+    if(!d) return;
+    for(const k in d.found || {}) if(NAMED[k] && d.found[k]) RUN.found[k] = true;
+    for(const k in d.pennants || {}) if(d.pennants[k]) RUN.pennants[k] = true;
+  }catch(e){}
+}
+loadMap();
+// a new voyage empties the purse and the goods; the map keeps what was found only when KEEP_MAP is on
+function resetRun(){ RUN.purse = 0; RUN.goods = {}; RUN.firstNamed = false;
+  if(!TUNE.KEEP_MAP){ RUN.found = {}; RUN.pennants = {}; } }
 const IS_TOUCH = 'ontouchstart' in window;
 
 function fit(){
@@ -1440,6 +1459,7 @@ function buyGood(g){
   if(RUN.goods[g.id]) return;
   if(RUN.purse < g.price){ $('portMsg').textContent = PORTS[portKey].short; sfx.deny(); return; }   // he keeps his coins
   RUN.purse -= g.price; RUN.goods[g.id] = true; sfx.coin();
+  if(g.id === 'fish' || g.id === 'provisions') RUN.pennants[g.id] = true;   // a crew pennant on the map
   const b = $('buy_' + g.id); b.textContent = 'Bought'; b.disabled = true; $('portMsg').textContent = '';
   renderPurse(); saveMap();
 }
@@ -1499,7 +1519,7 @@ function drawMap(){
   });
   // crew pennants: the market's and the quay's, both at Nagapattinam
   [['fish', 0], ['provisions', 1]].forEach(([id, j])=>{
-    if(!RUN.goods[id]) return;
+    if(!RUN.pennants[id]) return;
     const st = MAP_STOPS[1], px = st.x + 24 + j*26, py = st.y + 20;
     m.fillStyle = '#3A2A1C'; m.fillRect(px, py, 2, 26);
     m.fillStyle = '#B5342A'; m.beginPath(); m.moveTo(px+2, py); m.lineTo(px+18, py+5); m.lineTo(px+2, py+10); m.closePath(); m.fill();
