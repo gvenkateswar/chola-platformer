@@ -4,6 +4,68 @@ Write to the owner of a document you may not edit. Dated headings, newest
 first. The owner replies under the same heading or acts and says so in their
 document's revision notes.
 
+## 2026-10-25, from level-designer (LEVEL-1.md third draft)
+
+### To game-designer (`docs/DESIGN.md`)
+
+1. **Section 7 cell.** The pillar wall moved from 2480 to 3440 (the
+   teaching run for block, pole and rope comes first). Width 8,800 px, six
+   guards, one forced beat, as your table says. My beat-sheet sum is
+   178 s against your 193.
+2. **Rule 5 and optional step-offs.** Two drops in LEVEL-1 land in a
+   guard's sweep: a miss between the pillars (inside M1's east sweep,
+   which is the forced beat's point) and stepping east off course C in
+   the gateway yard, where the path is the pole and M3 is in plain view.
+   No layout with a guard under a hold can avoid the second. Proposed
+   wording: "No cone within 150 px of a landing the route requires." Until
+   you rule, I read rule 5 that way.
+3. **Isolation cost.** "No guard within 1,280 px" of a first use makes the
+   level 1 opening a 2,800 px guard-free run (about 40 s). Fine for
+   level 1; levels 2 and 3 may want the number for the piece's own lane
+   only, or 900 px.
+4. **Rope D** is reachable by walking off the plank end or a tapped
+   jump; a full jump carries the hero over the anchor. If grab-on-touch
+   covers the whole hitbox, it works as laid out.
+
+### To art-director (`ASSETS.md`)
+
+LEVEL-1.md section 7 requests, by name: older man of the company; hero
+unarmed idle; hero hand on hilt; hero climb (two frames), hang, push;
+scaffold pole; scaffold plank; hauling rope with beam; block on wooden
+rollers (plain, undressed granite, RESEARCH.md 3.4); scaffolding dressing
+for the cloister and an inner gateway (never the vimana).
+
+## 2026-10-25, from game-designer (DESIGN.md third draft)
+
+### To narrative-designer (`SCRIPT.md`)
+
+Decision 10 needs these strings (DESIGN.md section 2, "The sheathed
+sword"). One line each, Ilamaran's world, no hindsight:
+
+1. **Handover line.** The older man of Ilamaran's company gives him the
+   sheathed sword at the start of level 1. It should carry both facts:
+   it is his, and it is not for use at home.
+2. **Inert-press line**, levels 1 and 2. The build's placeholder is "Not
+   here. Not against our own. The sword waits." Keep, replace, or give one
+   per level; it shows on the first press and again after 30 s.
+3. **Title key text** for J/X: says the sword is sheathed until Kadaram,
+   at most six words.
+4. **Draw prompt**, level 3 hint before the first fighter, keyboard and
+   touch versions ("J/X" and "⚔").
+5. **First-draw line** (optional), floated once on the first cut in
+   level 3.
+
+### To level-designer (`docs/levels/LEVEL-1.md` to `LEVEL-3.md`)
+
+DESIGN.md section 2a is the traversal kit; section 7 sets target widths
+of 8,800, 9,400 and 10,000 px and 6, 7 and 6 guards or fighters. Rules
+changed: 3 (a block counts as a way past), 4 (marked ropes are announced
+like gates), 5 (no cone on a rope landing), 8 (each piece's first use
+over safe ground, no pole or rope inside a gate's x-range). The gate
+stand is now a leap with the same 0.5 s and the same catch. Forced
+stealth counts stay 1, 1, 0; poles and pushes are moving, so they do not
+force a stop. Tell me if a layout wants a piece the table lacks.
+
 ## 2026-10-25, from game-designer
 
 ### To level-designer (`docs/levels/LEVEL-1.md` to `LEVEL-3.md`)
@@ -142,7 +204,19 @@ Two proposals from the vision review, neither built, neither required:
    (DECISIONS.md, 1); this would be a closing beat inside level 2, which is
    your call.
 
-Rulings you can rely on are in VISION.md section 3 (table of six decisions).
+Rulings you can rely on are in VISION.md section 3 (table of test decisions).
+
+### To game-designer, traversal kit (DECISIONS.md, 11 to 14)
+
+VISION.md section 3 now rules on the owner's traversal pieces. Ropes,
+awnings, vines, slides, and push blocks are approved within one depth and
+in palette (bounce awnings in umber or indigo-grey, never green, never
+crimson), as long as they open or carry the way east. A push-block puzzle
+that guards an off-route reward is rejected (Pillar 3). A rope or vine that
+crosses between depths is open question 1 in VISION.md section 8; until
+Gaurav rules, depth changes stay at gates. Section 5 lists what we take
+from each owner reference and, for AC Chronicles: India, what we must not
+copy (takedowns, scores; our guards keep their sight cone but catch only a stopped player).
 
 ## 2026-10-25, from builder (branch build/level-1)
 

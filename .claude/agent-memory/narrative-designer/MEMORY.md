@@ -36,6 +36,14 @@ level links lanes 0-1 only: gate lines promise ↑ only; touch variant
 "tap ▲." Mid-level floats replace the checkpoint line at L1 CP2, L2 CP2,
 L3 CP4.
 
+## Sword legibility (DECISIONS 10, third draft)
+Adittan (invented, attested name, no rank) hands Ilamaran his father's
+sword at level 1 start. He cannot name Kadaram in 1010 (no hindsight).
+Push-home floats: L1 "Back in the sheath. Not among our own." L2 "Back in
+the sheath. Not before the far shore." Draw prompt L3 x 200. Title key
+"sword, sheathed until Kadaram." Budget now 1,700. Traversal hints for
+pole, planks, rope, block await level-designer positions.
+
 ## Open
 - Brief said vimana "about sixty-five metres"; RESEARCH.md 3.1 says
   "over sixty metres." Glossary uses the research wording.

@@ -27,6 +27,34 @@
   arrays in the level files if needed (gate footing, patrol 400 to 800,
   checkpoint spacing and cone margin, gap and step limits).
 
+## Third draft of level 1 (2026-10-25), after Gaurav's playtest
+
+- Gaurav played the draft 2 build: "short and too simple, a shell of a
+  larger game"; wants terrain variety (DECISIONS.md 10 to 16). DKC /
+  Jungle Book model: each piece taught where a fall is safe, then beside
+  a guard, then combined at the end.
+- Level 1 now 8,800 px, six guards (M1 F1 M2 F2 M3 N3), CP0 to CP5.
+  Draft 2 stealth core reused, shifted +960 px. Pillar wall now at 3440.
+- New format fields I proposed: K planks `[x,y,w,lane]`, POLE
+  `[x,yTop,yBottom,lane]`, ROPE `[x,anchorY,length,lane]`, BLOCK
+  `[startX,trackEndX,lane]` (80 x 64), npc `[x,y]`. None exist in the
+  engine yet.
+- The 1,280 px first-use isolation rule forces a long guard-free opening;
+  teach all pieces there in one run.
+- Block tricks: a 200 px course against a block's track end gives a 136
+  px step (double jump 203 can skip it). A block pushed to just west of a
+  gate covers the gate leap from the guard's cone (the M2 beat). Track
+  end east face must sit at or before the guard's x1, or the block
+  pushes into him.
+- Rope reach: a full jump from a plank at anchor height sails over the
+  rope; walk-off or tap reaches it. Release jump (vy -700, vx 300) from
+  near the rope top carries about 200 to 260 px.
+- Checker: `top()` must match a platform at the given y, not the lowest
+  one, for raised checkpoints and pole bases. Script kept in scratchpad as
+  l1v3.py; rebuild from the doc block if lost.
+- Fixed a draft 2 miss nobody flagged: M2 had no gate (rule 3).
+- Open with the designer: rule 5 for optional step-offs in view.
+
 ## Second draft (2026-10-25), after levels review and DESIGN.md draft 2
 
 - Catch rule (Decision 8): only a stopped hero is caught (within 40 px
@@ -80,3 +108,6 @@
   gate, the stop-only catch rule, and that levels stay about 2 minutes.
   The design-critic's verdict was "ready with fixes" (eight findings, all
   taken in the second draft).
+- Level 1 draft 2, played as a build: too short and simple; wants
+  traversal variety. Levels 2 and 3 still at draft 2, to be reworked the
+  same way.

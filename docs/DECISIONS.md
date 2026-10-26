@@ -31,3 +31,35 @@ note in docs/NOTES.md addressed to Gaurav.
    (about 2 minutes each, 8 minutes total). Targets in VISION.md section 7
    and DESIGN.md section 7 are corrected to match. Longer levels are
    release two.
+
+## 2026-10-25, after first playtest of level 1
+
+10. **Make the sword legible.** Gaurav could not tell whether he had a
+    sword. The player must know from the start that he carries one, that it
+    stays sheathed among Chola people, and that it will be drawn in
+    Kadaram. Designer chooses how (clearer first-press hint, a moment where
+    the sword is handed over, or both).
+11. **Traversal variety.** Levels are "a shell of a larger game, but that's
+    okay." Each level adds one or two new traversal pieces that fit its
+    setting and are historically defensible. Owner's ideas: slides, bouncy
+    surfaces, vines, trees, ropes on the ship. Candidate kit: Thanjavur
+    scaffolding and ropes, hauling ramps; Nagapattinam market awnings to
+    bounce on, ship rigging and yard; Kadaram mangrove roots, vines, swaying
+    stilt walkways, mud slides.
+12. **Level length.** Supersedes decision 9. Levels grow to fit the new
+    traversal, roughly three to four minutes each.
+13. **Gameplay references from the owner.** Donkey Kong Country,
+    Prince of Persia (the newer games), Assassin's Creed Chronicles: India.
+    VISION.md section 5 is updated to name what we take from each.
+14. **Another reference: The Jungle Book (SNES).** Take from it pushing
+    blocks to reach or open a path, and swinging on vines. Push blocks fit
+    Thanjavur (stone being hauled for the temple) and Nagapattinam (cargo
+    bales and crates). Vine swinging fits Kadaram.
+15. **Ropes and vines may cross depth if marked like a gate** (VISION.md
+    section 8 question 1, option b). A crossing rope or vine carries the
+    same lamp and ink mark as a gate, so every depth crossing is visible.
+    Unmarked ropes and vines stay within one depth.
+16. **Gate crossing is a visible leap.** Changing depth at a gate is shown
+    as a short leap toward or away from the camera, about half a second,
+    replacing the instant switch. The existing 0.5 s gate stand becomes
+    this leap; the catch rule still applies during it.
