@@ -225,6 +225,8 @@ const TUNE = {
   SHEATH_REPEAT:     30,   // §2: the line floats on the first press and after 30 s without one
   HANDOVER_LINE:    1.4,   // §2: seconds per line of the handover (see NOTES.md: three lines, not 2 s)
   FADE_TIME:        1.0,   // §3, §5: ink-wash return to the last checkpoint
+  BACKDROP_ZOOM:   1.08,   // builder's number: far backdrop drawn at 108% of screen width, once (no repeats)
+  BACKDROP_Y:      0.55,   // builder's number: share of the vertical overflow cropped from the top
   GRADE_NEAR_DIM:   -40,   // ASSETS.md "Color grade for the builder": palFront dimPal (was -22)
   GRADE_FAR_LIFT:    16,   // ASSETS.md "Color grade for the builder": palBack dimPal (was +10)
   FALL_DAMAGE:        1,   // §5: a fall costs one heart (was 2)
@@ -496,7 +498,19 @@ function texPat(key){
   return TEXPATS[key];
 }
 // painted backdrop, mirror-tiled so the seam never shows
+// The far backdrop is drawn once, never tiled, so no landmark (the vihara tower, the vimana) can repeat
+// on screen: it is scaled a little past the screen width, and its parallax is slowed so the whole
+// level's camera travel fits inside that margin. Tiling with mirrors stays only as a fallback.
 function drawBackdrop(im, par){
+  const s1 = Math.max(H / im.height, TUNE.BACKDROP_ZOOM * W / im.width);
+  const w1 = im.width*s1, h1 = im.height*s1, room = w1 - W;
+  const travel = Math.max(1, (level.width - W) + (level.castOffAtGoal ? TUNE.CAST_OFF_TIME*TUNE.CAST_OFF_SPEED : 0));
+  if(room > 0){
+    const pe = Math.min(par, room / travel);
+    const x = -clamp((cam.x + (level.drift||0))*pe, 0, room), y = (H - h1)*TUNE.BACKDROP_Y;
+    ctx.drawImage(im, x, y, w1, h1);
+    return;
+  }
   const s = H / im.height, w = im.width*s;
   const start = Math.floor((cam.x*par)/w) - 1;
   const count = Math.ceil(W/w) + 2;

@@ -67,6 +67,21 @@ grep the function names.
   way, fingertips over the strand filled by a traced `patch` polygon.
 - Level 1 cornice now [1700,280,170,24,1] so rope 1 needs a swing.
 
+## Levels 2-3 (branch build/levels-2-3, worktree /home/claude/wt-l23)
+
+- Work only in the worktree the brief names; /home/claude/new-repos/chola-platformer is main.
+- prepTraversal now reads: planks, poles [x,top,bot,lane,kind mast|line|ladder],
+  ropes and vines [x,ay,len,lane,(toLane,landX)] (marked if toLane), blocks,
+  bales [x,lane], awnings [x,y,w,lane], slopes [x1,y1,x2,y2,lane,gangplank|mud],
+  wades [x,y,w,lane], sways [x,y,w,lane,phase]; npc; castOffAtGoal; cpLines {i:text}.
+- Awnings, wades, sways, bales live in level.platforms by kind (bot sees them).
+- p.leap is general: {dur, arc, x0,x1, y0,y1, moving}; marked swings are moving.
+- Fighters: makeGuard type 'fighter'|'shield', 'stand'; updateFighter; drawFighter
+  (procedural); fighterBlock; first-cut stroke p.strokeT; finishLevel().
+- drawBackdrop draws once (no tiling) with slowed parallax.
+- Generate level arrays from the doc's section 9 block by script (parser in session
+  scratchpad: regex over the fenced block), never retype them.
+
 ## Quirks
 
 - CHECK THE BRANCH FIRST, alone, before any pull or merge: twice the

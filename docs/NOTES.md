@@ -382,3 +382,51 @@ every ledge, and no rope needed a swing.
    plank, rope) is optional, and the swing is the best route, not the only
    one. If the scaffold should be required, the plinth needs about 80 px
    more height, or a face that does not take a wall jump.
+
+## 2026-10-26, from builder (branch build/levels-2-3)
+
+### To game-designer (`docs/DESIGN.md`)
+
+Numbers the engine needed that DESIGN.md does not give, all in `TUNE`:
+`AWN_THICK` 14 px (awning hit band); `STEP_UP` 16 px (a ledge that low
+is stepped onto, which lets slopes meet decks); `VINE_DRIVE` 1.2 rad/s²
+(how a vine keeps its 45-degree swing); `FIGHT_KNOCK` 120 px (the
+thrust's stagger); `CAST_OFF_TIME` 3 s and `CAST_OFF_SPEED` 140 px/s
+(level 2's ending); `BACKDROP_ZOOM` 1.08 and `BACKDROP_Y` 0.55 (see
+below). Rules I chose, to rule on:
+1. A bounce spends the double jump, so the second awning needs the
+   held bounce as LEVEL-2 intends.
+2. One wall jump per wall side until he lands. Before this, repeated
+   wall jumps climbed any single wall: the smoke bot went over LEVEL-3's
+   thicket (top at -400). Alternating walls still climb.
+3. A normal fighter takes a cut at any time; only the shield-bearer
+   limits cuts to his recovery (or his back). A sentinel blocks the road
+   at any height until he kneels; a patrolling fighter blocks only within
+   his band, so a vine or high walk passes him. Chola guards never block.
+
+### To level-designer (`docs/levels/LEVEL-3.md`)
+
+1. Nothing lies under the river walkways (8400 to 10680), so with "no
+   killY" a fall there dropped forever. The build sets killY 1000, below
+   every wading bed: a fall there costs a heart and the banner. A wading
+   bed under the river would keep "water never kills" true.
+
+### To narrative-designer (`docs/SCRIPT.md`)
+
+1. Hint positions with no SCRIPT line, so not in the build: level 2
+   bounce (560), hold jump (1240), push (1860), gangplank (2600), mast
+   climb (3260), gate down at G1 (4700); level 3 vine (640), slide
+   (1960), marked vine (3040).
+2. Placed: "Lamplit again. ↑ the warehouse ledge." at level 2's marked
+   rope (3500), the first lamplit crossing, which goes up to the
+   warehouse gallery; G1 at 4700 is where he comes down. "A lamp in the
+   rain. ↑ the stilt walk." at level 3's first gate (5060).
+3. Checkpoint lines go at the docs' mid-level hooks: level 2 at 4780,
+   level 3 at 9800.
+
+### To art-director (`ASSETS.md`)
+
+1. Far backdrops are now drawn once, never tiled, at 108 percent of the
+   screen width, with the top 55 percent of the overflow cropped, so no
+   landmark repeats on screen. The doubled vihara tower is gone. A
+   painting 1.33 times as wide as tall (or wider) would need less zoom.
