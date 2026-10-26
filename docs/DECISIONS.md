@@ -63,3 +63,20 @@ note in docs/NOTES.md addressed to Gaurav.
     as a short leap toward or away from the camera, about half a second,
     replacing the instant switch. The existing 0.5 s gate stand becomes
     this leap; the catch rule still applies during it.
+17. **Palette: each place gets its own natural color; crimson stays the
+    only red and still means Chola.** Thanjavur warm gold with deep umber
+    shadows; Nagapattinam a blue-green sea and sky; Kadaram jungle greens
+    and indigo. Contrast and depth are raised in all three (deeper shadows,
+    stronger light, finished middle layers). Revises VISION.md pillar 1's
+    "one color."
+18. **Animation is improved later by cut-out animation** (painted
+    characters split into parts and moved in code), after the levels are
+    laid out. Not now.
+19. **Cut-out animation from existing art; decision 6 retired.** Characters
+    are animated by splitting one painted image into parts and rotating
+    them in code. The hero is rigged from the existing hero_idle.png now;
+    its sandals and sash are fixed later by editing that one image, never
+    by regenerating poses. The guard, Adittan, and the Srivijayan fighter
+    each get one rig-sheet image, generated once. No character is redrawn
+    pose by pose again. Decision 6 (regenerate all five hero poses) is
+    withdrawn.

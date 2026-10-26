@@ -132,3 +132,22 @@ The critic will not review a third time unless something new appears.
   areas (Super Mario Wiki).
 - Budget after fourth draft: sections 1 to 7 at 900 exactly, section 8 at
   99, revision notes 145.
+
+## Rulings 15 to 18 and the palette revision
+
+- 15: ropes and vines may cross depth if marked like a gate (my section 8
+  recommendation, option b, accepted). Section 8 is "None" again.
+- 16: a gate crossing is a visible half-second leap toward or away from the
+  camera; catch rule applies during it.
+- 17: palette revised after Gaurav found level 1 too drab. Each place gets
+  its own natural color: Thanjavur warm gold with deep umber shadows,
+  Nagapattinam blue-green sea and sky, Kadaram jungle greens and indigo;
+  contrast and depth raised. Crimson stays the only red and means Chola.
+  Pillar 1 is now "The painting has depth, and only Chola is red"; it
+  rejects any other red and flat, low-contrast layers. The old
+  "parchment and umber, one color" stance (Gris-like restraint) was
+  overruled: lesson, Gaurav wants vivid, readable color over austerity.
+- 18: cut-out animation later, after layouts. Not now.
+- The "green awnings" reject is gone; awnings take the place's palette,
+  never red. NOTES.md traversal note updated to match.
+- Budget after this pass: sections 1 to 7 at 898, revision notes 133.

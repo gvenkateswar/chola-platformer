@@ -41,7 +41,7 @@
 
 - Slot numbers are the level-designer's (NOTES.md) and are already cited
   in LEVEL-2/3; never renumber them. Level 3 gate is 35 (DECISIONS.md 7),
-  kasu is 36, next free slot is 37.
+  kasu is 36; rigs took 37 to 39.
 - Prop kinds and sizes: tileable 1024 sq opaque; point props 512x1024 or
   1024 sq or 1536x1024 transparent, bottom edge = ground; poses 1024x1536;
   wide pieces 1536x1024 with the walkable surface stated as a fraction of
@@ -53,6 +53,27 @@
 - No ink effects in enemy sprites; the engine draws flare, splash,
   wash-out. Kneel pose carries no wounds (violence rule).
 - Kasu (36): one face, 256 sq; the engine spins by x-scaling.
+
+## Fourth edition (2026-10-25): palette and rigs
+
+- Owner reaction: Gaurav played level 1 and found the sepia palette too
+  drab. DECISIONS.md 17: a natural color per place, crimson still the only
+  red. He favors legibility and life over restraint in color, unlike his
+  restraint on story and gore.
+- Accents: Thanjavur plantain green #6E8B3D, Nagapattinam turmeric
+  #DDB02F, Kadaram indigo #4B5E9A (also the fighter's cloth; raised from
+  #3F4D73, which vanished against the green mid plane).
+- Haze: fogHaze alpha cut to .16/.14/.20 (from .34/.32/.36); mist .05/.03
+  in levels 1 and 2, .12/.07 in level 3; depth comes from dimPal -40/+16.
+- Brick is umber-ochre in prompts, never red (crimson rule).
+- DECISIONS.md 19: cut-out animation, no per-pose generation ever again.
+  Rig sheets: 37 guard, 38 Adittan, 39 fighter (shield as separate part,
+  1536 square). Hero cut from existing hero_idle.png; part map measured
+  with a 50 px grid overlay in the scratchpad (method worth reusing).
+- hero_idle.png problems: opaque background, red glow behind sash tails,
+  sandals, sash too orange with silk sheen, talwar-like hooked pommel and
+  curved scabbard. Sword is an open question for Gaurav.
+- Next free slot: 40.
 
 ## Critic (design-critic) taste
 
