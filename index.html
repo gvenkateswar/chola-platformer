@@ -89,7 +89,7 @@
       <span><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> move</span>
       <span><kbd>Space</kbd>/<kbd>W</kbd> jump · wall-jump · double-jump</span>
       <span><kbd>↑</kbd><kbd>↓</kbd> cross planes at the lamplit gates</span>
-      <span><kbd>J</kbd>/<kbd>X</kbd> sword · from Chapter III</span>
+      <span><kbd>J</kbd>/<kbd>X</kbd> sword, sheathed until Kadaram</span>
     </div>
     <button class="btn" id="startBtn">Begin the voyage</button>
   </div>
@@ -154,13 +154,46 @@ const TUNE = {
   SHOVE_VY:        -380,   // §3 Caught: vy -380 as built
   SCOLD_TIME:       1.5,   // §3 Caught: guard scolds, then resumes his patrol
   INVULN:           1.2,   // §3 Caught: invulnerable after a catch
-  GATE_STAND:       0.5,   // §2 table, §3: the stand on every gate crossing
+  GATE_LEAP:        0.5,   // §2 "The gate leap", DECISIONS 16: replaces the 0.5 s stand
+  LEAP_ARC:          40,   // §2 "The gate leap": arc height, px
+  POLE_UP:          160,   // §2a scaffold pole: climb up, px/s
+  POLE_DOWN:        220,   // §2a scaffold pole: climb down, px/s
+  ROPE_CLIMB:       130,   // §2a hauling rope: climb, px/s
+  ROPE_SWAY:         12,   // §2a hauling rope: sway at the free end, ±px
+  ROPE_PERIOD:      2.0,   // §2a hauling rope: sway period, s
+  HANG_HANDS:        50,   // hands above feet while hanging (hero is 56 tall, §2)
+  GRAB_X:            16,   // §2a: horizontal reach to touch a pole or rope
+  GRAB_COOL:       0.25,   // no re-grab right after letting go
+  ROPE_SLACK:        24,   // builder tuning, not in DESIGN: the rope's tail can be caught this far below its end
+  CLIMB_JUMP_VY:   -700,   // §2a: jump leaves a pole, rope, or line with vy -700...
+  CLIMB_JUMP_VX:    300,   // §2a: ...and vx 300 away
+  PLANK_THICK:       20,   // §2a scaffold plank: 20 thick, one-way
+  PLANK_DROP:      0.25,   // §2a: ↓ plus jump drops through; planks ignored this long
+  BLOCK_W:           80,   // §2a block on rollers: 80 wide...
+  BLOCK_H:           64,   // §2a: ...64 tall
+  PUSH_DELAY:      0.25,   // §2a: hold into it 0.25 s before it moves
+  PUSH_SPEED:       120,   // §2a: push speed, px/s
+  BLOCK_TURN:        80,   // §2a, §3 "Hiding": a guard turns 80 px off a block's face
+  SHEATH_PUSH:      0.3,   // §2 "The sheathed sword": hand on hilt, no movement lock
+  SHEATH_REPEAT:     30,   // §2: the line floats on the first press and after 30 s without one
+  HANDOVER_LINE:    1.4,   // §2: seconds per line of the handover (see NOTES.md: three lines, not 2 s)
+  FADE_TIME:        1.0,   // §3, §5: ink-wash return to the last checkpoint
   FALL_DAMAGE:        1,   // §5: a fall costs one heart (was 2)
   SWORD_FROM_LEVEL:   2,   // §2, DECISIONS 3: attack inert in levels 1 and 2 (indices 0, 1)
 };
 const INK = '#1E1610';     // §3, §4 violence rule: every hit is black ink, never crimson
 // docs/SCRIPT.md section 4, verbatim
-const LINE_INERT_ATTACK = 'Not here. Not against our own. The sword waits.';
+const SHEATH_LINES = [                       // attack in levels 1 and 2, blade pushed home
+  'Back in the sheath. Not among our own.',
+  'Back in the sheath. Not before the far shore.',
+];
+const HANDOVER_LINES = [                     // section 3, "The handover"
+  ['Adittan', 'Your father carried this. Now you do.'],
+  ['Ilamaran', 'Do I draw it here?'],
+  ['Adittan', 'Never among our own. Draw it where the king\'s son sends you.'],
+];
+const LINE_BACK_TO_BANNER = 'Back to the banner.';
+const touchLine = t => t.replace('↑', 'tap ▲').replace('J or X', 'tap ⚔');   // §4, DESIGN.md §8
 const LINE_SHOUT = 'Hoi! You there!';
 const IS_TOUCH = 'ontouchstart' in window;
 
@@ -214,8 +247,8 @@ function bindTouch(id, fn, k){
 bindTouch('tL', null, 'L'); bindTouch('tR', null, 'R');
 bindTouch('tJ', ()=>{ jumpQueued=0.13; }, 'J');
 bindTouch('tA', ()=>{ attackQueued=true; });
-bindTouch('tU', ()=>{ shiftQueued=-1; });
-bindTouch('tD', ()=>{ shiftQueued=+1; });
+bindTouch('tU', ()=>{ shiftQueued=-1; }, 'U');   // held for climbing (§2a)
+bindTouch('tD', ()=>{ shiftQueued=+1; }, 'F');
 
 // ============================================================ audio
 let AC = null, masterGain = null;
@@ -257,6 +290,7 @@ const sfx = {
   djump: ()=> tone(420, .16, 'square', .06, 300),
   shift: ()=> { noiseBurst(.18,.16,500); tone(520,.2,'sine',.08,-260); },
   deny : ()=> tone(150, .12, 'square', .06, -30),
+  click: ()=> { noiseBurst(.035,.18,2200); tone(820,.05,'square',.05,-300); },   // wooden click, blade home
   shout: ()=> { tone(230, .12, 'square', .07, 70); setTimeout(()=>tone(300,.14,'square',.06,-40), 110); },
   hurt : ()=> { noiseBurst(.2,.3); tone(160,.25,'sawtooth',.12,-80); },
   slash: ()=> noiseBurst(.09,.12,1400),
@@ -401,27 +435,29 @@ function drawBackdrop(im, par){
 // platform: [x, y, w, h, lane, kind]   kind: 'stone'|'wood'|'stall'
 // guard: [x1, x2, groundY, lane] | coin: [x, y, lane]
 function buildLevel1(){
-  // docs/levels/LEVEL-1.md section 9 (builder notes); beats, guards, checkpoints in sections 3 to 6
+  // docs/levels/LEVEL-1.md draft 3, section 9 (builder notes); beats, guards, checkpoints in sections 3 to 6
   const P = [
-    [-80,620,1230,240,1], [300,500,140,26,1], [500,410,140,26,1], [700,330,150,26,1],
-    [1150,330,180,300,1], [1330,620,3230,240,1], [1680,492,1460,26,0],
-    [2480,440,90,290,1], [2660,360,90,370,1], [2840,280,200,450,1],          // the pillars (forced beat)
-    [3700,524,300,24,1], [4460,514,900,30,0], [4800,420,300,24,0],
-    [4460,656,140,64,2], [4720,656,140,64,2], [4980,656,140,64,2], [5240,656,320,64,2],
-    [5200,620,1400,240,1], [5640,540,760,26,0], [6000,524,300,24,1],
+    [-80,620,5640,240,1], [780,420,240,200,1], [1590,280,280,24,1], [2170,300,180,320,1],
+    [2640,492,1460,26,0], [3440,440,90,290,1], [3620,360,90,370,1], [3800,280,200,450,1],   // wall-walk, pillars
+    [4300,656,740,64,2], [5460,514,900,30,0], [5800,420,300,24,0],
+    [5460,656,140,64,2], [5720,656,140,64,2], [5980,656,140,64,2], [6240,656,320,64,2],     // canyon
+    [6200,620,2600,240,1], [7160,420,120,200,1], [6960,656,1100,64,2], [7520,560,200,24,2], // gateway yard
   ];
-  const G = [   // M1, F1, M2, F2, M3 (section 5)
-    [1900,2300,620,1], [2700,3100,492,0], [3550,3950,620,1], [4600,5000,514,0], [5850,6250,620,1],
+  const G = [   // M1, F1, M2, F2, M3, N3 (section 5)
+    [2860,3260,620,1], [3660,4060,492,0], [4480,4880,620,1], [5600,6000,514,0],
+    [7360,7760,620,1], [7400,7800,656,2],
   ];
   const C = [
-    [360,460,1],[560,370,1],[770,290,1],[900,280,1],[1000,240,1],[1100,280,1],
-    [1860,452,0],[1980,452,0],[2100,452,0],[2220,452,0],
-    [2525,400,1],[2705,320,1],[2940,240,1],[3760,484,1],[3850,484,1],[3940,484,1],
-    [4530,610,2],[4790,610,2],[5050,610,2],[4880,380,0],[4980,380,0],[5080,380,0],
-    [5800,500,0],[5950,500,0],[6100,500,0],[6250,500,0],
+    [840,380,1],[900,380,1],[960,380,1],[1180,360,1],[1260,360,1],[1340,360,1],
+    [1560,180,1],[1640,210,1],[1720,240,1],[1960,220,1],[2020,200,1],[2080,220,1],
+    [2820,452,0],[2940,452,0],[3060,452,0],[3180,452,0],[3485,400,1],[3665,320,1],[3900,240,1],
+    [4500,616,2],[4650,616,2],[4800,616,2],[5530,616,2],[5790,616,2],[6050,616,2],
+    [5880,380,0],[5960,380,0],[6040,380,0],[7400,200,1],[7600,200,1],[7800,200,1],[8000,200,1],
+    [7560,520,2],[7620,520,2],[7680,520,2],
   ];
+  const hint = (x,y,t)=>[x, y, t, touchLine(t)];        // docs/SCRIPT.md section 4
   return {
-    name:'Thanjavur', chapter:'Chapter I', width:6600, killY:820,
+    name:'Thanjavur', chapter:'Chapter I', width:8800, killY:820,
     date:'1010 CE · the 25th year of Rajaraja',
     story:'The stone is new. They say the king gave a copper pot plated in gold for '+
           'the top of the tower today, and I believe it; it burns from the far side '+
@@ -429,13 +465,19 @@ function buildLevel1(){
           'general, past the two east gateways. The gate guards want no village boy '+
           'inside the enclosure. I will cross it anyway.',
     platforms:P, coins:C, guards:G,
-    checkpoints:[[1400,620],[2900,280],[4400,620],[5400,620]],
-    links:[[1680,120,0,1],[2340,120,0,1],[4440,120,0,1],[4480,60,1,2],
-           [5260,120,0,1],[5460,60,1,2],[5640,120,0,1],[6300,120,0,1]],
-    // [x, y, text, touch text] from docs/SCRIPT.md section 4
-    hints:[[1740,540,'The lamp marks a gate. ↑ the cloister roof.','The lamp marks a gate. tap ▲ the cloister roof.'],
-           [1000,280,'Jump again in the air. The step is high.']],
-    goal:{x:6460,y:620}, start:[60,620],
+    planks:[[1120,400,260,1], [7240,240,300,1], [7540,240,300,1], [7840,240,300,1]],   // K [x,y,w,lane]
+    poles:[[1100,380,620,1], [7230,220,420,1]],                                          // [x,yTop,yBottom,lane]
+    ropes:[[1490,160,260,1], [8220,200,220,1]],                                          // [x,anchorY,length,lane]
+    blocks:[[460,700,1], [4220,4400,1], [6900,7080,1]],                                  // [startX,trackEndX,lane]
+    npc:[300,620],                                                                       // Adittan, the handover
+    checkpoints:[[1050,620],[2400,620],[3860,280],[5340,620],[6840,620],[8260,620]],
+    links:[[2640,120,0,1],[3300,120,0,1],[4320,60,1,2],[4970,60,1,2],[5420,120,0,1],
+           [5450,60,1,2],[6260,120,0,1],[6430,60,1,2],[6970,60,1,2],[7970,60,1,2]],
+    hints:[hint(500,560,'Stone on rollers. Lean into it to push.'),
+           hint(1100,560,'A scaffold pole. Hold ↑ to climb.'),
+           hint(1900,240,'Jump again in the air. The step is high.'),
+           hint(2700,540,'The lamp marks a gate. ↑ the cloister roof.')],
+    goal:{x:8600,y:620}, start:[60,620],
     sky:['#8A7B5C','#B5A47C','#CDBA8C','#D9C69A'], sun:{x:.74,y:.28,r:60,c:'#F4E7C0'},
     far:'gopuram', mid:'palms',
     pal:mkPal('#C0A171','#997253','#6B4E33'),
@@ -553,8 +595,29 @@ const player = {
   face:1, onGround:false, wallDir:0, jumps:0, coyote:0,
   attackT:0, hurtT:0, hp:3, checkpoint:[0,0],
   runPhase:0, shiftFx:0, shiftCool:0,
-  standT:0, stillT:0, sliding:false, shoveDir:0, shoveLeft:0,   // DESIGN.md §2, §3
+  stillT:0, sliding:false, shoveDir:0, shoveLeft:0,             // DESIGN.md §3
+  leap:null, climb:null, grabCool:0, onPlank:false, dropT:0, pushT:0,   // §2, §2a
+  hasSword:true, sheathT:0, scene:null, fadeT:0, fadeRefill:false, fadeDone:false,
 };
+
+// level fields beyond platforms: planks, poles, ropes, blocks, npc (DESIGN.md §2a, §2)
+function prepTraversal(L){
+  L.planks = L.planks || []; L.poles = L.poles || []; L.ropes = L.ropes || []; L.blocks = L.blocks || [];
+  // planks and blocks live in platforms (kind 'plank' / 'block') so every reader of the level sees them
+  for(const [x,y,w,lane] of L.planks) L.platforms.push([x, y, w, TUNE.PLANK_THICK, lane, 'plank']);
+  L.poles = L.poles.map(([x,top,bot,lane])=>({x, top, bot, lane}));
+  L.ropes = L.ropes.map(([x,ay,len,lane])=>({x, ay, len, lane}));
+  L.blocks = L.blocks.map(([x0,x1,lane])=>{
+    let gy = null;
+    for(const [bx,by,bw,,ln,kind] of L.platforms)
+      if(ln === lane && kind !== 'plank' && x0+TUNE.BLOCK_W/2 >= bx && x0+TUNE.BLOCK_W/2 <= bx+bw && (gy === null || by < gy)) gy = by;
+    const p = [x0, (gy ?? 620) - TUNE.BLOCK_H, TUNE.BLOCK_W, TUNE.BLOCK_H, lane, 'block'];
+    L.platforms.push(p);
+    return {p, x0:Math.min(x0,x1), x1:Math.max(x0,x1), lane};
+  });
+  if(L.npc && Array.isArray(L.npc)) L.npc = {x:L.npc[0], y:L.npc[1], given:false};
+  L.sheathLineAt = null; L.swordDrawn = false;
+}
 
 // guard: patrols, sees forward, chases, scolds (DESIGN.md §3)
 function makeGuard(g){
@@ -569,6 +632,37 @@ function topAt(ln, cx){
     if(cx >= bx && cx <= bx+bw && (best === null || by > best)) best = by;
   }
   return best ?? 620;
+}
+// hints never sit on a coin or a platform edge: nudge the text up (or down) until it is clear
+function placeHints(){
+  ctx.font = '19px "Marcellus SC", Marcellus, serif';
+  level.hintsPlaced = level.hints.map(([hx,hy,txt,touchTxt])=>{
+    const text = IS_TOUCH && touchTxt ? touchTxt : txt;
+    const hw = ctx.measureText(text).width/2 + 8;
+    // project another lane's world point into main-lane space, camera centered on the hint
+    const proj = (x,y,l)=>{ const s = LANES[l].s; return [(x-hx)*s + hx, (y-HORIZON)*s + HORIZON]; };
+    // a candidate box is clear of every coin and every platform rectangle, in any lane
+    const clear = (cx, base)=>{
+      const l = cx-hw, r = cx+hw, top = base - 20, bot = base + 30;   // text plus the arrow mark under it
+      for(const c of level.coins){
+        const [x,y] = proj(c.x, c.y, c.lane), rr = 14*LANES[c.lane].s;
+        if(x+rr > l && x-rr < r && y+rr > top && y-rr < bot) return false;
+      }
+      for(const [bx,by,bw,bh,ln] of level.platforms){
+        const [x0,y0] = proj(bx, by-12, ln), [x1,y1] = proj(bx+bw+18, by+bh, ln);
+        if(x1 > l && x0 < r && y1 > top && y0 < bot) return false;
+      }
+      return true;
+    };
+    let cx = hx, base = hy - 46, found = false;
+    for(const dx of [0, 120, -120, 240, -240]){
+      for(const dy of [0,-30,-60,30,-90,60,-120,-150]){
+        if(clear(hx+dx, hy-46+dy)){ cx = hx+dx; base = hy-46+dy; found = true; break; }
+      }
+      if(found) break;
+    }
+    return {x:cx, base, text};
+  });
 }
 function prepLinks(){
   level.links = (level.links||[]).map(k=>{
@@ -590,8 +684,13 @@ function loadLevel(i){
   level.coins = level.coins.map(c=>({x:c[0], y:c[1], lane:c[2]??1, taken:false, spin:hash(c[0])*6}));
   level.guards = level.guards.map(makeGuard);
   level.checkpoints = level.checkpoints.map(c=>({x:c[0], y:c[1], lit:false}));
-  level.inertShown = false;
-  player.standT = 0; player.stillT = 0; player.shoveLeft = 0; player.sliding = false;
+  prepTraversal(level);
+  placeHints();
+  player.stillT = 0; player.shoveLeft = 0; player.sliding = false;
+  player.leap = null; player.climb = null; player.scene = null; player.fadeT = 0;
+  player.pushT = 0; player.dropT = 0; player.sheathT = 0;
+  player.hasSword = !(level.npc && !level.npc.given);
+  $('tA').style.opacity = levelIdx < TUNE.SWORD_FROM_LEVEL ? '0.35' : '1';   // §2: ⚔ dimmed, never hidden
   totalCoins += level.coins.length;
   particles = []; floats = [];
   // perched birds on middle-lane platform tops
@@ -640,45 +739,172 @@ function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh){
 }
 function lanePlatforms(l){ return level.platforms.filter(p=>p[4]===l); }
 
+function linkAtPlayer(target){
+  const p = player;
+  return level.links.find(k=> p.x >= k.x-14 && p.x <= k.x+k.w+14 &&
+    ((k.a===p.lane && k.b===target) || (k.b===p.lane && k.a===target)));
+}
 function tryShift(dir){
   const p = player;
   const target = p.lane + dir;
   if(target < 0 || target > 2 || p.shiftCool > 0) return;
   // crossings exist only at the gates
-  const lk = level.links.find(k=> p.x >= k.x-14 && p.x <= k.x+k.w+14 &&
-    ((k.a===p.lane && k.b===target) || (k.b===p.lane && k.a===target)));
+  const lk = linkAtPlayer(target);
   if(!lk){
+    if(p.onPlank) return;                   // ↓ on a plank is the drop-through chord, not a crossing
     sfx.deny(); p.shiftCool = 0.35;
     floats.push({x:p.x, y:p.y-88, t:1.1, text:'no crossing here — seek a lamplit gate'});
     return;
   }
   // needs footing in the target lane near the player
   let best = null;
-  for(const [bx,by,bw,bh,ln] of level.platforms){
-    if(ln !== target) continue;
+  for(const [bx,by,bw,bh,ln,kind] of level.platforms){
+    if(ln !== target || kind === 'plank') continue;
     if(p.x > bx-6 && p.x < bx+bw+6 && by > p.y-150 && by < p.y+250){
       if(best === null || Math.abs(by-p.y) < Math.abs(best-p.y)) best = by;
     }
   }
   if(best === null){ sfx.deny(); p.shiftCool = 0.2; return; }
+  // §2 "The gate leap" (DECISIONS 16): the lane changes at takeoff, then a 0.5 s arc
   spawnInk(p.x, p.y-28, p.lane);
-  p.lane = target; p.shiftFx = 0.22; p.shiftCool = 0.3;
-  p.standT = TUNE.GATE_STAND; p.vx = 0;     // §3: the stand while the ink blooms; new lane's sight applies at once
-  if(best <= p.y){ p.y = best; p.vy = 0; p.onGround = true; p.jumps = 0; }
-  spawnInk(p.x, p.y-28, p.lane);
+  p.leap = {t:0, from:p.lane, to:target, y0:p.y, y1:best};
+  p.lane = target; p.shiftFx = 0; p.shiftCool = 0.3;
+  p.vx = 0; p.vy = 0; p.onGround = false; p.climb = null;
   sfx.shift(); shake = 3;
+}
+
+// ---- traversal kit (DESIGN.md §2a)
+function ropeX(r, y){                       // the rope sways more toward its free end
+  const k = clamp((y - r.ay)/r.len, 0, 1);
+  return r.x + TUNE.ROPE_SWAY*Math.sin(time*2*Math.PI/TUNE.ROPE_PERIOD)*k;
+}
+// feet range while holding a pole or rope
+function climbRange(c){
+  return c.kind === 'pole' ? [c.o.top, c.o.bot]
+                           : [c.o.ay + TUNE.HANG_HANDS + 10, c.o.ay + c.o.len + TUNE.HANG_HANDS];
+}
+function findClimbable(){
+  const p = player;
+  for(const o of level.poles){
+    if(o.lane !== p.lane) continue;
+    if(Math.abs(p.x - o.x) < TUNE.GRAB_X && p.y > o.top && p.y - p.h < o.bot) return {kind:'pole', o};
+  }
+  for(const o of level.ropes){
+    if(o.lane !== p.lane) continue;
+    const hy = p.y - TUNE.HANG_HANDS;
+    if(Math.abs(p.x - ropeX(o, Math.min(hy, o.ay + o.len))) < TUNE.GRAB_X && p.y > o.ay &&
+       hy < o.ay + o.len + TUNE.ROPE_SLACK) return {kind:'rope', o};
+  }
+  return null;
+}
+function climbStep(dt){
+  const p = player, c = p.climb;
+  const [lo, hi] = climbRange(c);
+  const pole = c.kind === 'pole';
+  const up = keys.U && !keys.F, down = keys.F && !keys.U;
+  let moved = false;
+  if(up && p.y > lo){ p.y = Math.max(lo, p.y - (pole ? TUNE.POLE_UP : TUNE.ROPE_CLIMB)*dt); moved = true; }
+  else if(down && p.y < hi){ p.y = Math.min(hi, p.y + (pole ? TUNE.POLE_DOWN : TUNE.ROPE_CLIMB)*dt); moved = true; }
+  const lr = (keys.L?-1:0) + (keys.R?1:0);
+  if(lr) p.face = lr;
+  p.x = pole ? c.o.x : ropeX(c.o, p.y - TUNE.HANG_HANDS);
+  p.vx = 0; p.vy = 0; p.onGround = false; p.wallDir = 0; p.sliding = false;
+  p.stillT = moved ? 0 : p.stillT + dt;     // §2a: hanging still counts as stopped, climbing is moving
+  if(moved) p.runPhase += dt*6;
+  if(jumpQueued > 0){                       // §2a: jump leaves with vy -700, vx 300 away
+    const away = lr || p.face;
+    p.vy = TUNE.CLIMB_JUMP_VY; p.vx = away*TUNE.CLIMB_JUMP_VX; p.face = away;
+    p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.jumps = 1; jumpQueued = 0; sfx.jump();
+    return;
+  }
+  if(down && p.y >= hi){                    // climbed off the bottom
+    p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.jumps = 1;
+  }
+}
+function blockOf(pl){ return level.blocks.find(b=>b.p === pl); }
+
+function startBackToBanner(refill){
+  const p = player;
+  if(p.fadeT > 0) return;
+  p.fadeT = TUNE.FADE_TIME; p.fadeRefill = refill; p.fadeDone = false;
+  p.vx = p.vy = 0; p.leap = null; p.climb = null; p.shoveLeft = 0;
+}
+function backToBanner(){                    // the midpoint of the ink-wash: move him and reset the blocks
+  const p = player;
+  if(p.fadeRefill) p.hp = 3;
+  p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1; p.vx = p.vy = 0;
+  p.stillT = 0; p.onGround = false;
+  for(const b of level.blocks) b.p[0] = b.x0;   // §2a: blocks return to their start on any checkpoint return
+  floats.push({x:p.x, y:p.y-90, t:1.6, text:LINE_BACK_TO_BANNER});
 }
 
 function movePlayer(dt){
   const p = player;
   const ACCEL = 2600, MAXV = 385, FRICTION = 2200;
-  const standing = p.standT > 0, shoved = p.shoveLeft > 0;
-  p.standT = Math.max(0, p.standT - dt);
-  const dir = (standing || shoved) ? 0 : (keys.L?-1:0) + (keys.R?1:0);
+  p.hurtT = Math.max(0, p.hurtT - dt);
+  p.shiftCool = Math.max(0, p.shiftCool - dt);
+  p.grabCool = Math.max(0, p.grabCool - dt);
+  p.sheathT = Math.max(0, p.sheathT - dt);
+
+  // ink-wash return to the checkpoint (§3, §5)
+  if(p.fadeT > 0){
+    p.fadeT -= dt;
+    if(!p.fadeDone && p.fadeT <= TUNE.FADE_TIME/2){ p.fadeDone = true; backToBanner(); }
+    p.vx = 0; p.vy = 0; jumpQueued = 0; shiftQueued = 0; attackQueued = false;
+    if(p.fadeT <= 0) p.fadeT = 0;
+    return;
+  }
+  // the handover scene (§2 "The sheathed sword"): input waits, jump or J/X skips
+  if(p.scene){
+    p.scene.t += dt;
+    const total = HANDOVER_LINES.length*TUNE.HANDOVER_LINE;
+    if(p.scene.t >= total || (p.scene.t > 0.25 && (jumpQueued > 0 || attackQueued))) endHandover();
+    jumpQueued = 0; attackQueued = false; shiftQueued = 0;
+    p.vx = 0;
+  }
+  // the gate leap: input ignored, x kept, 40 px arc to the target footing
+  if(p.leap){
+    const L = p.leap;
+    L.t += dt;
+    const k = Math.min(1, L.t / TUNE.GATE_LEAP);
+    p.y = lerp(L.y0, L.y1, k) - TUNE.LEAP_ARC*Math.sin(Math.PI*k);
+    p.vx = 0; p.vy = 0; p.onGround = false; p.sliding = false; p.stillT = 0;
+    jumpQueued = 0; shiftQueued = 0; attackQueued = false;
+    if(k >= 1){
+      p.y = L.y1; p.onGround = true; p.jumps = 0; p.leap = null;
+      spawnInk(p.x, p.y-28, p.lane); spawnDust(p.x, p.y, 5);
+    }
+    return;
+  }
+
+  // attack: a sword that waits in levels 1 and 2 (§2 "The sheathed sword", DECISIONS 3, 10)
+  if(attackQueued && levelIdx < TUNE.SWORD_FROM_LEVEL){
+    if(p.hasSword && p.sheathT <= 0){
+      p.sheathT = TUNE.SHEATH_PUSH; sfx.click();
+      const line = SHEATH_LINES[levelIdx];
+      if(line && (level.sheathLineAt === null || time - level.sheathLineAt >= TUNE.SHEATH_REPEAT)){
+        level.sheathLineAt = time;
+        floats.push({x:p.x, y:p.y-88, t:1.8, text:line});
+      }
+    }
+  } else if(attackQueued && p.attackT <= 0){ p.attackT = 0.28; sfx.slash(); level.swordDrawn = true; }
+  attackQueued = false;
+  p.attackT = Math.max(0, p.attackT - dt);
+
+  // grab a pole or rope: touch it airborne, or hold ↑ beside it
+  if(!p.climb && p.grabCool <= 0 && !p.scene){
+    const c = findClimbable();
+    if(c && (!p.onGround || keys.U) && !(keys.U && shiftQueued < 0 && linkAtPlayer(p.lane-1))){
+      p.climb = c; p.jumps = 0; p.shoveLeft = 0; shiftQueued = 0;
+      const [lo, hi] = climbRange(c); p.y = clamp(p.y, lo, hi);
+    }
+  }
+  if(p.climb){ shiftQueued = 0; climbStep(dt); jumpQueued = Math.max(0, jumpQueued - dt); return; }
+
+  const shoved = p.shoveLeft > 0;
+  const dir = (shoved || p.scene) ? 0 : (keys.L?-1:0) + (keys.R?1:0);
   if(shoved){
     p.vx = p.shoveDir * TUNE.SHOVE_VX;      // §3: shoved back the way he came
-  } else if(standing){
-    p.vx = 0;
   } else if(dir !== 0 && p.attackT <= 0.12){
     p.vx += dir*ACCEL*dt;
     p.face = dir;
@@ -690,13 +916,14 @@ function movePlayer(dt){
 
   const sliding = !p.onGround && p.wallDir !== 0 && dir === p.wallDir && p.vy > 0;
   p.sliding = sliding;
-  if(standing) jumpQueued = 0;
   p.vy += 2300*dt;
   if(sliding) p.vy = Math.min(p.vy, 150);
   p.vy = Math.min(p.vy, 1200);
 
   if(jumpQueued > 0){
-    if(p.onGround || p.coyote > 0){
+    if(p.onPlank && keys.F){                // §2a: ↓ plus jump drops through a plank
+      p.dropT = TUNE.PLANK_DROP; p.onGround = false; p.onPlank = false; jumpQueued = 0; p.vy = 60;
+    } else if(p.onGround || p.coyote > 0){
       p.vy = -830; p.jumps = 1; jumpQueued = 0; p.coyote = 0; sfx.jump();
       spawnDust(p.x, p.y, 8);
     } else if(p.wallDir !== 0){
@@ -709,38 +936,59 @@ function movePlayer(dt){
   }
   jumpQueued = Math.max(0, jumpQueued - dt);
   if(!keys.J && p.vy < -300) p.vy = -300;
+  p.dropT = Math.max(0, p.dropT - dt);
 
-  if(shiftQueued !== 0){ if(!standing && !shoved) tryShift(shiftQueued); shiftQueued = 0; }
-  p.shiftCool = Math.max(0, p.shiftCool - dt);
+  if(shiftQueued !== 0){ if(!shoved) tryShift(shiftQueued); shiftQueued = 0; }
   p.shiftFx = Math.max(0, p.shiftFx - dt);
-
-  if(attackQueued && levelIdx < TUNE.SWORD_FROM_LEVEL){
-    // §2, DECISIONS 3: the sword waits; the key shows one line, once per level, and does nothing else
-    if(!level.inertShown){ level.inertShown = true; floats.push({x:p.x, y:p.y-88, t:1.8, text:LINE_INERT_ATTACK}); }
-  } else if(attackQueued && p.attackT <= 0){ p.attackT = 0.28; sfx.slash(); }
-  attackQueued = false;
-  p.attackT = Math.max(0, p.attackT - dt);
-  p.hurtT = Math.max(0, p.hurtT - dt);
+  if(p.leap) return;
 
   const plats = lanePlatforms(p.lane);
   p.wallDir = 0;
   const x0 = p.x;
   p.x += p.vx*dt;
-  for(const [bx,by,bw,bh] of plats){
+  let pushHit = null;
+  for(const pl of plats){
+    const [bx,by,bw,bh,,kind] = pl;
+    if(kind === 'plank') continue;          // planks are one-way: no sides, no underside
     if(rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, bx,by,bw,bh)){
+      if(kind === 'block' && p.onGround && dir !== 0 && Math.sign(p.vx) === dir) pushHit = pl;
       if(p.vx > 0){ p.x = bx - p.w/2; if(!p.onGround) p.wallDir = 1; }
       else if(p.vx < 0){ p.x = bx+bw + p.w/2; if(!p.onGround) p.wallDir = -1; }
       p.vx = 0;
     }
   }
+  // §2a block on rollers: lean into it 0.25 s, then it rolls along its track at 120 px/s
+  if(pushHit){
+    p.pushT += dt;
+    if(p.pushT >= TUNE.PUSH_DELAY){
+      const b = blockOf(pushHit);
+      const nx = clamp(pushHit[0] + dir*TUNE.PUSH_SPEED*dt, b.x0, b.x1);
+      if(nx !== pushHit[0]){
+        pushHit[0] = nx;
+        p.x = dir > 0 ? nx - p.w/2 : nx + pushHit[2] + p.w/2;
+        p.vx = dir*TUNE.PUSH_SPEED;         // pushing is moving (§3 "What forces a stop")
+        if(Math.random() < dt*10) spawnDust(nx + (dir>0?0:pushHit[2]), pushHit[1]+pushHit[3], 1);
+      }
+    }
+  } else p.pushT = 0;
   p.x = clamp(p.x, p.w/2, level.width - p.w/2);
-  if(shoved){ p.shoveLeft = p.vx === 0 ? 0 : p.shoveLeft - Math.abs(p.x - x0); }
+  if(shoved){ p.shoveLeft = (p.x === x0) ? 0 : p.shoveLeft - Math.abs(p.x - x0); }
   p.stillT = Math.abs(p.vx) < TUNE.STOP_SPEED ? p.stillT + dt : 0;
 
   const wasGround = p.onGround;
-  p.onGround = false;
+  const feet0 = p.y;
+  p.onGround = false; p.onPlank = false;
   p.y += p.vy*dt;
-  for(const [bx,by,bw,bh] of plats){
+  for(const pl of plats){
+    const [bx,by,bw,bh,,kind] = pl;
+    if(kind === 'plank'){
+      if(p.vy >= 0 && p.dropT <= 0 && feet0 <= by + 0.5 && p.y >= by &&
+         p.x + p.w/2 > bx && p.x - p.w/2 < bx + bw){
+        p.y = by; p.vy = 0; p.onGround = true; p.onPlank = true; p.jumps = 0;
+        if(!wasGround) spawnDust(p.x, p.y, 5);
+      }
+      continue;
+    }
     if(rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, bx,by,bw,bh)){
       if(p.vy > 0){
         p.y = by; p.vy = 0; p.onGround = true; p.jumps = 0;
@@ -757,23 +1005,23 @@ function movePlayer(dt){
   if(p.y - p.h > level.killY){ hurt(TUNE.FALL_DAMAGE, true); }
 }
 
-function hurt(dmg, respawn){
+function endHandover(){
   const p = player;
-  if(p.hurtT > 0 && !respawn) return;
+  p.scene = null; p.hasSword = true;
+  if(level.npc) level.npc.given = true;
+  p.sheathT = TUNE.SHEATH_PUSH;              // the glyph pulses as the sword arrives
+  spawnInk(p.x - p.face*8, p.y - 30, p.lane);
+}
+
+// falls: one heart, then the ink-wash back to the banner (§5)
+function hurt(dmg){
+  const p = player;
   p.hp -= dmg; p.hurtT = 1.2; shake = 12; sfx.hurt();
   spawnBurst(p.x, p.y - 28, INK, 14, p.lane);
-  p.standT = 0; p.shoveLeft = 0; p.stillT = 0;
-  if(p.hp <= 0){
-    deaths++;
-    p.hp = 3;
-    p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1;
-    p.vx = p.vy = 0;
-    floats.push({x:p.x, y:p.y-90, t:1.6, text:'Fallen — the banner rises again'});
-  } else if(respawn){
-    p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1; p.vx = p.vy = 0;
-  } else {
-    p.vy = -380; p.vx = -p.face*260;
-  }
+  p.shoveLeft = 0; p.stillT = 0;
+  const out = p.hp <= 0;
+  if(out){ deaths++; }
+  startBackToBanner(out);
 }
 
 // ---- guards: patrol, forward sight, chase, catch on a stop (DESIGN.md §3, DECISIONS 8)
@@ -781,7 +1029,25 @@ function guardSees(g){
   const p = player;
   if(g.lane !== p.lane || Math.abs(p.y - g.y) > TUNE.SIGHT_BAND) return false;   // lanes never see each other
   const ahead = (p.x - g.x)*g.dir - g.w/2;                 // px in front of his face
-  return ahead >= -g.w/2 && ahead <= TUNE.SIGHT_RANGE;     // behind him is safe
+  if(ahead < -g.w/2 || ahead > TUNE.SIGHT_RANGE) return false;   // behind him is safe
+  // §3: only a block or bale occludes; the hero (56 tall) hides behind a 64 px block
+  const a = Math.min(g.x, p.x), c = Math.max(g.x, p.x);
+  for(const b of level.blocks){
+    const [bx,by,bw] = b.p;
+    if(b.lane === g.lane && bx+bw > a && bx < c && p.y - p.h >= by - 0.5) return false;
+  }
+  return true;
+}
+// §2a, §3: a guard turns (or, chasing, stops) 80 px off a block's face
+function blockAhead(g){
+  for(const b of level.blocks){
+    if(b.lane !== g.lane) continue;
+    const [bx,by,bw,bh] = b.p;
+    if(by > g.y || by + bh < g.y - 1) continue;
+    const d = g.dir > 0 ? bx - (g.x + g.w/2) : (g.x - g.w/2) - (bx + bw);
+    if(d >= -bw && d < TUNE.BLOCK_TURN) return true;
+  }
+  return false;
 }
 function inReach(g){
   const p = player;
@@ -791,7 +1057,7 @@ function inReach(g){
 }
 function heroStopped(){
   const p = player;
-  return p.stillT >= TUNE.STOP_TIME || p.sliding || p.standT > 0;
+  return p.stillT >= TUNE.STOP_TIME || p.sliding || !!p.leap;   // hanging still builds stillT (§2a)
 }
 function catchHero(g){
   const p = player;
@@ -799,12 +1065,11 @@ function catchHero(g){
   g.dir = Math.sign(p.x - g.x) || g.dir;
   p.hp -= 1; p.hurtT = TUNE.INVULN; shake = 8; sfx.hurt();
   spawnBurst(p.x, p.y - 28, INK, 14, p.lane);              // black ink, never crimson
-  p.standT = 0; p.stillT = 0;
-  // TODO(builder): DESIGN.md §3 asks for a 1 s ink-wash fade here; the return is still instant.
-  if(p.hp <= 0){                                           // third heart: back to the last checkpoint
-    deaths++; p.hp = 3; p.shoveLeft = 0;
-    p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1; p.vx = p.vy = 0;
-    floats.push({x:p.x, y:p.y-90, t:1.6, text:'Fallen — the banner rises again'});
+  p.stillT = 0;
+  if(p.leap){ p.leap = null; }             // caught mid-leap: he drops in the target lane
+  if(p.climb){ p.climb = null; p.grabCool = TUNE.GRAB_COOL; }
+  if(p.hp <= 0){                                           // third heart: ink-wash to the last checkpoint
+    deaths++; startBackToBanner(true);
     return;
   }
   p.shoveDir = g.dir; p.shoveLeft = TUNE.SHOVE_DIST;      // away from him: back the way he came
@@ -817,13 +1082,16 @@ function updateGuards(dt){
     g.modeT -= dt;
     let speed = 0;
     if(g.mode === 'patrol'){
+      if(blockAhead(g)) g.dir = -g.dir;
       speed = TUNE.GUARD_WALK;
       g.x += g.dir*speed*dt;
       if(g.x < g.x1){ g.x = g.x1; g.dir = 1; }
       if(g.x > g.x2){ g.x = g.x2; g.dir = -1; }
     } else if(g.mode === 'return'){
       if(g.x >= g.x1 && g.x <= g.x2) g.mode = 'patrol';
-      else { g.dir = g.x < g.x1 ? 1 : -1; speed = TUNE.GUARD_WALK; g.x += g.dir*speed*dt; }
+      else { g.dir = g.x < g.x1 ? 1 : -1;
+             if(blockAhead(g)) g.mode = 'patrol';
+             else { speed = TUNE.GUARD_WALK; g.x += g.dir*speed*dt; } }
     } else if(g.mode === 'look'){
       if(g.modeT <= 0) g.mode = 'return';
     } else if(g.mode === 'scold'){
@@ -837,7 +1105,7 @@ function updateGuards(dt){
         g.mode = 'look'; g.modeT = TUNE.LOOK_TIME; g.seeT = 0;
       } else {
         if(Math.abs(dx) > 4) g.dir = Math.sign(dx);
-        speed = Math.abs(dx) > 4 ? TUNE.CHASE_SPEED : 0;
+        speed = Math.abs(dx) > 4 && !blockAhead(g) ? TUNE.CHASE_SPEED : 0;
         g.x = clamp(g.x + g.dir*speed*dt, g.x1 - TUNE.CHASE_LEASH, g.x2 + TUNE.CHASE_LEASH);
       }
     }
@@ -879,6 +1147,12 @@ function updateWorld(dt){
       c.taken = true; coinsTaken++;          // §6: an ink bloom and nothing else; never counted
       spawnInk(c.x, c.y, c.lane);
     }
+  }
+
+  const npc = level.npc;
+  if(npc && !npc.given && !p.scene && p.lane === 1 && Math.abs(p.x - npc.x) < 34 && Math.abs(p.y - npc.y) < 60){
+    p.scene = {t:0};                         // §2: walking into him plays the handover
+    p.vx = 0; p.face = Math.sign(npc.x - p.x) || 1;
   }
 
   for(const c of level.checkpoints){
@@ -1164,7 +1438,8 @@ const AWNINGS = ['#4C7A5C','#6E4664','#3E6E7A','#8A4A3A'];
 
 function drawPlatform(bx,by,bw,bh,lane,kind,pal){
   const D = 18, DY = 10;
-  const wood = kind==='wood' || kind==='stall';
+  if(kind === 'block'){ drawBlock(bx,by,bw,bh,pal); return; }
+  const wood = kind==='wood' || kind==='stall' || kind==='plank';
   const wTop = wood? '#A97F52' : pal.top,  wTopD = wood? '#8A6540' : pal.topD;
   const wFace = wood? '#8A6743' : pal.face, wFaceD = wood? '#6B4E31' : pal.faceD;
   const wSide = wood? '#5E4429' : pal.side;
@@ -1219,7 +1494,7 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
       }
     }
     // railing with red-banded posts (background of the walkway)
-    if(bh <= 90){
+    if(bh <= 90 && kind !== 'plank'){
       ctx.strokeStyle = 'rgba(70,50,32,0.9)'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(bx+4, by-34); ctx.lineTo(bx+bw-4, by-34); ctx.stroke();
       for(let x=bx+10; x<bx+bw; x+=88){
@@ -1289,6 +1564,51 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
       ctx.fillStyle = '#9A4A34'; ctx.beginPath(); ctx.arc(x+56, by-8, 8, Math.PI, 0); ctx.fill();
     }
   }
+}
+
+// §2a block on rollers: a plain dressed stone on two wooden rollers (procedural until the art exists)
+function drawBlock(bx,by,bw,bh,pal){
+  ctx.fillStyle = pal.side; ctx.fillRect(bx+bw, by-6, 10, bh-4);
+  ctx.fillStyle = pal.top;  ctx.fillRect(bx+4, by-6, bw, 6);
+  const fg = ctx.createLinearGradient(bx, by, bx, by+bh);
+  fg.addColorStop(0, shade(pal.face, 10)); fg.addColorStop(1, pal.faceD);
+  ctx.fillStyle = fg; ctx.fillRect(bx, by, bw, bh-10);
+  ctx.strokeStyle = pal.ink; ctx.lineWidth = 2;
+  inkLine(bx, by, bx+bw, by, bx*0.3); inkLine(bx, by, bx, by+bh-10, bx*0.9); inkLine(bx+bw, by, bx+bw, by+bh-10, bx*1.1);
+  ctx.fillStyle = '#6B4E31';
+  for(const rx of [bx+16, bx+bw-16]){
+    ctx.beginPath(); ctx.arc(rx, by+bh-5, 6, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(30,20,12,0.5)'; ctx.beginPath(); ctx.arc(rx, by+bh-5, 2, 0, 7); ctx.fill();
+    ctx.fillStyle = '#6B4E31';
+  }
+}
+function drawPole(o){                        // §2a scaffold pole, lashed bamboo
+  ctx.strokeStyle = '#5E4429'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(o.x, o.top - 14); ctx.lineTo(o.x, o.bot); ctx.stroke();
+  ctx.strokeStyle = 'rgba(233,210,160,0.35)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(o.x+1.5, o.top - 12); ctx.lineTo(o.x+1.5, o.bot); ctx.stroke();
+  ctx.strokeStyle = 'rgba(40,28,18,0.7)'; ctx.lineWidth = 2;
+  for(let y = o.top; y < o.bot; y += 46){ ctx.beginPath(); ctx.moveTo(o.x-5, y); ctx.lineTo(o.x+5, y+4); ctx.stroke(); }
+}
+function drawRope(o){                        // §2a hauling rope from a beam, swaying
+  ctx.fillStyle = '#5E4429'; ctx.fillRect(o.x-30, o.ay-10, 60, 10);
+  ctx.strokeStyle = '#8A6A44'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(o.x, o.ay);
+  for(let i=1;i<=10;i++){ const y = o.ay + o.len*i/10; ctx.lineTo(ropeX(o, y), y); }
+  ctx.stroke();
+  ctx.fillStyle = '#5E4429'; ctx.beginPath(); ctx.arc(ropeX(o, o.ay+o.len), o.ay+o.len, 5, 0, 7); ctx.fill();
+}
+function drawSwordGlyph(x, y){               // §2 sign 2: an ink sword after the hearts, a sign, never a count
+  if(!player.hasSword) return;
+  const drawn = levelIdx >= TUNE.SWORD_FROM_LEVEL && level.swordDrawn;
+  const pulse = player.sheathT > 0 ? 1 + 0.35*Math.sin((player.sheathT/TUNE.SHEATH_PUSH)*Math.PI) : 1;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-0.75); ctx.scale(pulse, pulse);
+  ctx.fillStyle = '#C99A3F'; ctx.fillRect(-2, -14, 4, 8);           // grip
+  ctx.beginPath(); ctx.arc(0, -15, 3, 0, 7); ctx.fill();              // disc pommel
+  ctx.fillRect(-6, -6, 12, 3);                                        // guard
+  ctx.fillStyle = drawn ? '#D8D4C8' : INK;                            // blade, or the wooden scabbard
+  ctx.fillRect(drawn ? -1.6 : -3, -3, drawn ? 3.2 : 6, 24);
+  ctx.restore();
 }
 
 // ============================================================ entities
@@ -1410,7 +1730,7 @@ function drawBird(b){
 
 // figures ---------------------------------------------------------
 function drawFigure(x, y, face, phase, opts){
-  const {skin, cloth, sashC, isGuard, attackT=0, vy=0, onGround=true, hurt=false, vx=0} = opts;
+  const {skin, cloth, sashC, isGuard, attackT=0, vy=0, onGround=true, hurt=false, vx=0, procedural=false, unarmed=false, elder=false} = opts;
   // painted sprite path: pose picked from the asset slots, procedural rig as fallback
   const poseKey = isGuard
     ? (Math.sin(phase) > 0 ? 'guard_walk_a' : 'guard_walk_b')
@@ -1418,7 +1738,7 @@ function drawFigure(x, y, face, phase, opts){
     : !onGround ? 'hero_jump'
     : Math.abs(vx) > 40 ? (Math.sin(phase) > 0 ? 'hero_run_a' : 'hero_run_b')
     : 'hero_idle';
-  const sprite = IMGS[poseKey];
+  const sprite = procedural ? null : IMGS[poseKey];
   if(sprite){
     ctx.save();
     ctx.translate(x, y);
@@ -1567,12 +1887,14 @@ function drawFigure(x, y, face, phase, opts){
       ctx.fillStyle='#C99A3F';
       const aa = swing*0.8+0.35;
       ctx.beginPath(); ctx.arc(2+Math.sin(aa)*6, -53+Math.cos(aa)*6, 2.2, 0, 7); ctx.fill();
-      // curved sword in a wooden scabbard at the left hip
+      // sword in a wooden scabbard at the left hip
+      if(!unarmed){
       ctx.save(); ctx.translate(-7,-38); ctx.rotate(2.05);
       ctx.fillStyle = '#6B4E33'; ctx.fillRect(-1.8, 0, 3.6, 24);
       ctx.fillStyle = '#C99A3F'; ctx.fillRect(-2.6, -1, 5.2, 3);
       ctx.fillRect(-2.2, 19, 4.4, 2.2);
       ctx.restore();
+      }
     }
   }
   if(isGuard){                                     // spear
@@ -1593,8 +1915,8 @@ function drawFigure(x, y, face, phase, opts){
     ctx.fillRect(-3,-66, 15, 3);
     ctx.fillStyle = '#C99A3F'; ctx.fillRect(2,-73, 4, 6);
   } else {
-    // warrior's topknot (kudumi), gold headband, hoop earring
-    ctx.fillStyle = '#241A12';
+    // warrior's topknot (kudumi), gold headband, hoop earring; grey for the older man
+    ctx.fillStyle = elder ? '#8C8476' : '#241A12';
     ctx.beginPath(); ctx.arc(2,-67.5, 5.8, Math.PI*0.9, Math.PI*2.1); ctx.fill();
     ctx.beginPath(); ctx.arc(-1,-72.5, 3.6, 0, 7); ctx.fill();
     ctx.fillStyle = '#C99A3F';
@@ -1649,17 +1971,20 @@ function drawLaneContents(l){
   laneBegin(l);
   for(const b of level.platforms) if(b[4]===l) drawPlatform(b[0],b[1],b[2],b[3],l,b[5]||'stone',pal);
   for(const lk of level.links) if(lk.a===l || lk.b===l) drawGate(lk.cx, lk.gy[l]);
+  for(const o of level.poles) if(o.lane===l) drawPole(o);
+  for(const o of level.ropes) if(o.lane===l) drawRope(o);
   if(l===1){
     for(const c of level.checkpoints) drawFlag(c.x, c.y, c.lit);
     drawGoal(level.goal.x, level.goal.y);
     for(const b of birds) drawBird(b);
     // plane-shift hint markers
     ctx.font = '19px "Marcellus SC", Marcellus, serif'; ctx.textAlign='center';
-    for(const [hx,hy,txt,touchTxt] of level.hints){
+    for(const h of level.hintsPlaced){
       ctx.fillStyle = 'rgba(70,52,32,'+(0.55+0.3*Math.sin(time*2.4))+')';
-      ctx.fillText(IS_TOUCH && touchTxt ? touchTxt : txt, hx, hy-46);
+      ctx.fillText(h.text, h.x, h.base);
       ctx.fillStyle = 'rgba(150,44,34,0.8)';
-      ctx.beginPath(); ctx.moveTo(hx, hy-30); ctx.lineTo(hx-7, hy-18); ctx.lineTo(hx+7, hy-18); ctx.closePath(); ctx.fill();
+      const ay = h.base + 16;
+      ctx.beginPath(); ctx.moveTo(h.x, ay); ctx.lineTo(h.x-7, ay+12); ctx.lineTo(h.x+7, ay+12); ctx.closePath(); ctx.fill();
     }
     ctx.textAlign='left';
   }
@@ -1675,7 +2000,22 @@ function drawLaneContents(l){
       ctx.fillText(mark, g.x, g.y - 92); ctx.textAlign = 'left';
     }
   }
-  if(player.lane === l && state==='play'){
+  if(l === 1 && level.npc){                  // Adittan, an older man of the company (procedural)
+    const n = level.npc;
+    drawFigure(n.x, n.y, -1, 0, {skin:'#7A5236', cloth:'#CFC2A2', sashC:'#5E4429', vx:0, onGround:true,
+                                 procedural:true, unarmed:n.given, elder:true});
+  }
+  if(player.lane === l && state==='play' && player.leap){
+    // §2 the gate leap: scale and position tween from the source lane to the target
+    const L = player.leap, k = Math.min(1, L.t/TUNE.GATE_LEAP);
+    const scr = (ln)=>{ const s = LANES[ln].s; return [(player.x - cam.x - W/2)*s + W/2, (player.y - cam.y - HORIZON)*s + HORIZON, s]; };
+    const A = scr(L.from), B = scr(L.to);
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.translate(lerp(A[0],B[0],k), lerp(A[1],B[1],k)); const sc = lerp(A[2],B[2],k); ctx.scale(sc, sc);
+    drawFigure(0, 0, player.face, player.runPhase, {skin:'#8A5A3B', cloth:'#EDE2C4', sashC:'#B5342A',
+      vx:0, vy:-200, onGround:false, unarmed:!player.hasSword});
+    ctx.restore();
+  } else if(player.lane === l && state==='play'){
     // ghost flash during a plane shift
     if(player.shiftFx > 0){
       ctx.globalAlpha = 0.5;
@@ -1687,9 +2027,14 @@ function drawLaneContents(l){
     }
     drawFigure(player.x, player.y, player.face, player.runPhase, {
       skin:'#8A5A3B', cloth:'#EDE2C4', sashC:'#B5342A',
-      attackT:player.attackT, vx:player.vx, vy:player.vy,
-      onGround:player.onGround, hurt:player.hurtT>0,
+      attackT:player.attackT, vx:player.climb ? 0 : player.vx, vy:player.vy,
+      onGround:player.onGround || !!player.climb, hurt:player.hurtT>0, unarmed:!player.hasSword,
     });
+    if(player.sheathT > 0){                  // hand on the hilt: an ink tick at the hip
+      ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+      const hx = player.x - player.face*8, hy = player.y - 38, r = 10 + 8*(1 - player.sheathT/TUNE.SHEATH_PUSH);
+      ctx.beginPath(); ctx.arc(hx, hy, r, 0, 7); ctx.globalAlpha = player.sheathT/TUNE.SHEATH_PUSH; ctx.stroke(); ctx.globalAlpha = 1;
+    }
   }
   for(const q of particles){
     if((q.lane??1) !== l) continue;
@@ -1729,6 +2074,7 @@ function drawHUD(){
     ctx.bezierCurveTo(x+4, y-14, x+12, y-6, x, y+6);
     ctx.fill();
   }
+  drawSwordGlyph(140, 30);
   // no coin counter (DESIGN.md §6, Pillar 3)
   ctx.textAlign = 'left'; ctx.textBaseline='middle';
   // depth-plane indicator
@@ -1784,9 +2130,20 @@ function render(){
   // floating labels (screen-anchored to main lane)
   laneBegin(1);
   ctx.font = '17px "Marcellus SC", serif'; ctx.textAlign='center';
+  // floats stay inside the viewport (playtest: the sheath line clipped off the left edge)
+  const inView = (x, text)=>{ const hw = ctx.measureText(text).width/2 + 16; return clamp(x, cam.x + hw, cam.x + W - hw); };
   for(const f of floats){
     ctx.fillStyle = 'rgba(90,64,36,'+clamp(f.t,0,1)+')';
-    ctx.fillText(f.text, f.x, f.y - (1.6-f.t)*26);
+    ctx.fillText(f.text, inView(f.x, f.text), f.y - (1.6-f.t)*26);
+  }
+  if(player.scene && level.npc){             // the handover, one line at a time over the speaker
+    const i = Math.min(HANDOVER_LINES.length-1, player.scene.t/TUNE.HANDOVER_LINE|0);
+    const [who, line] = HANDOVER_LINES[i];
+    const sx = who === 'Ilamaran' ? player.x : level.npc.x, sy = (who === 'Ilamaran' ? player.y : level.npc.y) - 104;
+    ctx.fillStyle = 'rgba(60,42,26,0.95)'; ctx.fillText(line, inView(sx, line), sy);
+    ctx.font = '13px "Marcellus SC", serif'; ctx.fillStyle = 'rgba(90,64,36,0.85)';
+    ctx.fillText(who, inView(sx, line), sy - 22);
+    ctx.font = '17px "Marcellus SC", serif';
   }
   ctx.textAlign='left';
   laneEnd();
@@ -1822,6 +2179,10 @@ function render(){
 
   drawHUD();
 
+  if(player.fadeT > 0){                       // §3, §5: 1 s ink-wash to the last checkpoint
+    const a = 1 - Math.abs(player.fadeT - TUNE.FADE_TIME/2)/(TUNE.FADE_TIME/2);
+    ctx.fillStyle = 'rgba(24,17,12,'+clamp(a,0,1)+')'; ctx.fillRect(0,0,W,H);
+  }
   if(player.hurtT > 1.05){
     ctx.fillStyle = 'rgba(30,22,16,'+((player.hurtT-1.05)*2.2)+')';   // ink, not crimson (§3)
     ctx.fillRect(0,0,W,H);
@@ -1836,7 +2197,7 @@ function renderTitleBG(){
     level.coins = level.coins.map(c=>({x:c[0],y:c[1],lane:c[2]??1,taken:false,spin:hash(c[0])*6}));
     level.guards = level.guards.map(makeGuard);
     level.checkpoints = level.checkpoints.map(c=>({x:c[0],y:c[1],lit:false}));
-    prepLinks();
+    prepLinks(); prepTraversal(level); placeHints();
     birds = [];
     player.x = -999; player.y = -999;
   }

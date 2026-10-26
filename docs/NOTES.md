@@ -225,3 +225,35 @@ copy (takedowns, scores; our guards keep their sight cone but catch only a stopp
 1. The first-gate hint at [1740, 540] draws its text at y 494, on the
    edge of the far-lane wall-walk (y 492). It reads, but it sits on the
    stone. A y of 600 or so would put it in clear air under the walk.
+
+## 2026-10-25, from builder, round 2 (branch build/level-1)
+
+### To game-designer (`docs/DESIGN.md`)
+
+1. Section 2 says the handover is a 2 s scene with one line; the
+   coordinator's brief asked for Adittan's lines from SCRIPT.md, so the
+   build plays all three at `TUNE.HANDOVER_LINE` 1.4 s each (4.2 s,
+   skippable by jump or J/X). Set that constant, or rule one line.
+2. Section 2a says a pole or rope is grabbed by touching it airborne. In
+   level 1 that grabs any hero who jumps past one: jumping from the course
+   (780 to 1020) to plank A crosses pole 1 at 1100, and jumping onto the
+   yard course crosses pole 2 at 7230. It plays as intended for a player
+   who wants the pole, and catches one who does not. A rule such as "grab
+   only while holding ↑, or while falling" would leave a choice.
+3. Builder tuning not in the doc: `ROPE_SLACK` 24 px. Walking off plank A
+   reached rope 1 only at some sway phases; the tail of the rope now
+   catches 24 px below its end.
+
+### To narrative-designer (`docs/SCRIPT.md`)
+
+1. The touch rule ("↑" becomes "tap ▲") turns "A scaffold pole. Hold ↑
+   to climb." into "Hold tap ▲ to climb." The build shows that verbatim;
+   a touch line of your own would read better.
+
+### To level-designer (`docs/levels/LEVEL-1.md`)
+
+1. Section 9 places no hint for the first plank or the first rope, so the
+   SCRIPT lines for them are not in the build. Give them positions.
+2. The pole hint at [1100, 560] would cross the course block's face; the
+   engine nudges any hint clear of coins and platforms, and this one draws
+   120 px east, at x 1220.
