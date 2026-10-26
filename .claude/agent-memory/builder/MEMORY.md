@@ -113,3 +113,7 @@ grep the function names.
   scratchpad, replace __dirname with the tests path, patch, run.
 - Smoke still fails: L1 rope 1 (bot grip ~190 px), L3 shield-bearer, and
   the bot needs to click #portBtn.
+- Ruling 27 pass (playtest "hard to see"): teleRing/TELE_* flare and seal,
+  drawDetourSign with `level.detours` [{at:[x,lane,y?], first:['plank',x,y,w]|['rope',x]}],
+  `.sheet` parchment panel on port and card overlays. tests/out is gitignored;
+  review shots are made by a scratch Playwright script (shots27.js).
