@@ -78,46 +78,50 @@ If the 2 s scene holds one line, use the third.
 > **Ilamaran:** Do I draw it here?
 > **Adittan:** Never among our own. Draw it where the king's son sends you.
 
-Adittan knows a muster, not a voyage: he cannot name Kadaram in 1010.
-
 ## 4. In-level hints and floats
 
-Positions follow `docs/levels/LEVEL-N.md` section 9 and may shift. First
-gates link lanes 0 and 1 only, so gate lines promise ↑ alone. Touch
-versions swap "↑" for "tap ▲" and "J or X" for "tap ⚔."
+Positions from the level documents' fourth drafts. First gates link lanes
+0 and 1; level 2's player arrives from the far gallery, so ↓. Touch swaps
+"↑ ↓" for "tap ▲ ▼," "J or X" for "tap ⚔."
 
-| Where | Text |
+| Where (x) | Text |
 |---|---|
-| Level 1, double jump (x 1000) | Jump again in the air. The step is high. |
-| Level 1, first scaffold pole | A scaffold pole. Hold ↑ to climb. |
-| Level 1, first scaffold planks | ↓ and jump to drop through the planks. |
-| Level 1, first hauling rope | A hauling rope. Jump to it, then climb. |
-| Level 1, first block on rollers | Stone on rollers. Lean into it to push. |
-| Level 1, first gate (x 1740) | The lamp marks a gate. ↑ the cloister roof. |
-| Level 2, first gate (x 260) | Lamplit again. ↑ the warehouse ledge. |
-| Level 2, climb (x 320) | Up the bales. Height hides you. |
-| Level 3, draw prompt before the first fighter (x 200) | Here the sword comes out. J or X. |
-| Level 3, first cut, once (optional) | My father's blade, out for the first time. |
-| Level 3, first gate (x 340) | A lamp in the rain. ↑ the stilt walk. |
-| Level 3, S1's first telegraph (x 5340) | Gold on his blade. Meet it as it comes: J or X. |
-| Level 3, S2's first black seal (x 6800) | Black ink over his head. Don't meet it. Step back. |
+| L1 push (500) | Stone on rollers. Lean into it to push. |
+| L1 detour D1 (880) | Copper up the scaffold. Somebody went this way. |
+| L1 climb (1100) | A scaffold pole. Hold ↑ to climb. |
+| L1 double jump (1900) | Jump again in the air. The step is high. |
+| L1 first gate (2700) | The lamp marks a gate. ↑ the wall-walk. |
+| L2 bounce (560) | Undyed cloth, stretched tight. Land on it. |
+| L2 hold jump (1240) | Hold the jump as you land. Higher. |
+| L2 push (1860) | A bale of cloth. Push it to the dock. |
+| L2 gangplank (2600) | The gangplank. Up onto the hull. |
+| L2 climb (3260) | Climb the mast by the lashings. |
+| L2 marked rope (3500) | A lamp on the rope. Grab it, then ↑. |
+| L2 first gate (4700) | Lamplit again. ↓ back down to the quay. |
+| L3 vine (640) | Vines over the water. Let go on the forward swing. |
+| L3 slide (1960) | Mud. Lean back to slow down. |
+| L3 marked vine (3040) | A ring on the vine. Grab it, then ↑. |
+| L3 draw prompt (4800) | Here the sword comes out. J or X. |
+| L3 first gate (5060) | A lamp in the rain. ↑ the stilt walk. |
+| L3 S1's first telegraph (5340) | Gold on his blade. Meet it as it comes: J or X. |
+| L3 S2's first black seal (6800) | Black ink over his head. Don't meet it. Step back. |
+| L3 first cut, once (optional) | My father's blade, out for the first time. |
 | Mistimed parry that still guards | Steel on steel. No opening. |
 | Good parry, first time only | He reels. Cut now. |
-| Level 1, first detour cluster | Copper off the path. Somebody went this way. |
 | First named kasu, after its name | An old coin. Its story is kept on the map. |
-| Up or down pressed away from a gate (replaces "no crossing here") | No gate here. Find the lamp. |
-| Attack in level 1: blade pushed home; first press and after 30 s | Back in the sheath. Not among our own. |
-| Attack in level 2, same rule | Back in the sheath. Not before the far shore. |
-| Checkpoint reached (replaces "Banner planted") | The banner is planted. Breathe. |
-| Level 1, CP2 (x 2900), replaces the checkpoint line | The tower. I did not know stone went that high. |
-| Level 2, CP2 (x 3030), replaces the checkpoint line | A foreign king's house of monks. Nobody minds it. |
-| Level 3, CP4 (x 5100), replaces the checkpoint line | A wall of timber. Men in front. No way round. |
-| Return to checkpoint after a fall or third heart (replaces "Fallen") | Back to the banner. |
-| Guard spots the hero (DESIGN.md 3 asks for a shout) | Hoi! You there! |
+| ↑ or ↓ away from a gate | No gate here. Find the lamp. |
+| Attack, level 1 (first press, then after 30 s) | Back in the sheath. Not among our own. |
+| Attack, level 2 | Back in the sheath. Not before the far shore. |
+| Checkpoint reached | The banner is planted. Breathe. |
+| L1 CP2 (3860), in place of the line above | The tower. I did not know stone went that high. |
+| L2 CP (4780), same | A foreign king's house of monks. Nobody minds it. |
+| L2 the swing (8900) | Water to the next ship. No way but over. |
+| L3 CP (9800), same | A wall of timber. Men in front. No way round. |
+| Return to a checkpoint | Back to the banner. |
+| Guard spots the hero | Hoi! You there! |
 
-Struck: "+1 kasu," "Guard felled," end stats. Gap: the level documents'
-third drafts add hints (bounce, hold jump, vine, slide, marked vine) at
-new positions; this table needs a pass against them.
+Struck: "+1 kasu," "Guard felled," end stats, and the plank and rope
+hints the level documents dropped.
 
 ## 4a. Ports, the voyage map, and cards (DECISIONS.md 26)
 
@@ -156,15 +160,14 @@ wait for it.
 
 **Leaving:** Sleep on deck. We sail at first light.
 
-Order problem: the quay plays after the Chapter III card, already on the
-Kadaram shore. Playing it before that card fixes this (game designer's
-call).
+Order problem for the game designer: the quay plays after the Chapter III
+card, already in Kadaram; play it before that card.
 
 ### Crew lines (shown on the next card)
 
 - **Market fish and rice** (Chapter III card): The crew ate fried fish on
   the quay. Sattan ate mine too.
-- **Quay provisions** (end screen, above the line of cost): The water held
+- **Quay provisions** (end screen, before the cost): The water held
   to Kadaram. Nobody aboard went thirsty.
 - **Both bought** (replaces the line above): Sattan shared my fish in port
   and my water at sea.
@@ -174,50 +177,49 @@ call).
 **Labels:** Thanjavur · 1010 / Nagapattinam · 1025 / Kadaram · 1025. No
 route line: the route is unrecorded.
 
-**A lit lamp, on tap:** [place name]. [coin name]. Read the card. (Places
-wait on the level designer.) **A crew pennant:** The crew ate well here.
+**A lit lamp, on tap:** place line, coin name, "Read the card." The coin name also floats 1.5 s at pickup.
+
+| Detour | Place line | Named kasu float (RESEARCH.md 6a type) |
+|---|---|---|
+| D1 | The masons' lamp-niche, up on the scaffold. | Rajaraja's gold kasu (1) |
+| D2 | The lamp shelf at the inner gateway. | An older king's tiger silver (3) |
+| D3 | A merchants' loft above the awnings. | Rajaraja's copper, from Lanka (2) |
+| D4 | A Srivijayan ship's stern lantern, in our own port. | A Chinese coin with a square hole (4) |
+| D5 | A small brick shrine on the hill. | Rajendra's silver, Ganges title (5) |
+| D6 | A porch on stilts, its lamp still lit. | A small gold coin with a flower (6) |
+
+**A crew pennant:** The crew ate well here.
 
 **Card viewer frame:** title; "Kept from [place], with [coin name]" under
 the image; "Back to the map." With none kept: "No cards yet. Old coins lie
 off the path."
 
-### Named kasu (the 1.5 s float)
-
-| Level | Coin | Float |
-|---|---|---|
-| 1 | Rajaraja gold, lamp-stand type | Rajaraja's gold kasu |
-| 1 | Uttama Chola silver, seated tiger | An older king's tiger silver |
-| 2 | Rajaraja copper of the same design | Rajaraja's copper, from Lanka |
-| 2 | Song bronze, square hole | A Chinese coin with a square hole |
-| 3 | Rajendra silver, after Gangaikonda | Rajendra's silver, Ganges title |
-| 3 | Malay gold, stamped flower | A small gold coin with a flower |
-
 ### The six cards
 
-The historian's texts (RESEARCH.md 6a), trimmed; tags in comments.
+RESEARCH.md 6a texts, trimmed; tags in comments.
 
 **Gold for the Top of the Tower** (Rajaraja's gold kasu)
-On the 275th day of his 25th year as king, Rajaraja gave a copper pot to
-crown the great tower, covered with plates of gold weighing 2,926 and a
-half karanju. The weight is carved in Tamil on the temple wall. The round
-cap at the very top is what he gilded. Nobody wrote down how they raised
-the stones, but they recorded the gold.
+In the 25th year of his reign, Rajaraja gave a copper pot to crown the
+great tower, covered with 2,926 and a half karanju of gold plate. The
+weight is carved in Tamil on the temple wall. The round cap at the very
+top is what he gilded. Nobody wrote down how they
+raised the stones, but they recorded the gold.
 <!-- [documented] SII II no. 1, para. 18 -->
 
 **The Guards of the King's Gate** (tiger silver)
 The guards you slipped past had a name. This temple's inscriptions list
-the "sacred bodyguard" of the Keralantaka gate and the inner gate, and
-about thirty regiments, each named for one of the king's titles. Soldiers
-gave gifts to the temple too, with their regiment's name carved beside
-the gift, so a thousand years later we know who stood here.
+the "sacred bodyguard" of the Keralantaka gate and the inner gate, among
+about thirty regiments named for the king's titles. Soldiers gave gifts
+to the temple with their regiment's name carved beside them, so a
+thousand years later we know who stood here.
 <!-- [documented] SII II, Hultzsch's introduction and no. 57 n. 2 -->
 
 **A Sumatran King's Monastery** (Rajaraja's copper)
 Nagapattinam's tall brick tower was built by a Buddhist king from across
 the sea. In 1006 his monastery received a whole village, Anaimangalam,
-from Rajaraja, who worshiped Shiva. The grant was cut on copper plates
-strung on a ring with the Chola tiger seal, now in the Netherlands. The
-tower stood until 1867, when it was pulled down for its bricks.
+from Rajaraja, who worshiped Shiva. The grant, on copper plates under the
+Chola tiger seal, is now in the Netherlands. The tower stood until 1867,
+when it was pulled down for its bricks.
 <!-- [documented] Larger Leiden plates (Mahalingam 1948); Elliot 1878 -->
 
 **Pearls for the Emperor of China** (Chinese coin)
@@ -245,8 +247,6 @@ an embassy to the Chinese emperor, and the kingdom went on trading and
 building for another century and more.
 <!-- [documented] Bujang Valley survey (RESEARCH 3.3); Song Shi 489 -->
 
-Cards may use modern names (Merbok, Kedah); Ilamaran never does.
-
 ## 5. The ending
 
 **Eyebrow (record):** 1025 CE · Kadaram has fallen
@@ -268,8 +268,6 @@ sent. It was a raid; no Chola rule followed. Three years later Srivijaya
 sent envoys to China, as it always had.
 
 **Button:** Sail again
-
-No numbers appear on this screen (Pillar 3).
 
 ## 6. Sources screen
 
@@ -300,7 +298,7 @@ and Sakhuja, eds., *Nagapattinam to Suvarnadwipa* (2009). Balasubrahmanyam,
 | Thanjavur | Chola capital; the Brihadisvara temple, finished 1010. |
 | Nagapattinam | Main eastern port; the Chudamani vihara, funded by Srivijaya. |
 | Anaimangalam | Village granted to the vihara in 1006; Sattan's home. |
-| Srivijaya | Malay Buddhist kingdom centered on Palembang, Sumatra. |
+| Srivijaya | Malay Buddhist kingdom, centered on Palembang. |
 | Kadaram | Kedah, Malay peninsula. |
 | kasu | Chola coin and unit of account (SII II). Copper on the road; named kasu gold, silver, or bronze. |
 | sevagan | A common soldier. |
@@ -315,6 +313,7 @@ None.
 - 2026-10-26, fourth draft (DECISIONS.md 24, 26): section 4a (ports,
   crew lines, map, card viewer, named kasu, six cards), parry and detour
   hints, copper kasu per RESEARCH.md 6a. Budget 2,600.
-- 2026-10-25, third draft: the sword handover and its hints. 1,700.
-- 2026-10-25, second draft: the script review's seven findings.
-- 2026-10-25, first draft: every `index.html` string rewritten.
+- 2026-10-26, fourth draft, second pass: hint table rechecked against the
+  level documents' fourth drafts (new hints, positions, L2 gate now ↓);
+  map place lines for D1 to D6, merged with the named kasu.
+- 2026-10-25, drafts one to three: strings, review fixes, sword handover.

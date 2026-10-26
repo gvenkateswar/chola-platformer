@@ -53,8 +53,12 @@ allowed); Ilamaran never uses Merbok/Kedah. Parry: gold = meet it, black
 seal = step back; mistimed guard float "Steel on steel. No opening."
 Crew lines tie to Sattan (sharpens the line of cost).
 Open: quay scene plays after the Chapter III card (order problem, flagged
-to game designer); detour place names await level designer; hint table
-needs a position pass against level docs' third drafts.
+to game designer).
+Done 2026-10-26: D1-D6 map place lines (merged table with named kasu);
+hint table matched to level docs' fourth drafts. L2's first gate is ↓
+(player arrives from the far gallery). Script sits at exactly 2,600
+words: any addition needs an equal cut. History cards must stay 60-90
+words each (DESIGN 6).
 
 ## Open
 - Brief said vimana "about sixty-five metres"; RESEARCH.md 3.1 says
