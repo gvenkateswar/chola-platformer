@@ -447,3 +447,7 @@ every ledge, and no rope needed a swing.
    plank, rope) is optional, and the swing is the best route, not the only
    one. If the scaffold should be required, the plinth needs about 80 px
    more height, or a face that does not take a wall jump.
+
+## For builder and game-designer (orchestrator, 2026-10-26)
+
+The quay scene (night before sailing) plays before the Chapter III card, not after it, so it is set in Nagapattinam before the card moves the story to the Kadaram shore.
