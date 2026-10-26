@@ -82,6 +82,20 @@ grep the function names.
 - Generate level arrays from the doc's section 9 block by script (parser in session
   scratchpad: regex over the fenced block), never retype them.
 
+## Game-feel pass (report docs/research/game-feel-deep-dive.md)
+
+- Combat: hitstop globals (hitstopT, startHitstop, hitstopOffset) freeze frame() without advancing time;
+  attackQueued is a 0.13 s timer; cut keyframes TUNE.CUT_KEYS via cutPose(u); blade drawn in drawRig
+  with pose.blade (wrist) and pose.bladeLen; smear via bladeAt(u) sampled analytically (drawSmear);
+  hit = flash + flinch + knockback slide + spawnHitInk + spawnCloth + sfx.thud + kick(); block =
+  spawnSparks + sfx.clang + hero recoil. Shake is one shared shakeOff per render.
+- Pose blend is 1-(1-POSE_RATE)^(dt*60); the cut writes its parts straight into st.ang (no blend).
+- Rope: ropeW2(o) = g/L (grip floored at ROPE_MIN_LEN), ropeAmp energy cap, 70° safety clamp;
+  verlet chain o.pts via stepRopeChain (in updateRopes), drawn by drawRope; swing phase poses
+  ('drive','rise','apexFwd','back','apexBack') and body lag in heroPoseTarget; grab jolt.
+- Coins: drawCoin is the kasu brief; spawnGoldLeaf on pickup; IMGS.kasu used if kasu.png exists.
+- Recheck forced swings after any rope change: level 1 rope 1 (cornice 1700) and level 2 R2.
+
 ## Quirks
 
 - CHECK THE BRANCH FIRST, alone, before any pull or merge: twice the

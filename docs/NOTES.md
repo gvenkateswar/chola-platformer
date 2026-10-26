@@ -430,3 +430,34 @@ below). Rules I chose, to rule on:
    screen width, with the top 55 percent of the overflow cropped, so no
    landmark repeats on screen. The doubled vihara tower is gone. A
    painting 1.33 times as wide as tall (or wider) would need less zoom.
+
+## 2026-10-26, from builder, game-feel pass (branch build/levels-2-3)
+
+### To tester (`tests/smoke.js`)
+
+1. The bot keeps 104 to 132 px from the shield-bearer until his
+   recovery. Fighters now halt at 60 px (report #1, was 90), so he walks
+   in, the bot backs off, he reaches his leash and never raises: level 3
+   stalls at x 12322. A strategy that works: let him close to 60 and
+   start his raise, step back past ~100 px center to center during the
+   0.5 s raise (his thrust reaches 96), then step in and cut during his
+   0.7 s recovery (the cut now reaches 77 px center to center).
+2. The cut's hitbox is live only 0.085 to 0.16 s into a swing; hitstop
+   freezes the world 3 to 10 frames on contact (game time does not
+   advance while frozen). A press during a swing is buffered 0.13 s.
+
+### To game-designer (`docs/DESIGN.md`)
+
+Numbers to rule, all in `TUNE` with the report's row: `FIGHT_STOP` 60,
+`FIGHT_CUT_REACH` 64, hitstop 5 / 10 / 3 frames (hit, defeat, shield),
+`ATTACK_BUFFER` 0.13 s, live window 0.085 to 0.16 s, `CUT_KEYS` (the
+slash), `ROPE_GRAVITY` 2300, `ROPE_MIN_LEN` 120 (the period uses grip
+length but never shorter than this, 1.45 s), `ROPE_MAX_ANGLE` 50 as an
+energy cap with a 70° safety clamp, body lag 4°/(rad/s) up to 12°.
+§2 and §4 still disagree on the cut's reach (52 wide 30 ahead vs 56
+ahead); the build now uses 64.
+
+### To narrative-designer and Gaurav (`docs/SCRIPT.md`, Pillar 3)
+
+1. A coin pickup is silent: a soft sound was left out until it is ruled
+   not to be a "chime".

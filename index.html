@@ -468,6 +468,7 @@ const ASSET_FILES = {
   hero_idle:'hero_idle.png',          // the hero's cut-out rig source (DECISIONS 19)
   guard_walk_a:'guard_walk_a.png', guard_walk_b:'guard_walk_b.png',
   gate:'gate.png',
+  kasu:'kasu.png',                    // ASSETS.md slot 36; the procedural kasu draws until it exists
 };
 const IMGS = {};
 // character and prop sprites get alpha-trimmed so feet anchor to the ground
@@ -1950,8 +1951,8 @@ function updateWorld(dt){
     if(c.taken) continue;
     c.spin += dt*4;
     if(c.lane === p.lane && rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, c.x-12, c.y-12, 24, 24)){
-      c.taken = true; coinsTaken++;          // §6: an ink bloom and nothing else; never counted
-      spawnInk(c.x, c.y, c.lane);
+      c.taken = true; coinsTaken++;          // §6: never counted; report #14: its own soft gold bloom
+      spawnGoldLeaf(c.x, c.y, c.lane);
     }
   }
 
@@ -2066,6 +2067,12 @@ function spawnSparks(x, y, lane, dir){       // blocked: pale metal sparks, quic
 }
 let kickX = 0;
 function kick(dir){ kickX = dir*TUNE.HIT_SHAKE; }
+// a coin taken: a soft pale-gold ring and a few flakes of gold leaf drifting up (not the lane-shift ink)
+function spawnGoldLeaf(x, y, lane){
+  particles.push({x, y, vx:0, vy:0, t:.35, r:6, col:'#E8C979', lane, kind:'ringGold', t0:.35});
+  for(let i=0;i<7;i++) particles.push({x:x+(Math.random()*10-5), y:y+(Math.random()*8-4), vx:Math.random()*50-25, vy:-30-Math.random()*50,
+    t:.55+Math.random()*.35, r:2.5+Math.random()*2, col: Math.random()<0.5 ? '#E8C979' : '#D9C69A', grav:-20, lane, kind:'leaf', spin:Math.random()*6});
+}
 function spawnRing(x,y){
   for(let i=0;i<10;i++){
     const a = i/10*Math.PI*2;
@@ -2581,18 +2588,30 @@ function drawSwordGlyph(x, y){               // §2 sign 2: an ink sword after t
 }
 
 // ============================================================ entities
+// kasu (ASSETS.md slot 36): a thick, hand-struck coin of pale, dull gold with a lumpy edge and a worn
+// standing figure beside a lamp stand, no lettering; it turns slowly (the engine spins it by scaling).
+// The painted kasu.png is used when it exists. Report #14: drawn as a coin of the period, not an arcade reward.
+const KASU_EDGE = Array.from({length:14}, (_, i)=> 1 + (hash(i*7.3)-0.5)*0.12);
 function drawCoin(c){
   if(c.taken) return;
-  const sx = Math.abs(Math.cos(c.spin));
-  const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 22);
-  g.addColorStop(0,'rgba(217,168,78,0.35)'); g.addColorStop(1,'rgba(217,168,78,0)');
-  ctx.fillStyle = g; ctx.fillRect(c.x-22, c.y-22, 44, 44);
-  ctx.save(); ctx.translate(c.x, c.y + Math.sin(c.spin*0.7)*3); ctx.scale(sx, 1);
-  ctx.fillStyle = '#C08A2E'; ctx.beginPath(); ctx.arc(0,0,11,0,7); ctx.fill();
-  ctx.fillStyle = '#EFCB7A'; ctx.beginPath(); ctx.arc(0,0,8.5,0,7); ctx.fill();
-  ctx.strokeStyle = '#7A5326'; ctx.lineWidth = 1.6;
-  ctx.beginPath(); ctx.moveTo(-4,3); ctx.quadraticCurveTo(0,-6,4,3); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0,-2); ctx.lineTo(0,4); ctx.stroke();
+  const sx = 0.35 + 0.65*Math.abs(Math.cos(c.spin*0.5)), bob = Math.sin(c.spin*0.35)*2;
+  ctx.save(); ctx.translate(c.x, c.y + bob);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 16);           // a faint warmth, not a glow
+  g.addColorStop(0,'rgba(232,201,121,0.16)'); g.addColorStop(1,'rgba(232,201,121,0)');
+  ctx.fillStyle = g; ctx.fillRect(-16, -16, 32, 32);
+  ctx.scale(sx, 1);
+  const im = IMGS.kasu;
+  if(im){ ctx.drawImage(im, -11, -11, 22, 22); ctx.restore(); return; }
+  const lumpy = (r)=>{ ctx.beginPath(); for(let i=0;i<14;i++){ const a = i/14*Math.PI*2, rr = r*KASU_EDGE[i];
+    i ? ctx.lineTo(Math.cos(a)*rr, Math.sin(a)*rr) : ctx.moveTo(Math.cos(a)*rr, Math.sin(a)*rr); } ctx.closePath(); };
+  ctx.fillStyle = '#6B4E33'; ctx.save(); ctx.translate(0.8, 1.6); lumpy(10); ctx.fill(); ctx.restore();   // thick rim, warm shadow below
+  ctx.fillStyle = '#C9A55E'; lumpy(10); ctx.fill();
+  ctx.fillStyle = '#D9C69A'; lumpy(7.8); ctx.fill();                                                        // the struck face
+  ctx.fillStyle = 'rgba(107,78,51,0.55)';                                                                   // a worn standing figure
+  ctx.beginPath(); ctx.arc(-1.2, -4.6, 1.4, 0, 7); ctx.fill();
+  ctx.fillRect(-2.2, -3.2, 2.2, 3.4); ctx.fillRect(-2.8, 0, 3.4, 2.6); ctx.fillRect(-2.4, 2.4, 1, 2.6); ctx.fillRect(-0.6, 2.4, 1, 2.6);
+  ctx.fillRect(2.4, -4, 0.9, 8.4); ctx.fillRect(1.6, -4.6, 2.4, 1);                                       // the lamp stand
+  ctx.strokeStyle = 'rgba(60,44,28,0.5)'; ctx.lineWidth = 0.9; lumpy(10); ctx.stroke();
   ctx.restore();
 }
 function drawFlag(x, y, lit){
@@ -3101,6 +3120,14 @@ function drawLaneContents(l){
     if(q.kind === 'streak' || q.kind === 'spark'){
       ctx.strokeStyle = q.col; ctx.globalAlpha = clamp(q.t*4, 0, 1); ctx.lineWidth = q.kind === 'spark' ? 1.6 : q.r;
       ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - q.vx*0.04, q.y - q.vy*0.04); ctx.stroke(); ctx.globalAlpha = 1; continue;
+    }
+    if(q.kind === 'ringGold'){
+      const k = 1 - q.t/q.t0; ctx.strokeStyle = 'rgba(232,201,121,'+(0.7*(1-k))+')'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(q.x, q.y, 6 + 16*k, 0, 7); ctx.stroke(); continue;
+    }
+    if(q.kind === 'leaf'){
+      ctx.save(); ctx.translate(q.x, q.y); ctx.rotate((q.spin||0) + q.t*4); ctx.globalAlpha = clamp(q.t*1.8, 0, 0.9);
+      ctx.fillStyle = q.col; ctx.beginPath(); ctx.ellipse(0, 0, q.r, q.r*0.45, 0, 0, 7); ctx.fill(); ctx.restore(); continue;
     }
     if(q.kind === 'cloth'){
       ctx.save(); ctx.translate(q.x, q.y); ctx.rotate((q.spin||0) + q.t*9); ctx.globalAlpha = clamp(q.t*2, 0, 1);
