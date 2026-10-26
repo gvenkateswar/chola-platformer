@@ -110,6 +110,22 @@ to 717, `updateWorld` 719 to 800. Canvas 1280 by 720. Lanes 0 far (scale
   GATE_STAND 0.5 in tryShift, LINE_INERT_ATTACK, SWORD_FROM_LEVEL gate on
   attack-kill, guard modes patrol/return/look/chase/scold.
 
+## Ruling pass 2026-10-26
+
+- Section 7 takes the level files' numbers: widths 8,800 / 11,600 /
+  13,300; 6 guards / 6 guards / 6 fighters; times 178 / 187 / 204 s.
+- Rule 10 kept: no fight on a swaying section; S3 and S4 in LEVEL-3 must
+  move to fixed walkways or stable ground (told level designer).
+- Checkpoints light by x in any lane or height (builder task), fixing
+  LEVEL-3's far-lane skip of CP 7350 without a layout change.
+- Rope/vine swing = builder's TUNE numbers (Decision 20): period 2.0,
+  max 50° (never < 45), pump 2.4 rad/s², damp 0.12, grab keeps 0.8,
+  release 1.3 × tangent + vy -420, spends double jump, AIR_KEEP 300.
+- First-use isolation: 900 px in the piece's own lane. Gate target
+  footing ≤ 140 px above (engine refuses > 150).
+- Still unanswered builder questions: handover 1 vs 3 lines
+  (HANDOVER_LINE 1.4 s × 3), grab-on-touch catching passers-by.
+
 ## Open with Gaurav
 
 - Ship-deck closing beat in level 2: keep (recommended) or end at quay.

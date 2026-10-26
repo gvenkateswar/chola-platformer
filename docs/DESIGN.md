@@ -95,35 +95,41 @@ Numbered 2a so section numbers the level files cite stay valid. Decisions
 
 **Common rules.** Each level introduces two ideas and ends on a stretch
 combining everything the player has (VISION 5). A piece is first met where
-a fall is safe (no `killY` below, no guard within 1,280 px, kasu tracing
-the motion), then beside a guard, then in the combination. Guards and
-fighters never climb, push, bounce, swing, or slide; they walk platforms,
-planks, gangplanks, and walkways. A hero hanging still with his feet in a
-guard's band counts as stopped; climbing or swinging is moving. Grab a
-pole, rope, or line by touching it airborne or holding ↑; jump leaves it
-with `vy -700`, `vx 300` away.
+a fall is safe (no `killY` below, no guard in its lane within 900 px, kasu
+tracing the motion), then beside a guard, then in the combination. Guards
+and fighters never climb, push, bounce, swing, or slide; they walk
+platforms, planks, gangplanks, and walkways. A hero hanging still with his
+feet in a guard's band counts as stopped; climbing or swinging is moving.
+Grab a pole, rope, or line by touching it airborne or holding ↑; jump
+leaves a pole with `vy -700`, `vx 300` away.
+
+**Rope and vine swing (Decision 20; the builder's numbers, ruled).** A
+pumped pendulum: period 2.0 s; limit 50°, never below 45 (LEVEL-2's R2
+needs it); ← or → with the swing adds 2.4 rad/s²; damping 0.12/s; a
+running grab keeps 0.8 of run speed. Jump releases along the tangent at
+1.3 × hand speed plus `vy -420`, vines included, and spends the double
+jump, so the swing is the aim. Speed above 385 bleeds off at 300 px/s².
+A swinging hero is never caught.
 
 | Piece | Lvl | Does | Numbers | With guards |
 |---|---|---|---|---|
 | Scaffold pole | 1 | Climb ↑↓ | 160 px/s up, 220 down; 200 to 400 tall | He cannot follow |
 | Scaffold plank | 1 | One-way platform; ↓ plus jump drops through | 20 thick, 120 to 300 wide, 110 to 140 apart | Walks planks in his lane; 90 px up hides |
-| Hauling rope | 1 | Climb, sways | 130 px/s; ±12 px, period 2 s; 160 to 320 long | As pole |
+| Hauling rope | 1 | Climb, swing | 130 px/s; idle sway ±12 px; 160 to 320 long | As pole |
 | Block on rollers | 1 | Hold into it 0.25 s, then push along its roller track only | 80 wide, 64 tall; push 120 px/s | Top is a step; stops a cone at its face, so the hero (56 tall) hides behind it; a guard turns at it |
 | Cloth awning, undyed | 2 | Landing on it bounces; no standing | `vy -1000` (217 px), `-1100` with jump held (263 px) | He walks under; bouncing is moving |
-| Cargo bale | 2 | Pushed like the block, no track; drops into a gap as a step | 96 wide, 72 tall; push 140 px/s | As block |
+| Cargo bale | 2 | Pushed like the block, no track | 96 wide, 72 tall; push 140 px/s | As block |
 | Gangplank | 2 | Slope, quay to deck | Up to 25°; 330 px/s up, 385 down | He walks it |
 | Rigging line, mast | 2 | Climb by the lashings | 130 px/s; mast to 480 px | As pole |
 | Yard | 2 | The ship's high path | 20 thick, 200 to 400 wide, 300+ above deck | Above every band |
-| Vine or rattan | 3 | Swings by itself; jump releases | 160 to 260 long; arc ±45°, period 2.0 s; release adds `vy -300`, up to about 500 px/s across | Out of reach; release over his head |
+| Vine or rattan | 3 | Pumped swing; jump releases | 160 to 260 long; swing numbers above | Out of reach; release over his head |
 | Prop roots | 3 | Small one-way platforms; arches are walls | Knots 60 to 100 wide, at most 120 apart | Fighters stay off |
 | Shallow water | 3 | Under roots and walkways; wading, never death (Decision 2) | Wade 160 px/s; jump capped at 77 px | Fighters do not wade |
-| Stilt walkway | 3 | Sections sway, so gaps open and close | ±20 px, period 2.4 s, neighbors opposite: gap 40 to 120 | Fighters walk it, riding the sway |
+| Stilt walkway | 3 | Sections sway, so gaps open and close | ±20 px, period 2.4 s, neighbors opposite: gap 40 to 120 | No fighter stands on one (rule 10) |
 | Mud slide | 3 | Riverbank slope; the hero slides | 30°; 520 px/s, hold back for 380; jump keeps speed; no stopping or climbing back | No one follows; any chase ends |
 
 Blocks and bales never leave their lane and return to their start on any
-checkpoint return, so no layout can lock. Gangplank and mud slide need a
-slope primitive the engine lacks (builder task); until then a gangplank is
-stepped planks and the slide is cut.
+checkpoint return, so no layout can lock.
 
 **Depth-crossing ropes and vines (Decision 15).** A marked rope (level 2)
 or vine (level 3) carries the gate's lamp at its anchor, an ink ring at
@@ -245,7 +251,9 @@ Hearts refill at every checkpoint.
 hearts. A fall: one heart and the same return. No deaths counter, no end
 stats, no lives (Pillar 3).
 
-**Checkpoints.** A banner on the main lane, 1,000 to 1,500 px apart: rule 6.
+**Checkpoints.** A main-lane banner, 1,000 to 1,500 px apart (rule 6). It
+lights when the hero passes its x in any lane or height; he returns to the
+banner (builder task; the engine checks lane 1 within 30 px).
 
 **Cost in time.** A catch: 3 s. A fall or three hearts gone: 5 to 15 s.
 
@@ -262,23 +270,19 @@ pale gold, a standing figure, no lettering.
 
 | Level | Target time | Width | Guards or fighters | Forced stealth beats | Combat beats | New ideas |
 |---|---|---|---|---|---|---|
-| 1 Thanjavur | 3 min 13 s | 8,800 px | 6 guards | 1 (the pillar wall at 2480) | 0 | Gate leap and forward sight; climbing and pushing |
-| 2 Nagapattinam | 3 min 31 s | 9,400 px | 7 guards | 1 (the deck wall-jump) | 0 | Height hides; bouncing and rigging; the first marked rope |
-| 3 Kadaram | 3 min 55 s | 10,000 px | 6 fighters (4 patrols, 2 gateway sentinels, one a shield-bearer) | 0 | 1 forced, up to 4 optional | The sword and its telegraph; swinging and sliding |
+| 1 Thanjavur | 2 min 58 s | 8,800 px | 6 guards | 1 (the pillar wall at 3440) | 0 | Gate leap and forward sight; climbing and pushing |
+| 2 Nagapattinam | 3 min 7 s | 11,600 px | 6 guards | 1 (the deck wall-jump) | 0 | Height hides; bouncing and rigging; the first marked rope |
+| 3 Kadaram | 3 min 24 s | 13,300 px | 6 fighters (4 patrols, 2 gateway sentinels, one a shield-bearer) | 0 | 1 forced, up to 4 optional | The sword and its telegraph; swinging and sliding |
 
-**Arithmetic (Decision 12).** Run at 385 px/s: 23, 24, 26 s. Waits, 4.2 s
-per patrolling guard or fighter: 25, 29, 17 s. Traversal per beat: level
-1, five climbs at 5 s, three pushes at 8 s: 49 s. Level 2, four bounces at
-4, two bales at 8, three rigging climbs at 6, two marked ropes at 2: 54 s.
-Level 3, six vines at 3, two marked vines at 2, three walkways at 6, two
-root stretches at 5, one slide at 6: 56 s. Leaps and reading: 40 s each.
-Retries at 8 s: 56, 64, 56 s. Level 3 fights: two at 15 s, one optional at
-10: 40 s. Totals 193, 211, 235 s: 10 min 39 s, about 12 with the cards.
-The widths are targets, not yet laid out.
+**Arithmetic (Decision 12).** Widths, counts, and times come from the
+level files' third drafts; each time is the beat-sheet sum: 178 + 187 +
+204 = 569 s, 9 min 29 s of play, about 10.5 with the cards. Draft 3's
+per-beat estimate (193, 211, 235 s) is the ceiling. Level 1 sits 2 s
+under three minutes; the playtest decides.
 
 **The ten-year-old check.** Hardest skill: the pillar wall. Hardest
-timing: a walkway gap, reopening every 2.4 s. Hardest read: the
-shield-bearer. Worst case anywhere: a heart and a shove, or 15 s.
+timing: a walkway gap. Hardest read: the shield-bearer. Worst case: a
+heart and a shove, or 15 s.
 
 ## 8. Touch controls
 
@@ -299,9 +303,9 @@ far, ▼ near" on touch. Jump hold works, so bounce height and plank drops
    hide behind, or a flat run behind his back.
 4. **Gates and marked ropes are announced**: lamplit, visible 500 px off,
    on flat ground at least 200 px long, never at the end of a jump, in
-   pairs 600 to 1,200 px apart. The first of each kind has a hint. Level
-   3's gate is plain timber post-and-lintel with lamps, no crimson, arrow
-   glyph black (Decision 7).
+   pairs 600 to 1,200 px apart, target footing at most 140 px above. The
+   first of each kind has a hint. Level 3's gate is plain timber
+   post-and-lintel with lamps, arrow glyph black (Decision 7).
 5. **No cone within 150 px of a drop landing, a rope landing, or a
    checkpoint.** A gate exit may lie in a cone sweep only if the guard in
    the target lane is on screen from the gate and walks away a full leg.
@@ -319,7 +323,8 @@ far, ▼ near" on touch. Jump hold works, so bounce height and plank drops
    cone, never off the route.
 10. **Level 3**: the gateway is the only place all three lanes close and
     the only place a sentinel stands. Fighters at least 400 px apart in a
-    lane, on flat ground with 300 px of retreat, never two awake at once.
+    lane, never two awake at once, on ground that does not move (a fixed
+    walkway counts) with 300 px of retreat. No fight on a swaying section.
 
 ## 10. Open questions for Gaurav
 
@@ -334,6 +339,17 @@ never kills.
 
 ## Revision notes
 
+- 2026-10-26, third draft, ruling pass on the level designer's LEVEL-2
+  and LEVEL-3 notes and the builder's rope numbers. Section 7 now takes
+  the level files' widths, counts, and beat-sheet times (178, 187, 204 s).
+  Rule 10 holds: no fight on a swaying section, so S3 and S4 move (NOTES.md).
+  Checkpoints light by x in any lane, a builder task that fixes the far-lane
+  skip with no layout change. The builder's swing numbers are adopted as
+  the rope and vine swing in 2a; vines release at `vy -420`, not -300.
+  Also: first-use isolation narrowed to 900 px in the piece's lane; gate
+  footing at most 140 px above (rule 4); bale-into-gap dropped as unused.
+  The slope note was cut for budget; slopes still do not exist in the
+  engine and LEVEL-3 lists them as new.
 - 2026-10-25, third draft, after Gaurav's playtest of level 1 (Decisions
   10 to 16), VISION draft 4, RESEARCH 3.4, and the builder's memory. Budget
   raised from 2,500 to 3,200 words for the new traversal section, per the
