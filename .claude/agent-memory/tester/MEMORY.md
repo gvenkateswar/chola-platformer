@@ -30,3 +30,11 @@ TRACE=1, DEV_LEVEL=<0-2> DEV_TELEPORT=x,y.
 - Dev aids: START_LEVEL=n (uses the game's queueLevel), DEV_LEVEL + DEV_TELEPORT, TRACE=1.
 - Do not `pkill -f` a pattern that appears in your own command line; it kills the shell. Run long loops with run_in_background and a done-file.
 - Asset check is now a WARN (game falls back to procedural art), per the coordinator's commit.
+
+## Round 3 (build/levels-2-3): levels 2 and 3
+- Clock is now simulated: rAF is replaced so each frame advances 1/60 s and runs `window.__botStep` first. Runs are deterministic (same numbers every run); limits are game seconds `20 + 2*goalX/385`. A stalled loop (thrown error) is detected by game time not advancing for 6 s wall.
+- Baseline on that branch: L1 36.1, L2 46.7, L3 42.2 game s; about 74 s wall; three runs identical.
+- New bot parts: BFS lane planner over all platforms (hops and gate links, footing must be the planned platform), `back` rule to lane 1, awning jump by arc sim, rope/vine grab by arc sim (waits at a ledge up to 4 s), swing mode (slide to rope bottom, pump with the swing, release when the arc lands on non-wade footing ahead), marked rope: walk off the ledge, press up, fight controller (cut at gap <= 95; shield: hold 104-132 px, rush in recovery).
+- Piece counters in `cov`, required per level in NEEDED. Ladder, near-lane routes and drop-through planks are not used by the route and not required.
+- Falls print a trail in the INFO line; use it first when a level fails.
+- Do not `pkill -f` patterns present in your own command.
