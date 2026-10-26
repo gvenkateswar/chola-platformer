@@ -1,7 +1,8 @@
 # Chola: Tides of Bronze — Script
 
 Owner: narrative-designer. Readers: builder, design-critic, level-designer.
-First draft, 2026-10-25. Budget 1,500 words including the text itself.
+Third draft, 2026-10-25. Budget 1,700 words including the text itself
+(raised from 1,500 for the handover scene, DECISIONS.md 10).
 Every fact follows `docs/RESEARCH.md`; every fight and kill follows
 `docs/DECISIONS.md` 3 and 4.
 
@@ -37,8 +38,8 @@ You are Ilamaran. Nobody will write your name on a wall. Run, climb, and
 cross between the near and far paths of the painting at the lamplit gates.
 The sword stays in its scabbard until Kadaram.
 
-**Key legend, one change:** "J / X sword" becomes "J / X sword · from
-Chapter III."
+**Key legend, one change:** "J / X sword" becomes "J / X sword, sheathed
+until Kadaram."
 
 **Prompt:** Begin the voyage
 
@@ -75,23 +76,43 @@ and a gate of jewels. The gate is ahead of us. The elephants I will not
 see. The men in front of that gate know this ground. I have carried this
 sword fifteen years without drawing it on a man. (70 words)
 
+### The handover (level 1, start; DESIGN.md 2, "The sheathed sword")
+
+Adittan, an older man of Ilamaran's company, waits by the first stairs.
+Walking into him plays the scene. If the 2 s scene holds one line, use
+the third.
+
+> **Adittan:** Your father carried this. Now you do.
+> **Ilamaran:** Do I draw it here?
+> **Adittan:** Never among our own. Draw it where the king's son sends you.
+
+Adittan knows a muster, not a voyage: he cannot name Kadaram in 1010.
+
 ## 4. In-level hints and floats
 
 Positions follow `docs/levels/LEVEL-N.md` section 9, still in revision;
-the x values here may shift. Each level's first gate links lanes 0 and 1
-only, so the gate lines promise ↑ and nothing else. All under 12 words.
+the x values here may shift, and the four traversal lines wait for the
+level designer to place each piece's first use (DESIGN.md 2a). Each
+level's first gate links lanes 0 and 1 only, so the gate lines promise ↑
+and nothing else. All under 12 words. Touch versions swap "↑" for "tap
+▲" and "J or X" for "tap ⚔" (DESIGN.md 8).
 
 | Where | Text |
 |---|---|
 | Level 1, double jump (x 1000) | Jump again in the air. The step is high. |
+| Level 1, first scaffold pole | A scaffold pole. Hold ↑ to climb. |
+| Level 1, first scaffold planks | ↓ and jump to drop through the planks. |
+| Level 1, first hauling rope | A hauling rope. Jump to it, then climb. |
+| Level 1, first block on rollers | Stone on rollers. Lean into it to push. |
 | Level 1, first gate (x 1740) | The lamp marks a gate. ↑ the cloister roof. |
 | Level 2, first gate (x 260) | Lamplit again. ↑ the warehouse ledge. |
 | Level 2, climb (x 320) | Up the bales. Height hides you. |
-| Level 3, sword (x 300) | Here the sword comes out. J or X. |
+| Level 3, draw prompt before the first fighter (x 200) | Here the sword comes out. J or X. |
+| Level 3, first cut, once (optional) | My father's blade, out for the first time. |
 | Level 3, first gate (x 340) | A lamp in the rain. ↑ the stilt walk. |
-| Touch variant of each gate line (DESIGN.md 8) | Same words; "↑" becomes "tap ▲." |
 | Up or down pressed away from a gate (replaces "no crossing here") | No gate here. Find the lamp. |
-| Attack pressed in levels 1 and 2, once per level (DESIGN.md 3) | Not here. Not against our own. The sword waits. |
+| Attack in level 1: blade pushed home; first press and after 30 s | Back in the sheath. Not among our own. |
+| Attack in level 2, same rule | Back in the sheath. Not before the far shore. |
 | Checkpoint reached (replaces "Banner planted") | The banner is planted. Breathe. |
 | Level 1, CP2 (x 2900), replaces the checkpoint line | The tower. I did not know stone went that high. |
 | Level 2, CP2 (x 3030), replaces the checkpoint line | A foreign king's house of monks. Nobody minds it. |
@@ -136,7 +157,7 @@ Leiden plates, 1006); sewn-plank hulls; the 1025 raid, the captured king,
 the seized gateway (Rajendra's Thanjavur inscription); Srivijaya's embassy
 to China in 1028 (*Song Shi* 489). Whether the thirteen places fell in one
 campaign is disputed; the game follows Kulke. **Invented:** Ilamaran,
-Sattan, every guard, fighter, and route, the lamplit gates, and the gold
+Adittan, Sattan, every guard, fighter, and route, the lamplit gates, and the gold
 kasu scattered on the road. Nobody knows how many ships sailed or how long
 the crossing took.
 
@@ -148,18 +169,19 @@ and Sakhuja, eds., *Nagapattinam to Suvarnadwipa* (2009). Balasubrahmanyam,
 
 | On screen | What it is |
 |---|---|
-| Ilamaran | The hero, a common soldier (sevagan) of the fleet. Invented name; RESEARCH.md 4 does not object. |
-| Sattan, son of Kandan | Ilamaran's deckmate, lost at Kadaram. Invented, in the attested "X son of Y of village Z" form. |
-| Rajaraja | Rajaraja I, king 985–1014, builder of the temple. "The king" in Ilamaran's mouth; never "emperor." |
-| Rajendra | Rajendra I, the king's son and general in 1010; co-regent 1012; king 1014–1044; sent the fleet of 1025. |
-| Thanjavur | Chola capital; the Brihadisvara temple, finished 1010, its tower over sixty metres. Ilamaran has no metres. |
-| Nagapattinam | The main eastern port; home of the Chudamani vihara, a Buddhist monastery funded by Srivijaya. |
-| Anaimangalam | Village near Nagapattinam granted to the vihara in 1006; Sattan's home. |
-| Srivijaya | Malay Buddhist kingdom centered on Palembang, Sumatra, Kedah in its network. The level-3 enemy is Srivijayan. |
-| Kadaram | Kedah, Malay peninsula; a mangrove estuary, one mountain behind. "Kadaram has fallen" is a Chola boast. |
-| kasu | Chola coin and unit of account (SII II). Gold in the game by convention; copper existed. Never counted. |
+| Ilamaran | The hero, a common soldier (sevagan) of the fleet. Invented; RESEARCH.md 4 does not object. |
+| Adittan | Older man of Ilamaran's company; hands him his father's sword. Invented, attested name, no rank. |
+| Sattan, son of Kandan | Ilamaran's deckmate, lost at Kadaram. Invented, attested "X son of Y of village Z" form. |
+| Rajaraja | Rajaraja I, king 985–1014, builder of the temple. "The king," never "emperor." |
+| Rajendra | Rajendra I, the king's son; co-regent 1012; king 1014–1044; sent the fleet of 1025. |
+| Thanjavur | Chola capital; the Brihadisvara temple, finished 1010, tower over sixty metres. |
+| Nagapattinam | Main eastern port; the Chudamani vihara, a Buddhist monastery funded by Srivijaya. |
+| Anaimangalam | Village granted to the vihara in 1006; Sattan's home. |
+| Srivijaya | Malay Buddhist kingdom centered on Palembang, Sumatra. |
+| Kadaram | Kedah, Malay peninsula. "Kadaram has fallen" is a Chola boast. |
+| kasu | Chola coin and unit of account (SII II). Gold by game convention. Never counted. |
 | sevagan | A common soldier. Glossed here; used once in Chapter II. |
-| tiger | The Chola emblem; a tiger on a crimson field on a pole. "The Sea Belongs to the Tiger" is the boast, kept by DECISIONS.md 4. |
+| tiger | The Chola emblem, on a crimson field on a pole (DECISIONS.md 4). |
 
 ## Open questions for Gaurav
 
@@ -167,13 +189,11 @@ None.
 
 ## Revision notes
 
-- 2026-10-25, second draft. All seven findings of
-  `docs/reviews/script-review-2026-10-25.md` taken: gate hints at the
-  level documents' positions, ↑-only; double-jump, climb, sword, touch, and
-  three mid-level lines added; Chapter III no longer denies the gateway;
-  the line of cost no longer says the ships were rowed (RESEARCH.md 9.2);
-  "Merbok" to "the Kadaram shore"; Rajendra's sources tag narrowed.
-- 2026-10-25, first draft. Every player-facing string in `index.html`
-  rewritten against RESEARCH.md: navy, young prince, war elephants,
-  Ayyavole, jungle, citadel, metres, and the "only expedition" claim
-  removed; line of cost and inert-attack float added.
+- 2026-10-25, third draft (DECISIONS.md 10; NOTES.md request): handover
+  scene, per-level push-home lines, draw prompt, first-cut line, four
+  traversal hints, title key text. Budget raised to 1,700.
+- 2026-10-25, second draft: all seven findings of the script review taken
+  (hint positions, ↑-only gates, mid-level lines, gateway, no rowing,
+  Kadaram shore, Rajendra's tag).
+- 2026-10-25, first draft: every `index.html` string rewritten against
+  RESEARCH.md.
