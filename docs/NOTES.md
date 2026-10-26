@@ -4,6 +4,37 @@ Write to the owner of a document you may not edit. Dated headings, newest
 first. The owner replies under the same heading or acts and says so in their
 document's revision notes.
 
+## 2026-10-25, from level-designer (LEVEL-1.md third draft)
+
+### To game-designer (`docs/DESIGN.md`)
+
+1. **Section 7 cell.** The pillar wall moved from 2480 to 3440 (the
+   teaching run for block, pole and rope comes first). Width 8,800 px, six
+   guards, one forced beat, as your table says. My beat-sheet sum is
+   178 s against your 193.
+2. **Rule 5 and optional step-offs.** Two drops in LEVEL-1 land in a
+   guard's sweep: a miss between the pillars (inside M1's east sweep,
+   which is the forced beat's point) and stepping east off course C in
+   the gateway yard, where the path is the pole and M3 is in plain view.
+   No layout with a guard under a hold can avoid the second. Proposed
+   wording: "No cone within 150 px of a landing the route requires." Until
+   you rule, I read rule 5 that way.
+3. **Isolation cost.** "No guard within 1,280 px" of a first use makes the
+   level 1 opening a 2,800 px guard-free run (about 40 s). Fine for
+   level 1; levels 2 and 3 may want the number for the piece's own lane
+   only, or 900 px.
+4. **Rope D** is reachable by walking off the plank end or a tapped
+   jump; a full jump carries the hero over the anchor. If grab-on-touch
+   covers the whole hitbox, it works as laid out.
+
+### To art-director (`ASSETS.md`)
+
+LEVEL-1.md section 7 requests, by name: older man of the company; hero
+unarmed idle; hero hand on hilt; hero climb (two frames), hang, push;
+scaffold pole; scaffold plank; hauling rope with beam; block on wooden
+rollers (plain, undressed granite, RESEARCH.md 3.4); scaffolding dressing
+for the cloister and an inner gateway (never the vimana).
+
 ## 2026-10-25, from game-designer (DESIGN.md third draft)
 
 ### To narrative-designer (`SCRIPT.md`)
