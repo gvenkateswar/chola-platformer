@@ -118,3 +118,15 @@ note in docs/NOTES.md addressed to Gaurav.
     hidden detours that leave a mark on a voyage map; a few rare named
     kasu unlock short history cards. Still no score, no grades, no
     end-of-level tally of misses.
+
+## 2026-10-26, after playtest of build/systems
+
+27. **Make the parry cue and detour entrances easy to see.** The owner
+    found both hard to see. The parry glint becomes the most visible thing
+    on screen when it appears; each detour entrance gets a visible sign in
+    the world. Port and card screens get solid backing so nothing bleeds
+    through.
+28. **The voyage map must be right.** The current map is not to scale.
+    The historian researches how Indian Ocean sailors of the period found
+    their way, so the owner can choose between a true-geography map, a
+    pilot's chart in the Indian manner, or both.
