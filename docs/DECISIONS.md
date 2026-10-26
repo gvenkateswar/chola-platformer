@@ -31,3 +31,23 @@ note in docs/NOTES.md addressed to Gaurav.
    (about 2 minutes each, 8 minutes total). Targets in VISION.md section 7
    and DESIGN.md section 7 are corrected to match. Longer levels are
    release two.
+
+## 2026-10-25, after first playtest of level 1
+
+10. **Make the sword legible.** Gaurav could not tell whether he had a
+    sword. The player must know from the start that he carries one, that it
+    stays sheathed among Chola people, and that it will be drawn in
+    Kadaram. Designer chooses how (clearer first-press hint, a moment where
+    the sword is handed over, or both).
+11. **Traversal variety.** Levels are "a shell of a larger game, but that's
+    okay." Each level adds one or two new traversal pieces that fit its
+    setting and are historically defensible. Owner's ideas: slides, bouncy
+    surfaces, vines, trees, ropes on the ship. Candidate kit: Thanjavur
+    scaffolding and ropes, hauling ramps; Nagapattinam market awnings to
+    bounce on, ship rigging and yard; Kadaram mangrove roots, vines, swaying
+    stilt walkways, mud slides.
+12. **Level length.** Supersedes decision 9. Levels grow to fit the new
+    traversal, roughly three to four minutes each.
+13. **Gameplay references from the owner.** Donkey Kong Country,
+    Prince of Persia (the newer games), Assassin's Creed Chronicles: India.
+    VISION.md section 5 is updated to name what we take from each.
