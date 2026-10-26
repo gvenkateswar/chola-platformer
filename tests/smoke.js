@@ -6,7 +6,8 @@ const fs = require('fs');
 
 const HTML = path.resolve(process.argv[2] || path.join(__dirname, '..', 'index.html'));
 const OUT = path.join(__dirname, 'out');
-const LEVEL_TIMEOUT_MS = 35000;
+// Level 1 is 8,800 px with a climb section, so its limit is longer than levels 2 and 3 (about 5,500 px).
+const LEVEL_TIMEOUT_MS = [75000, 40000, 40000];
 fs.mkdirSync(OUT, { recursive: true });
 
 let failed = 0;
@@ -67,7 +68,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   };
   const tap = async (k) => { await page.keyboard.down(k); await sleep(40); await page.keyboard.up(k); };
 
-  for (let L = 0; L < 3; L++) {
+  const FIRST = +(process.env.START_LEVEL || 0);   // dev aid: begin at level n (0-2) via the game's own queueLevel
+  if (FIRST > 0) await page.evaluate((n) => queueLevel(n), FIRST);
+  for (let L = FIRST; L < 3; L++) {
     const name = `level ${L + 1}`;
     await page.click('#interBtn');
     await sleep(150);
@@ -100,25 +103,87 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         }
         return false;
       };
+      // if we just keep walking off this edge, do we land on something before the kill line?
+      const walkOffLands = (p) => {
+        let x = p.x, y = p.y, vy = 0, air = false;
+        for (let i = 0; i < 180; i++) {
+          x += 385 / 60;
+          if (!air) air = !plats.some(([bx, by, bw, , l]) => (l ?? 1) === p.lane && x >= bx && x <= bx + bw && Math.abs(by - y) <= 1);
+          if (air) {
+            const py = y; vy += 2300 / 60; y += vy / 60;
+            if (y > level.killY) return false;
+            for (const [bx, by, bw, , l] of plats) {
+              if ((l ?? 1) === p.lane && x >= bx && x <= bx + bw && py <= by + 1 && y >= by) return true;
+            }
+          }
+        }
+        return true;
+      };
       const anyBelow = (lane, x, y) => groundAt(lane, x, y, 1e5);
+      // a block that should keep being pushed: it can still roll right and a tall wall stands beyond it
+      const blocks = level.blocks || [];
+      const pushable = (q, y) => {
+        const b = blocks.find(k => k.p === q);
+        return !!b && q[0] < b.x1 - 1 && plats.some(w => w !== q && w[5] !== 'block' && w[5] !== 'plank' &&
+          (w[4] ?? 1) === (q[4] ?? 1) && w[0] >= q[0] + q[2] && w[0] < q[0] + q[2] + 600 && y - w[1] >= 150);
+      };
       // a ledge or wall ahead that needs a jump; taller ones need an earlier take-off
-      const wallAhead = (lane, x, y) => plats.some(([bx, by, bw, , l]) => {
+      const wallAhead = (lane, x, y) => plats.some((q) => {
+        const [bx, by, , , l] = q;
         const h = y - by;
-        return (l ?? 1) === lane && h > 20 && h < 260 && bx > x + 10 && bx < x + (h <= 130 ? 80 : 185);
+        return (l ?? 1) === lane && h > 20 && h < 260 && bx > x + 10 && bx < x + (h <= 130 ? 80 : 185) && !pushable(q, y);
       });
       const linkAt = (x, a, b) => links.find(k => x >= k.x - 10 && x <= k.x + k.w + 10 &&
         ((k.a === a && k.b === b) || (k.a === b && k.b === a)));
       // same rule the game uses: a gate link under the player and footing in the target lane
       const canShift = (p, target) => !!linkAt(p.x, p.lane, target) && plats.some(([bx, by, bw, , ln]) =>
         ln === target && p.x > bx - 6 && p.x < bx + bw + 6 && by > p.y - 150 && by < p.y + 250);
-      let lastShift = 0, jumpAt = -1e9, lastAtk = 0, atkUp = -1, spaceDown = false, sx = -1, st = time * 1000;
+      let upDown = false, lastShift = 0, jumpAt = -1e9, lastAtk = 0, atkUp = -1, spaceDown = false, sx = -1, st = time * 1000;
       press('ArrowRight', true);
+      // what the run actually exercised, so a green run proves the traversal pieces were used
+      const cov = window.__cov = { pole: 0, rope: 0, plank: 0, leap: 0, push: 0, handover: 0, falls: 0 };
+      let prev = { climb: null, plank: false, leap: false, hp: 3 }; const pushedBlocks = new Set();
       window.__bot = setInterval(() => {
         const p = player, now = time * 1000;   // game time, so timers do not depend on frame rate
         if (state !== 'play') { clearInterval(window.__bot); press('ArrowRight', false); press(' ', false); return; }
+        if (p.climb && !prev.climb) cov[p.climb.kind]++;
+        if (p.onPlank && !prev.plank) cov.plank++;
+        if (p.leap && !prev.leap) cov.leap++;
+        if (p.scene && !prev.scene) cov.handover++;
+        if (p.fadeT > 0 && !prev.fade) { cov.falls++; (window.__falls = window.__falls || []).push([Math.round(p.x), Math.round(p.y), p.lane]); }
+        for (const b of level.blocks || []) if (b.p[0] !== b.x0 && !pushedBlocks.has(b)) { pushedBlocks.add(b); cov.push++; }
+        prev = { climb: p.climb, plank: p.onPlank, leap: !!p.leap, scene: !!p.scene, fade: p.fadeT > 0 };
         const jump = (why) => { (window.__log = window.__log || []).push([why, Math.round(p.x), Math.round(p.y), Math.round(p.vy), p.jumps]); if (spaceDown) press(' ', false); press(' ', true); spaceDown = true; jumpAt = now; };
         if (spaceDown && now - jumpAt > 380) { press(' ', false); spaceDown = false; }
         if (atkUp > 0 && now > atkUp) { press('j', false); atkUp = -1; }
+        const logit = (...a) => (window.__log = window.__log || []).push(a);
+        // ink-wash return to the banner: nothing to do until it ends
+        if (p.fadeT > 0 || p.leap) { st = now; return; }   // the gate leap ignores input for 0.5 s
+        // the sword handover scene: skip it with J once it has run a moment
+        if (p.scene) {
+          st = now;
+          if (p.scene.t > 0.3 && now - lastAtk > 300) { logit('skip-handover', Math.round(p.x)); press('j', true); atkUp = now + 60; lastAtk = now; }
+          return;
+        }
+        // on a pole or rope: climb up if a ledge above lies ahead (always on a pole), then jump off toward the goal
+        if (p.climb) {
+          st = now;
+          const c = p.climb, o = c.o;
+          const lo = c.kind === 'pole' ? o.top : o.ay + 60;
+          const ledgeAhead = plats.some(q => (q[4] ?? 1) === p.lane && q[5] !== 'block' && q[0] + q[2] > p.x + 60 && q[0] < p.x + 700 && q[1] < p.y - 40);
+          if ((c.kind === 'pole' || ledgeAhead) && p.y > lo + 3) {
+            if (!upDown) { press('ArrowUp', true); upDown = true; }
+          } else {
+            if (upDown) { press('ArrowUp', false); upDown = false; }
+            if (now - jumpAt > 300) { logit('climb-off-' + c.kind, Math.round(p.x), Math.round(p.y)); jump('climb-off'); }
+          }
+          return;
+        }
+        // walking up to a pole whose top lies well above our feet: hold up beside it to grab it
+        const pole = (level.poles || []).find(o => o.lane === p.lane && o.x > p.x - 20 && o.x < p.x + 110 &&
+          o.top < p.y - 100 && Math.abs(o.bot - p.y) < 40);
+        if (p.onGround && pole) { if (!upDown) { press('ArrowUp', true); upDown = true; logit('pole-up', Math.round(p.x)); } }
+        else if (upDown) { press('ArrowUp', false); upDown = false; }
         // take the far lane across a lane-1 gap, come back to lane 1 afterwards
         let wantFar = false;
         if (p.lane === 1 && p.onGround && groundAt(1, p.x + 130, p.y, 300) === null && canShift(p, 0)) {
@@ -136,11 +201,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
           // stepping off a ledge with a higher ledge in reach ahead: jump for it rather than drop
           const climb = ahead !== null && ahead > p.y + 30 && plats.some(([bx, by, , , l]) =>
             (l ?? 1) === p.lane && bx > p.x + 10 && bx < p.x + 260 && by < p.y - 10 && by > p.y - 200);
-          if (ahead === null || climb || wallAhead(p.lane, p.x, p.y)) jump('ground');
+          // the ledge ahead drops away and plain walking off it would miss the next footing: jump
+          const shortDrop = groundAt(p.lane, p.x + 45, p.y, 0) === null && !walkOffLands(p);
+          if (ahead === null || climb || shortDrop || wallAhead(p.lane, p.x, p.y)) jump(shortDrop ? 'edge' : 'ground');
         } else if (!p.onGround && p.vy > 50 && p.jumps === 1 && now - jumpAt > 200) {
           if (!landsOn(p.lane, p) || wallAhead(p.lane, p.x, p.y)) jump('air');
         }
-        if (now - lastAtk > 400 && level.guards.some(g => !g.dead && g.lane === p.lane && Math.abs(g.x - p.x) < 85)) {
+        if (levelIdx >= 2 && now - lastAtk > 400 && level.guards.some(g => !g.dead && g.lane === p.lane && Math.abs(g.x - p.x) < 85)) {
           press('j', true); atkUp = now + 60; lastAtk = now;
         }
         if (Math.abs(p.x - sx) > 15) { sx = p.x; st = now; }
@@ -149,12 +216,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     });
     const start = Date.now();
     let done = false, midShot = false;
-    while (Date.now() - start < LEVEL_TIMEOUT_MS) {
+    while (Date.now() - start < LEVEL_TIMEOUT_MS[L]) {
       await sleep(process.env.TRACE ? 40 : 150);
       s = await snap();
       if (process.env.TRACE) console.log(JSON.stringify([Math.round(s.x), Math.round(s.y), s.lane, s.ground, s.hp]));
       if (s.state !== 'play') { done = true; break; }
       if (!midShot && s.x > s.gx * 0.5) { midShot = true; await shot(`l${L + 1}-mid`); }
+    }
+    const cov = await page.evaluate(() => window.__cov);
+    console.log(`INFO ${name} exercised: ` + Object.entries(cov).map(([k, v]) => `${k} ${v}`).join(', '));
+    const falls = await page.evaluate(() => window.__falls || []);
+    if (falls.length) console.log(`INFO ${name} returns to banner at (x,y,lane): ` + JSON.stringify(falls));
+    if (L === 0 && done) {
+      const miss = ['pole', 'rope', 'plank', 'leap', 'push', 'handover'].filter((k) => !cov[k]);
+      miss.length === 0 ? pass('level 1 traversal exercised (handover, pole, rope, plank, block push, gate leap)')
+                        : fail('level 1 traversal exercised', 'never used: ' + miss.join(', '));
     }
     if (process.env.TRACE) console.log('LOG ' + JSON.stringify(await page.evaluate(() => window.__log)));
     await page.evaluate(() => { clearInterval(window.__bot); });
