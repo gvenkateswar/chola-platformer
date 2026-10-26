@@ -26,16 +26,17 @@ change layers; neither paints the layer or makes you earn the crossing.
 
 ## 3. Pillars
 
-### Pillar 1: The painting has depth and one color
+### Pillar 1: The painting has depth, and only Chola is red
 
-Every scene is one ink-and-watercolor painting with three depths to stand
-in; the player crosses between them only at painted gates, leaving an ink
-mark each time. Crimson means Chola; nothing else gets it.
+Every scene is one ink-and-watercolor painting in its own place's colors,
+with three depths to stand in, crossed only where marked; crimson is the
+only red and means Chola.
 
-Approves: gate crossings.
+Approves: each place's palette (DECISIONS.md, 17); the gate leap (16); a
+marked rope or vine (15).
 
-Rejects: green market awnings; a crimson guard standing in for a
-Srivijayan.
+Rejects: any other red (a red awning, a red-clad Srivijayan); flat,
+low-contrast layers.
 
 ### Pillar 2: One of the crew
 
@@ -54,7 +55,7 @@ Every level is a leg of one voyage east, and the game never counts, ranks,
 or rewards what the player left behind.
 
 Approves: kasu that lead the eye to the better route; a stealth stretch
-that still moves east.
+moving east.
 
 Rejects: any stop to earn something in place (a stall, a shop, a timed
 challenge); tallies of kasu, falls, or minutes.
@@ -65,11 +66,11 @@ challenge); tallies of kasu, falls, or minutes.
 |---|---|
 | Lane switching | 1 approves. |
 | Coins | 3: trail stays; counter, tally, "+1 kasu," and chime go; a pickup is an ink bloom. |
-| Chola guard as only enemy | 2 rejects (DECISIONS.md, 3); 1 rejects the crimson stand-in. |
+| Chola guard as only enemy | 2 rejects (DECISIONS.md, 3); 1 rejects a red Srivijayan. |
 | Boss fight | 2 rejects. |
 | Stealth section | 3 approves; 2 silent. |
 | Trading mini-game | 3 rejects. |
-| Ropes, awnings, vines, slides, push blocks (DECISIONS.md, 11, 14) | 1 approves within one depth, in palette; 3 approves while they open or carry the way east. Crossing depths: section 8. |
+| Ropes, awnings, vines, slides, push blocks (DECISIONS.md, 11, 14) | 1 approves in palette, crossing depths only if marked (15); 3 approves if they lead east. |
 
 Conflicts are deliberate: 1 lingers, 3 moves; 2 wants a small ending, the
 title a large one; 1 gives a way around every enemy, 2 wants fights the road
@@ -107,8 +108,8 @@ stealth in painted South Asia, with depth planes. We take its legible
 patrols: route and reach read before the player commits. We differ: a
 guard who sees the player chases him but catches him only if he stops in
 reach (DECISIONS.md, 8), and no Chola is fought; no takedowns from hiding;
-no score or ranks; depth changes only at gates; crimson on parchment where
-Chronicles is saturated; a crewman, never an assassin.
+no score or ranks; depth changes only where marked; only Chola wears
+red; a crewman, never an assassin.
 
 ## 6. Historical stance
 
@@ -142,31 +143,20 @@ ship-deck level (release two, DECISIONS.md, 1).
 
 ## 8. Open questions for Gaurav
 
-Earlier questions are ruled in `docs/DECISIONS.md`.
-
-**1. May a rope or vine carry the player between depths?** Pillar 1 allows
-depth changes only at gates, so a vine or rigging swing from the near path
-to the far one, a natural piece for ruling 11, is rejected today. Options:
-(a) gates only; ropes and vines stay within one depth; (b) a rope or vine
-may cross if it is marked like a gate, with a lamp and an ink mark; (c) drop
-the gate rule. Recommendation: (b). The crossing stays earned and readable,
-and the kit gets its swing.
+None. All questions so far are ruled in `docs/DECISIONS.md`; the depth
+crossing question became ruling 15.
 
 ## Revision notes
 
-- 2026-10-25, four drafts in one day. First: written from the build before
-  `docs/RESEARCH.md` existed. Second: rulings 1 to 5 settled; the critic's
-  eight findings and the historian's corrections applied. Third: the
-  critic's six smaller findings applied; hero redraw (ruling 6). Fourth:
-  section 5 replaced with the owner's references (rulings 13 and 14). Gris,
-  Ponniyin Selvan, Ōkami, and the Son of Thanjai contrast were cut, and DKC
-  and The Jungle Book share one entry since both give setting-built
-  traversal and vine swings, which keeps the three-reference limit; the crimson rule lives in Pillar 1, the
-  interstitial voice in Pillar 2, the brush look in `ASSETS.md`. Scope
-  updated for rulings 10 to 12; traversal kit ruled in the table; one new
-  question for Gaurav.
-- Fourth draft, correction: section 5 wrongly said our guards have no
-  sight cone; they do (DESIGN.md section 3). The difference from Chronicles
-  is what being seen leads to.
-- Two pushbacks kept: revision notes sit outside the word budget, and the
-  ship-deck beat is a designer proposal (NOTES.md), not scope.
+- 2026-10-25, four drafts. First: written from the build before
+  `docs/RESEARCH.md` existed. Second: rulings 1 to 5; the critic's eight
+  findings and the historian's corrections applied. Third: the critic's six
+  smaller findings; hero redraw (ruling 6). Fourth: section 5 rebuilt on the
+  owner's references (rulings 13, 14), DKC and The Jungle Book merged to
+  keep three entries; Gris, Ponniyin Selvan, Okami, and Son of Thanjai cut.
+  Scope set by rulings 10 to 12. Corrected: our guards do have a sight cone
+  (DESIGN.md 3); the difference from Chronicles is what being seen leads to.
+  Palette: Pillar 1 rewritten for rulings 15 to 17 (per-place color, marked
+  rope crossings, gate leap); crimson stays the only red.
+- Pushbacks kept: revision notes sit outside the budget; the ship-deck beat
+  is a designer proposal (NOTES.md), not scope.
