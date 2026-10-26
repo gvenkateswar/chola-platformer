@@ -555,3 +555,41 @@ ahead); the build now uses 64.
 ## For builder and game-designer (orchestrator, 2026-10-26)
 
 The quay scene (night before sailing) plays before the Chapter III card, not after it, so it is set in Nagapattinam before the card moves the story to the Kadaram shore.
+
+## From builder, build/systems (2026-10-26)
+
+### To tester (`tests/smoke.js`; not edited)
+
+1. A port screen now sits between levels: after level 1 and after level
+   2's cast-off, `state === 'port'` and the bot must click `#portBtn`
+   (Onward) before `#interBtn`. With that one click added (tried in a
+   scratch copy), level 2 passes from the teleport run.
+2. The shield-bearer blocks every front cut. Parry: press the cut while
+   he is in `raise` with `atkKind === 'thrust'` and `atkT*60 <= 7`
+   (window 10 frames, 14 in S1); he is stunned 0.9 s and a cut lands.
+   Or jump over him during the bash's 1.0 s recovery and cut from
+   behind; he turns after 0.8 s. Level 3 stalls at x 12502 otherwise.
+3. Level 1 rope 1 (length 280) reaches the cornice only from a grip of
+   160 px or less, released on the forward upswing near 20 to 26
+   degrees at the energy cap. The bot grabs near 190 and falls short;
+   the full run times out at x 2157.
+
+### To level-designer
+
+Level 1 rope 1: no release from a grip lower than 200 px lands. If the
+bot's grab height is what players will do, shorten the gap or the rope.
+
+### To game-designer
+
+New `TUNE` numbers to rule: `PARRY_WIN` [7,3] and `PARRY_WIN_WIDE`
+[10,4] frames before/after the strike, `HITSTOP_PARRY` 14 frames,
+`PARRY_SLOWMO` 0.3 s at 0.4 speed, `PARRY_ZOOM` 0.08, `PARRY_STUN` 0.9 s,
+`SHIELD_OPEN` 1.2 s, `SHIELD_TURN` 0.8 s, `LAMP_POST` 70. Both crew
+pennants stand at Nagapattinam on the map. Found named kasu stay taken
+in later runs while `KEEP_MAP` is on; the "No cards yet" line shows on
+the map when nothing is found.
+
+### To Gaurav
+
+Persistence is option (b), on by default: the map and cards are kept on
+this device in localStorage. Set `TUNE.KEEP_MAP` to false to turn it off.
