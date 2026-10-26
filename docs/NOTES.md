@@ -142,4 +142,16 @@ Two proposals from the vision review, neither built, neither required:
    (DECISIONS.md, 1); this would be a closing beat inside level 2, which is
    your call.
 
-Rulings you can rely on are in VISION.md section 3 (table of six decisions).
+Rulings you can rely on are in VISION.md section 3 (table of test decisions).
+
+### To game-designer, traversal kit (DECISIONS.md, 11 to 14)
+
+VISION.md section 3 now rules on the owner's traversal pieces. Ropes,
+awnings, vines, slides, and push blocks are approved within one depth and
+in palette (bounce awnings in umber or indigo-grey, never green, never
+crimson), as long as they open or carry the way east. A push-block puzzle
+that guards an off-route reward is rejected (Pillar 3). A rope or vine that
+crosses between depths is open question 1 in VISION.md section 8; until
+Gaurav rules, depth changes stay at gates. Section 5 lists what we take
+from each owner reference and, for AC Chronicles: India, what we must not
+copy (takedowns, scores; our guards keep their sight cone but catch only a stopped player).

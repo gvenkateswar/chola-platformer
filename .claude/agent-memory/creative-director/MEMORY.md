@@ -92,3 +92,43 @@ The critic will not review a third time unless something new appears.
 - Playwright play script: scratchpad director/play.js; screenshots showed
   painted backdrops and hero poses load, guards and gates procedural,
   Nagapattinam awnings saturated, level 2 water lethal.
+
+## Rulings 7 to 14 (2026-10-25, after first playtest of level 1)
+
+- 7: level 3 gate is plain timber, no crimson; arrow glyph off in level 3.
+- 8: catch rule, a guard catches only a player who stops in reach.
+- 9: superseded by 12. 12: levels 3 to 4 minutes each (about 10 to 12 total).
+- 10: the sword must be legible from the start, sheathed among Cholas,
+  drawn in Kadaram; designer chooses how.
+- 11: traversal variety, one or two setting-native pieces per level. Owner
+  ideas: slides, bouncy surfaces, vines, trees, ship ropes. Candidate kit:
+  Thanjavur scaffolding, ropes, hauling ramps; Nagapattinam bounce awnings,
+  rigging, yard; Kadaram mangrove roots, vines, stilt walkways, mud slides.
+- 13: references Donkey Kong Country, Prince of Persia (Sands of Time
+  onward, The Lost Crown), AC Chronicles: India. 14: The Jungle Book (SNES)
+  for push blocks and vine swings.
+- Taste signal: Gaurav thinks in concrete platformer references and wants
+  more traversal toys; he called the levels "a shell of a larger game."
+
+## Fourth draft (section 5 rewrite)
+
+- Section 5 now holds three entries: DKC and Jungle Book merged (same
+  takeaway, setting-built traversal and vine swings; coordinator suggested
+  the merge), Prince of Persia, AC Chronicles: India. Gris, Ponniyin Selvan,
+  Okami, and the Son of Thanjai contrast were cut; the crimson rule lives in
+  Pillar 1, the interstitial voice in Pillar 2.
+- What we refuse from each reference (sight cones are NOT refused; our guards have a 300 px cone per DESIGN.md 3, the difference is chase-but-catch-only-if-stopped and no Chola fight): DKC bonus rooms, letters, banana
+  counts; Lost Crown ability gates and backtracking (both Pillar 3); AC
+  India takedowns from hiding, scores and ranks, saturated
+  color, assassin framing.
+- Pillar check on the traversal kit: all approved within one depth, in
+  palette, moving east. Conflict found: a rope or vine swing between depths
+  violates Pillar 1's gates-only rule. Raised as VISION.md section 8
+  question 1 (recommend: allow it if marked like a gate). Not dropped.
+- Search confirmations: AC India uses vision cones, hiding spots, noise
+  lures, takedowns (TheSixthAxis review); Lost Crown is an ability-gated
+  metroidvania with gentle checkpoints (Slant review); DKC levels center on
+  a gimmick such as Slipslide Ride's ropes, with KONG letters and bonus
+  areas (Super Mario Wiki).
+- Budget after fourth draft: sections 1 to 7 at 900 exactly, section 8 at
+  99, revision notes 145.
