@@ -1,6 +1,6 @@
 # Builder memory
 
-Last updated 2026-10-25 after build/level-1 round 2. Line numbers drift;
+Last updated 2026-10-25 after build/level-1 round 3. Line numbers drift;
 grep the function names.
 
 ## Where things live in index.html (~2,150 lines)
@@ -28,13 +28,36 @@ grep the function names.
 - Drawing: drawBlock, drawPole, drawRope, drawSwordGlyph (HUD), NPC and
   leap tween in drawLaneContents, floats clamped to the viewport.
 
+## Round 3 additions
+
+- Color grade: per-level fields `inkTint`, `mistCol`, `mistA`, `vig`,
+  `rays`, `farCol`, `midCol`, `accent`, `gateCrimson` (level 3 false) in
+  the level objects; `applyGrade(L)` sets pal.ink and the dimPal spread
+  (`TUNE.GRADE_NEAR_DIM/FAR_LIFT`). `CRIMSON` is the only red; a hue scan
+  script (hue < 0.075 or > 0.9, sat > 0.3) found only crimson and skin.
+- Cut-out rig: `HERO_RIG` (generated data: pivots, parents, order, traced
+  `cut` outlines), `RIG_DEFS`, `buildRig` (bakes parts at 0.2 scale with
+  clip paths), `rigBlend`, `drawRig`, `heroPoseTarget()` (all poses).
+  drawFigure takes `rig:'hero', pose:player.rigS`. To rig the guard,
+  Adittan, or fighter: add a part map to RIG_DEFS and its file to
+  ASSET_FILES and RIG_SOURCES; drawFigure call sites then pass `rig`.
+- Outlines are generated offline from the PNG: priority-then-nearest
+  pixel ownership from rough seed polygons, 7x7 dilation, 22 px joint
+  discs, a 34 px shoulder cap on the torso, cv2 contours (eps 1.6).
+  The scripts lived in the session scratchpad; regenerate the same way if
+  hero_idle.png is edited.
+- Old pose PNGs (`POSE_FALLBACK`) load only if the rig fails.
+- Text placement: `textObstacles`, `placeText`, `placeHints`,
+  `placeDialogue` keep hints and the handover off coins, platforms,
+  props (poles, ropes, flags, gates, npc, goal) and each other.
+
 ## Quirks
 
 - tests/smoke.js reads globals `deaths` and `coinsTaken`; keep them.
-- The smoke bot cannot climb: it auto-grabs rope 1 (x 1490) in the air and
-  hangs forever (no jump while hanging, stuck check needs onGround).
-  Use `DEV_TELEPORT=8300,620 DEV_LEVEL=0` to cover the level 1 end and
-  levels 2 and 3; 2400,620 reaches pole 2 at 7230 and stops there too.
+- Since tester commit 288b2c1 the smoke bot climbs, pushes, leaps, and
+  skips the handover; level 1 takes it about 37 s.
+- A page opened from disk cannot read image pixels (getImageData throws),
+  so anything pixel-based is precomputed offline into index.html.
 - Headless ~10 fps; level times vary run to run (level 3: 21 to 34 s of
   a 35 s limit).
 - Drive rules by hand: `time+=1/60; movePlayer(1/60); updateWorld(1/60)`.

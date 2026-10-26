@@ -178,10 +178,13 @@ const TUNE = {
   SHEATH_REPEAT:     30,   // §2: the line floats on the first press and after 30 s without one
   HANDOVER_LINE:    1.4,   // §2: seconds per line of the handover (see NOTES.md: three lines, not 2 s)
   FADE_TIME:        1.0,   // §3, §5: ink-wash return to the last checkpoint
+  GRADE_NEAR_DIM:   -40,   // ASSETS.md "Color grade for the builder": palFront dimPal (was -22)
+  GRADE_FAR_LIFT:    16,   // ASSETS.md "Color grade for the builder": palBack dimPal (was +10)
   FALL_DAMAGE:        1,   // §5: a fall costs one heart (was 2)
   SWORD_FROM_LEVEL:   2,   // §2, DECISIONS 3: attack inert in levels 1 and 2 (indices 0, 1)
 };
-const INK = '#1E1610';     // §3, §4 violence rule: every hit is black ink, never crimson
+const INK = '#1E1610';
+const CRIMSON = '#B5342A';  // ASSETS.md style sheet: the only red, and it means Chola (DECISIONS 17)     // §3, §4 violence rule: every hit is black ink, never crimson
 // docs/SCRIPT.md section 4, verbatim
 const SHEATH_LINES = [                       // attack in levels 1 and 2, blade pushed home
   'Back in the sheath. Not among our own.',
@@ -215,6 +218,12 @@ function shade(hex, amt){                 // hex -> hex, lightened/darkened
 }
 function mkPal(top, face, side){
   return {top, topD:shade(top,-16), face, faceD:shade(face,-28), side, ink:'rgba(46,32,22,0.55)'};
+}
+// ASSETS.md "Color grade for the builder": shadow tint and the wider near/far value spread
+function applyGrade(L){
+  if(L.inkTint) L.pal.ink = L.inkTint;
+  L.palFront = dimPal(L.pal, TUNE.GRADE_NEAR_DIM);
+  L.palBack  = dimPal(L.pal, TUNE.GRADE_FAR_LIFT);
 }
 function dimPal(p, amt){ return {top:shade(p.top,amt), topD:shade(p.topD,amt), face:shade(p.face,amt), faceD:shade(p.faceD,amt), side:shade(p.side,amt), ink:p.ink}; }
 
@@ -358,8 +367,7 @@ const ASSET_FILES = {
   l1_far:'l1_far.png',  l2_far:'l2_far.png',  l3_far:'l3_far.png',
   l1_mid:'l1_mid.png',  l2_mid:'l2_mid.png',  l3_mid:'l3_mid.png',
   tex_stone:'tex_stone.png', tex_wood:'tex_wood.png',
-  hero_idle:'hero_idle.png', hero_run_a:'hero_run_a.png', hero_run_b:'hero_run_b.png',
-  hero_jump:'hero_jump.png', hero_attack:'hero_attack.png',
+  hero_idle:'hero_idle.png',          // the hero's cut-out rig source (DECISIONS 19)
   guard_walk_a:'guard_walk_a.png', guard_walk_b:'guard_walk_b.png',
   gate:'gate.png',
 };
@@ -397,14 +405,32 @@ function trimAlpha(im){
   t.hf = t.height / im.height;      // figure's fraction of the frame, resolution-independent
   return t;
 }
-for(const [k,f] of Object.entries(ASSET_FILES)){
+// the old pose PNGs are a fallback, loaded only if the rig cannot be built
+const POSE_FALLBACK = {hero_run_a:'hero_run_a.png', hero_run_b:'hero_run_b.png',
+                       hero_jump:'hero_jump.png', hero_attack:'hero_attack.png'};
+let poseFallbackLoaded = false;
+function loadAsset(k, f, onRaw, onFail){
   const im = new Image();
   im.onload = ()=>{
+    if(onRaw) onRaw(im);
     if(TRIM_KEYS.has(k)){ try{ IMGS[k] = trimAlpha(im); }catch(e){ IMGS[k] = im; } }
     else IMGS[k] = im;
   };
+  if(onFail) im.onerror = onFail;
   // a build may define ASSET_DATA to ship assets inline (e.g. the claude.ai artifact)
   im.src = (typeof ASSET_DATA !== 'undefined' && ASSET_DATA[f]) ? ASSET_DATA[f] : 'assets/'+f;
+}
+function loadPoseFallback(){
+  if(poseFallbackLoaded) return; poseFallbackLoaded = true;
+  for(const [k,f] of Object.entries(POSE_FALLBACK)) loadAsset(k, f);
+}
+// rig sources by asset key: built from the raw image (trimming would shift the part map)
+const RIG_SOURCES = {hero_idle:'hero'};
+for(const [k,f] of Object.entries(ASSET_FILES)){
+  const rig = RIG_SOURCES[k];
+  loadAsset(k, f,
+    rig ? (im)=>{ try{ buildRig(rig, im); }catch(e){ loadPoseFallback(); } } : null,
+    rig ? ()=>loadPoseFallback() : null);
 }
 const TEXPATS = {};
 function texPat(key){
@@ -429,6 +455,176 @@ function drawBackdrop(im, par){
       ctx.drawImage(im, 0, 0, w, H); ctx.restore();
     } else ctx.drawImage(im, sx, 0, w, H);
   }
+}
+
+// Hero part map: ASSETS.md "Cut-out rigs", hero_idle.png 1024x1536. Pivots, parents and draw order
+// are the art director's; the cut outlines were traced offline from that image (each pixel to one
+// part, 3 px bleed, 22 px overlap into the parent at every joint, a shoulder
+// cap kept on the torso) because a page opened from disk cannot read image pixels.
+const HERO_RIG = {
+  file:'hero_idle', anchor:[620,1505], frameH:1536,
+  order:['sash', 'bua', 'bfa', 'bth', 'bsh', 'fth', 'fsh', 'torso', 'pelvis', 'veshti', 'head', 'scab', 'fua', 'ffa'],
+  parts:{
+    sash:{pivot:[520,630], parent:'pelvis',   // Sash tails
+      cut:[[533,605,527,605,472,634,460,653,445,664,426,683,410,710,409,721,411,729,432,719,445,704,449,703,417,753,426,791,422,843,381,846,355,823,295,842,271,846,222,860,169,885,141,905,117,928,63,961,50,989,59,984,60,981,74,976,89,985,96,994,88,1012,89,1029,96,1043,108,1037,117,1029,122,1032,121,1036,124,1036,141,1023,209,938,241,926,273,920,309,906,331,894,333,895,307,925,263,952,219,985,203,1006,194,1024,168,1050,150,1080,121,1102,98,1127,83,1167,90,1161,96,1165,93,1171,95,1171,103,1164,106,1164,120,1148,130,1142,139,1140,152,1131,173,1137,180,1141,186,1150,185,1169,178,1184,180,1203,182,1206,194,1205,197,1209,196,1221,204,1241,207,1242,212,1236,213,1238,218,1234,226,1221,239,1187,241,1168,260,1103,269,1059,284,1042,315,1018,341,989,376,919,413,879,437,843,458,805,460,806,460,814,464,813,507,734,567,645,568,637]]},
+    bua:{pivot:[470,345], parent:'torso',   // Back upper arm
+      cut:[[481,283,474,289,453,292,438,299,424,311,412,329,402,356,400,380,388,401,383,404,372,438,373,457,365,488,349,514,347,522,422,522,443,496,455,474,462,469,470,449,479,462,480,443,489,418,498,326]]},
+    bfa:{pivot:[385,540], parent:'bua',   // Back forearm and hand
+      cut:[[348,517,345,535,337,553,332,573,330,668,323,674,320,681,320,704,322,709,328,713,322,768,345,804,369,814,364,819,349,824,348,827,375,851,428,848,431,785,422,746,412,760,406,751,404,732,393,713,379,699,383,694,384,675,377,666,378,656,387,632,409,592,416,535,426,517]]},
+    bth:{pivot:[530,700], parent:'pelvis',   // Back thigh
+      cut:[[440,680,439,711,448,702,449,705,438,721,434,847,458,805,460,806,461,817,459,821,460,837,450,858,454,884,450,897,450,907,435,919,430,934,428,1001,450,1065,528,1065,538,1050,565,1037,565,680]]},
+    bsh:{pivot:[470,1045], parent:'bth',   // Back shin and foot
+      cut:[[543,1027,482,1027,470,1023,458,1027,442,1027,437,1035,430,1035,434,1046,441,1052,405,1106,392,1139,384,1188,379,1298,372,1303,373,1315,371,1318,372,1327,369,1330,370,1338,367,1343,368,1355,364,1367,355,1381,354,1399,332,1445,312,1470,311,1483,306,1489,306,1503,316,1510,346,1516,387,1516,403,1513,411,1509,417,1501,416,1473,413,1460,419,1420,419,1405,422,1403,426,1391,426,1384,423,1380,422,1359,426,1353,428,1338,426,1333,430,1328,429,1320,434,1309,431,1303,432,1297,457,1240,491,1190,500,1172,506,1147,512,1091,535,1053,541,1049]]},
+    fth:{pivot:[700,700], parent:'pelvis',   // Front thigh
+      cut:[[640,680,680,1085,707,1085,708,1037,726,1050,728,1064,723,1085,805,1085,801,733,785,686,785,680]]},
+    fsh:{pivot:[760,1065], parent:'fth',   // Front shin and foot
+      cut:[[692,1037,692,1123,701,1121,704,1118,708,1081,709,1052,707,1038,726,1050,728,1064,714,1117,711,1161,717,1180,729,1199,740,1225,758,1291,759,1302,754,1308,756,1326,751,1335,748,1348,752,1353,754,1346,755,1354,759,1343,761,1343,760,1360,762,1364,757,1370,754,1382,756,1389,749,1412,750,1426,743,1433,744,1445,750,1450,764,1453,823,1451,868,1463,894,1467,930,1467,959,1460,966,1453,966,1442,954,1430,939,1420,930,1419,923,1414,903,1409,893,1401,871,1392,840,1361,827,1336,823,1315,822,1289,816,1285,814,1263,818,1141,807,1085,807,1073,813,1048,812,1037]]},
+    torso:{pivot:[620,600], parent:'pelvis',   // Torso
+      cut:[[642,600,636,585,629,580,620,578,605,584,600,591,598,600,599,602,641,602],[440,329,437,337,437,353,447,370,459,377,470,379,488,375,483,418,475,437,474,456,487,475,509,499,514,517,712,517,712,498,714,496,719,499,731,517,739,517,729,441,724,421,740,424,748,423,763,415,768,408,769,378,765,367,748,357,732,357,718,365,716,364,720,312,712,311,697,303,689,320,603,320,559,289,504,272,480,283,476,287,485,315,478,312,462,312,447,320]]},
+    pelvis:{pivot:[620,620], parent:null,   // Pelvis
+      cut:[[513,512,517,533,511,536,507,542,511,556,505,565,508,577,505,581,506,587,499,594,500,602,714,602,716,546,711,540,712,512]]},
+    veshti:{pivot:[620,630], parent:'pelvis',   // Veshti
+      cut:[[499,597,500,605,497,613,472,634,461,650,466,650,474,641,529,612,560,642,502,728,461,802,460,837,450,858,454,884,450,897,450,907,435,919,423,953,418,961,412,979,416,1006,429,1029,432,1040,443,1040,448,1032,536,1032,536,1052,565,1037,574,1028,588,1006,602,974,609,975,611,977,608,1008,609,1067,628,1084,635,1087,632,1121,642,1133,653,1140,673,1128,697,1122,698,1042,707,1042,708,1037,714,1042,813,1042,812,1029,820,1013,820,1006,836,987,832,977,820,965,823,951,811,933,811,911,816,893,762,758,714,597]]},
+    head:{pivot:[640,300], parent:'torso',   // Head and neck
+      cut:[[547,12,539,18,532,35,511,41,496,56,499,54,500,60,506,51,517,49,507,70,506,86,511,102,501,113,499,123,501,125,500,120,506,112,515,108,521,102,521,89,529,98,543,103,535,111,524,109,530,115,529,119,533,116,549,113,532,143,532,162,537,171,526,178,511,181,503,193,495,194,488,201,488,204,493,197,501,197,504,205,507,206,506,198,512,192,520,188,527,190,509,210,504,219,507,233,514,242,519,266,515,270,506,271,499,276,553,294,597,325,695,325,702,306,689,300,647,271,648,258,657,240,666,240,682,245,692,245,698,240,698,228,706,219,705,214,710,210,710,201,720,197,723,193,717,172,734,150,733,171,727,180,729,179,747,146,748,134,744,124,746,125,749,109,743,101,729,104,728,99,711,81,691,78,666,66,653,63,620,63,618,65,612,59,617,52,617,35,613,32,614,34,611,34,600,20,589,15,568,14,561,11]]},
+    scab:{pivot:[745,640], parent:'pelvis',   // Scabbard and hilt
+      cut:[[845,820,839,825,842,839,852,837],[727,512,736,528,727,541,719,563,715,560,716,546,711,540,709,604,755,758,802,873,811,901,814,901,817,886,848,952,864,968,875,971,877,963,870,941,862,925,818,789,813,765,793,711,780,665,770,644,772,630,769,621,800,653,797,636,777,603,763,603,769,621,766,618,757,617,751,608,744,581,746,559,749,556,750,561,750,554,739,512]]},
+    fua:{pivot:[740,390], parent:'torso',   // Front upper arm
+      cut:[[714,311,709,385,723,441,735,524,744,559,750,557,751,568,765,608,777,608,773,589,770,543,818,542,820,540,798,509,789,475,791,466,788,452,779,431,774,428,767,414,769,378,761,349,755,337,742,322,729,315]]},
+    ffa:{pivot:[790,565], parent:'fua',   // Front forearm and hand
+      cut:[[765,537,769,603,792,645,821,676,835,698,831,707,832,714,838,724,843,727,837,740,837,757,840,767,838,807,843,813,842,816,847,819,839,825,846,839,854,837,855,844,859,846,875,837,894,821,901,796,908,783,908,777,901,764,885,720,889,711,887,697,884,690,873,682,867,669,845,591,835,562,826,546,815,534,812,537]]},
+  },
+};
+
+// ============================================================ cut-out rigs (DECISIONS 18, 19; ASSETS.md "Cut-out rigs")
+// One painted image is cut into parts once; each frame the parts are drawn rotated about their pivots.
+// The registry is general: the guard, Adittan, and the fighter join it when their rig sheets
+// (ASSETS.md slots 37 to 39) exist, with a part map in the same shape as HERO_RIG. Until then they
+// stay procedural.
+const RIG_DEFS = { hero: HERO_RIG };
+const RIGS = {};                               // built rigs by name
+const RIG_BAKE = 0.2;                          // parts are baked at 20% of the source (about 3x their drawn size)
+function buildRig(name, im){
+  const d = RIG_DEFS[name], parts = {};
+  for(const k of d.order){
+    const p = d.parts[k];
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for(const c of p.cut) for(let i=0;i<c.length;i+=2){
+      x0 = Math.min(x0, c[i]); x1 = Math.max(x1, c[i]); y0 = Math.min(y0, c[i+1]); y1 = Math.max(y1, c[i+1]);
+    }
+    x0 -= 2; y0 -= 2; x1 += 2; y1 += 2;
+    const cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.ceil((x1-x0)*RIG_BAKE)); cv.height = Math.max(1, Math.ceil((y1-y0)*RIG_BAKE));
+    const g = cv.getContext('2d');
+    g.imageSmoothingQuality = 'high';
+    g.scale(RIG_BAKE, RIG_BAKE); g.translate(-x0, -y0);
+    g.beginPath();
+    for(const c of p.cut){ g.moveTo(c[0], c[1]); for(let i=2;i<c.length;i+=2) g.lineTo(c[i], c[i+1]); g.closePath(); }
+    g.clip();
+    g.drawImage(im, 0, 0);                     // drawing a file:// image is allowed; reading it back is not
+    parts[k] = {cv, x0, y0, w:x1-x0, h:y1-y0, pivot:p.pivot, parent:p.parent};
+  }
+  RIGS[name] = {def:d, parts};
+}
+// smooth pose changes so states blend instead of snapping
+function rigBlend(st, target, rate){
+  st.ang = st.ang || {};
+  for(const k in target.ang){ const a = st.ang[k] ?? target.ang[k]; st.ang[k] = a + (target.ang[k] - a)*rate; }
+  for(const k in st.ang) if(!(k in target.ang)) st.ang[k] *= (1 - rate);
+  for(const k of ['dx','dy','rot']){ const a = st[k] ?? 0; st[k] = a + ((target[k] ?? 0) - a)*rate; }
+  return st;
+}
+// draw a rig with its feet at (x, y), facing +1 right or -1 left, `h` px tall for the whole frame
+function drawRig(name, x, y, face, pose, h, opts={}){
+  const R = RIGS[name], d = R.def, S = h / d.frameH;
+  ctx.save();
+  ctx.translate(x, y);
+  if(opts.alpha !== undefined) ctx.globalAlpha *= opts.alpha;
+  ctx.save(); ctx.scale(1, 0.3);              // soft contact shadow
+  const sg = ctx.createRadialGradient(0,8,2, 0,8,22);
+  sg.addColorStop(0,'rgba(25,16,10,0.45)'); sg.addColorStop(1,'rgba(25,16,10,0)');
+  ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(0, 8, 22, 0, 7); ctx.fill();
+  ctx.restore();
+  ctx.scale(face*S, S);
+  ctx.translate(-d.anchor[0] + (pose.dx||0), -d.anchor[1] + (pose.dy||0));
+  const rad = Math.PI/180, ang = pose.ang || {};
+  for(const k of d.order){
+    const chain = [];
+    for(let q = k; q; q = R.parts[q].parent) chain.unshift(q);
+    ctx.save();
+    for(const q of chain){
+      const P = R.parts[q], a = (ang[q] || 0) + (q === chain[0] ? (pose.rot || 0) : 0);
+      if(a){ ctx.translate(P.pivot[0], P.pivot[1]); ctx.rotate(a*rad); ctx.translate(-P.pivot[0], -P.pivot[1]); }
+    }
+    const P = R.parts[k];
+    ctx.drawImage(P.cv, P.x0, P.y0, P.w, P.h);
+    if(k === 'ffa' && opts.blade){             // level 3: the drawn blade, straight and double-edged
+      const hand = [870, 840];
+      ctx.save(); ctx.translate(hand[0], hand[1]); ctx.rotate(-0.35);
+      ctx.fillStyle = '#D8D4C8'; ctx.beginPath();
+      ctx.moveTo(-9, 0); ctx.lineTo(-7, 430); ctx.lineTo(0, 470); ctx.lineTo(7, 430); ctx.lineTo(9, 0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#C9A24A'; ctx.fillRect(-28, -10, 56, 14);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+// ---- hero poses, all from the one cut image. Angles in degrees, + is clockwise in the right-facing
+// image: a hanging limb swings back, an upright part leans forward.
+function heroPoseTarget(){
+  const p = player, A = {};
+  const run = (ph, amp)=>{
+    const s = Math.sin(ph), c = Math.cos(ph);
+    A.fth = -30*s*amp; A.bth = 30*s*amp;
+    A.fsh = (10 + 45*Math.max(0, c))*amp; A.bsh = (10 + 45*Math.max(0, -c))*amp;
+    A.fua = 26*s*amp; A.bua = -26*s*amp; A.ffa = -28 - 10*s; A.bfa = -28 + 10*s;
+    A.veshti = 3*s*amp; A.scab = 2*s*amp; A.sash = 18*amp + 5*Math.sin(2*ph);
+    return -Math.abs(c)*16*amp;
+  };
+  let dy = 0, rot = 0, tag = 'idle';
+  if(p.leap){
+    const k = Math.min(1, p.leap.t / TUNE.GATE_LEAP), t = Math.sin(Math.PI*k);
+    A.fth = -55*t; A.fsh = 75*t; A.bth = -25*t; A.bsh = 70*t; A.fua = -70*t; A.bua = -45*t; A.ffa = -30*t; A.bfa = -30*t;
+    A.torso = 8*t; A.sash = 25*t; tag = 'leap';
+  } else if(p.climb){
+    const moving = p.stillT < 0.05, c = moving ? Math.sin(time*9) : 0;
+    if(p.climb.kind === 'pole'){
+      A.fua = -160 + 14*c; A.bua = -150 - 14*c; A.ffa = 12; A.bfa = 12;
+      A.fth = -38 + 16*c; A.fsh = 55; A.bth = -12 - 16*c; A.bsh = 45; A.torso = 4; A.sash = -6; tag = 'climb';
+    } else {
+      A.fua = -172 + 8*c; A.bua = -166 - 8*c; A.ffa = 4; A.bfa = 4;
+      A.fth = -12 + 10*c; A.fsh = 14; A.bth = 6 - 10*c; A.bsh = 16; A.sash = -10;
+      rot = -0.6*TUNE.ROPE_SWAY*Math.sin(time*2*Math.PI/TUNE.ROPE_PERIOD); tag = moving ? 'climb' : 'hang';
+    }
+    dy = -40;                                  // hands, not feet, carry him
+  } else if(p.pushT >= TUNE.PUSH_DELAY && Math.abs(p.vx) > 0){
+    dy = run(p.runPhase, 0.55);
+    A.torso = 24; A.head = -12; A.fua = -82; A.ffa = -12; A.bua = -72; A.bfa = -18; tag = 'push';
+  } else if(p.pushT > 0){
+    A.torso = 20; A.head = -10; A.fua = -80; A.ffa = -12; A.bua = -70; A.bfa = -18; A.fth = -14; A.bth = 18; A.bsh = 12; tag = 'lean';
+  } else if(!p.onGround){
+    if(p.vy < 0){ A.fth = -45; A.fsh = 70; A.bth = 15; A.bsh = 48; A.fua = -55; A.ffa = -40; A.bua = 38; A.bfa = -20; A.torso = 4; A.sash = -8; tag = 'jump'; }
+    else { A.fth = -18; A.fsh = 22; A.bth = 12; A.bsh = 28; A.fua = -105; A.ffa = -25; A.bua = -60; A.bfa = -20; A.torso = -2; A.sash = 28; tag = 'fall'; }
+  } else if(Math.abs(p.vx) > 40){
+    dy = run(p.runPhase, clamp(Math.abs(p.vx)/385, 0.35, 1));
+    A.torso = 7; A.head = -3; tag = 'run';
+  } else {
+    const b = Math.sin(time*2.2);              // idle breath
+    A.torso = 0.9*b; A.head = -0.6*b; A.bua = 1.6*b; A.fua = -1.6*b; A.sash = 2*Math.sin(time*1.3); dy = 3*b;
+  }
+  if(p.hurtT > 0.9){                           // the first 0.3 s of a hit: recoil
+    A.torso = -14; A.head = -12; A.fua = -60; A.bua = 50; A.ffa = -30; A.bfa = -30; tag = 'hurt';
+  }
+  if(p.attackT > 0){                           // level 3 cut: the front arm sweeps
+    const t = 1 - p.attackT/0.28;
+    A.fua = lerp(-150, 15, Math.min(1, t*1.6)); A.ffa = -20; A.torso = (A.torso||0) + 8; tag = 'attack';
+  } else if(p.sheathT > 0){                    // hand on the hilt pushes the blade home
+    const t = Math.sin(Math.PI * p.sheathT / TUNE.SHEATH_PUSH);
+    A.fua = 40*t + (A.fua||0)*(1-t); A.ffa = -112*t + (A.ffa||0)*(1-t); A.scab = -3*t;
+  }
+  return {ang:A, dy, rot, tag};
 }
 
 // ============================================================ levels
@@ -478,11 +674,14 @@ function buildLevel1(){
            hint(1900,240,'Jump again in the air. The step is high.'),
            hint(2700,540,'The lamp marks a gate. ↑ the cloister roof.')],
     goal:{x:8600,y:620}, start:[60,620],
-    sky:['#8A7B5C','#B5A47C','#CDBA8C','#D9C69A'], sun:{x:.74,y:.28,r:60,c:'#F4E7C0'},
+    // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
+    sky:['#7A5F34','#C2954A','#E3BC6A','#F2D894'], sun:{x:.74,y:.28,r:60,c:'#FFF0C4'},
     far:'gopuram', mid:'palms',
-    pal:mkPal('#C0A171','#997253','#6B4E33'),
-    fogHaze:'rgba(213,199,160,0.34)', grade:'rgba(120,90,40,0.05)',
-    motes:'#E9DCAF', banners:false,
+    pal:mkPal('#D2A85E','#9C6E3C','#5A3A1E'), inkTint:'rgba(42,26,14,0.60)',
+    fogHaze:'rgba(236,206,140,0.16)', grade:'rgba(160,110,30,0.07)',
+    mistCol:'240,220,170', mistA:[0.05,0.03], vig:'rgba(34,20,8,0.50)', rays:[255,228,160,0.20],
+    farCol:'rgba(122,90,48,0.45)', midCol:'rgba(58,36,18,0.70)', accent:'#6E8B3D',
+    motes:'#F6E2A8', banners:false,
   };
 }
 
@@ -525,11 +724,14 @@ function buildLevel2(){
     links:[[2180,60,0,1],[3105,70,0,1],[2170,70,1,2],[3095,60,1,2],[4680,200,0,1]],
     hints:[[2010,540,'cross at the lamplit gates — ↑ far · ↓ near']],
     goal:{x:5280,y:620}, start:[40,620],
-    sky:['#7E6A55','#B08A62','#CFA878','#DDBE8E'], sun:{x:.28,y:.32,r:70,c:'#F7E3B8'},
+    // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
+    sky:['#2F5E6E','#5E8F94','#A9C4B4','#E6D9A8'], sun:{x:.28,y:.32,r:70,c:'#FFF3D0'},
     far:'ships', mid:'docks',
-    pal:mkPal('#BB9468','#8F6A47','#61452C'),
-    fogHaze:'rgba(220,196,152,0.32)', grade:'rgba(140,90,40,0.05)',
-    motes:'#F0DDB0', water:644, banners:true,
+    pal:mkPal('#C8B48A','#7C6E55','#3E3A33'), inkTint:'rgba(18,34,42,0.55)',
+    fogHaze:'rgba(190,214,206,0.14)', grade:'rgba(40,110,120,0.07)',
+    mistCol:'214,230,224', mistA:[0.05,0.03], vig:'rgba(10,26,34,0.48)', rays:[255,240,205,0.15],
+    farCol:'rgba(80,118,118,0.42)', midCol:'rgba(28,52,56,0.68)', accent:'#DDB02F',
+    motes:'#E8F0E6', water:644, banners:false,
   };
 }
 
@@ -573,11 +775,15 @@ function buildLevel3(){
     links:[[1280,130,0,1],[1620,140,0,1],[3025,70,0,1],[3795,60,0,1],[3035,60,1,2],[3815,80,1,2]],
     hints:[[2860,540,'cross at the lamplit gates — ↑ far · ↓ near']],
     goal:{x:5460,y:620}, start:[50,620],
-    sky:['#5F6B57','#8A9474','#ABB088','#C2C098'], sun:{x:.80,y:.22,r:52,c:'#EFF2CC'},
+    // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
+    sky:['#2E3A52','#4F6A6A','#86A08A','#C9D3B0'], sun:{x:.80,y:.22,r:52,c:'#F2F6DA'},
     far:'stupas', mid:'jungle',
-    pal:mkPal('#A3A275','#75754F','#4E5136'),
-    fogHaze:'rgba(196,199,164,0.36)', grade:'rgba(60,90,50,0.05)',
-    motes:'#DDE8B0', banners:true,
+    pal:mkPal('#9DAA7C','#5E6B4A','#2E3A2C'), inkTint:'rgba(16,28,30,0.60)',
+    fogHaze:'rgba(184,204,178,0.20)', grade:'rgba(40,60,110,0.07)',
+    mistCol:'210,224,204', mistA:[0.12,0.07], vig:'rgba(10,20,28,0.52)', rays:[226,240,210,0.10],
+    farCol:'rgba(60,96,80,0.45)', midCol:'rgba(24,44,32,0.70)', accent:'#4B5E9A',
+    gateCrimson:false,                 // DECISIONS 7: level 3 gate has no crimson; its arrow is ink
+    motes:'#DDE8B0', banners:false,
   };
 }
 const LEVELS = [buildLevel1, buildLevel2, buildLevel3];
@@ -634,35 +840,58 @@ function topAt(ln, cx){
   return best ?? 620;
 }
 // hints never sit on a coin or a platform edge: nudge the text up (or down) until it is clear
+// ---- text placement: hints and dialogue never sit on coins, platforms, props, or each other
+// Boxes are [left, top, right, bottom] in main-lane space, other lanes projected with the camera
+// centered on cxRef (accurate when that text is mid-screen, which is when it is read).
+function textObstacles(cxRef, opts={}){
+  const proj = (x,y,l)=>{ const s = LANES[l].s; return [(x-cxRef)*s + cxRef, (y-HORIZON)*s + HORIZON]; };
+  const box = (x0,y0,x1,y1,l)=>{ const [a,b] = proj(x0,y0,l), [c,d] = proj(x1,y1,l); return [a,b,c,d]; };
+  const B = [];
+  for(const c of level.coins) B.push(box(c.x-14, c.y-14, c.x+14, c.y+14, c.lane));
+  for(const [bx,by,bw,bh,ln] of level.platforms) B.push(box(bx, by-12, bx+bw+18, by+bh, ln));
+  for(const o of level.poles) B.push(box(o.x-8, o.top-16, o.x+8, o.bot, o.lane));
+  for(const o of level.ropes) B.push(box(o.x-32, o.ay-12, o.x+32, o.ay+o.len+8, o.lane));   // includes the sway
+  for(const c of level.checkpoints) B.push(box(c.x-6, c.y-124, c.x+62, c.y, 1));            // kodi on its staff
+  for(const lk of level.links) for(const l of [lk.a, lk.b]) B.push(box(lk.cx-46, lk.gy[l]-112, lk.cx+46, lk.gy[l], l));
+  if(level.npc && !opts.noNpc) B.push(box(level.npc.x-26, level.npc.y-112, level.npc.x+26, level.npc.y, 1));
+  B.push(box(level.goal.x-8, level.goal.y-205, level.goal.x+100, level.goal.y, 1));
+  return B;
+}
+// try offsets around (cx, base); a box is [cx-hw, base-up, cx+hw, base+down]. First clear spot wins,
+// otherwise the spot with the least overlap.
+function placeText(cx, base, hw, up, down, obstacles, dxs, dys){
+  let best = null, bestCost = Infinity;
+  for(const dx of dxs) for(const dy of dys){
+    const l = cx+dx-hw, r = cx+dx+hw, t = base+dy-up, b = base+dy+down;
+    let cost = 0;
+    for(const [x0,y0,x1,y1] of obstacles){
+      const ox = Math.min(r,x1) - Math.max(l,x0), oy = Math.min(b,y1) - Math.max(t,y0);
+      if(ox > 0 && oy > 0) cost += ox*oy;
+    }
+    if(cost === 0) return {x:cx+dx, base:base+dy, box:[l,t,r,b]};
+    if(cost < bestCost){ bestCost = cost; best = {x:cx+dx, base:base+dy, box:[l,t,r,b]}; }
+  }
+  return best;
+}
 function placeHints(){
   ctx.font = '19px "Marcellus SC", Marcellus, serif';
+  const placed = [];
   level.hintsPlaced = level.hints.map(([hx,hy,txt,touchTxt])=>{
     const text = IS_TOUCH && touchTxt ? touchTxt : txt;
     const hw = ctx.measureText(text).width/2 + 8;
-    // project another lane's world point into main-lane space, camera centered on the hint
-    const proj = (x,y,l)=>{ const s = LANES[l].s; return [(x-hx)*s + hx, (y-HORIZON)*s + HORIZON]; };
-    // a candidate box is clear of every coin and every platform rectangle, in any lane
-    const clear = (cx, base)=>{
-      const l = cx-hw, r = cx+hw, top = base - 20, bot = base + 30;   // text plus the arrow mark under it
-      for(const c of level.coins){
-        const [x,y] = proj(c.x, c.y, c.lane), rr = 14*LANES[c.lane].s;
-        if(x+rr > l && x-rr < r && y+rr > top && y-rr < bot) return false;
-      }
-      for(const [bx,by,bw,bh,ln] of level.platforms){
-        const [x0,y0] = proj(bx, by-12, ln), [x1,y1] = proj(bx+bw+18, by+bh, ln);
-        if(x1 > l && x0 < r && y1 > top && y0 < bot) return false;
-      }
-      return true;
-    };
-    let cx = hx, base = hy - 46, found = false;
-    for(const dx of [0, 120, -120, 240, -240]){
-      for(const dy of [0,-30,-60,30,-90,60,-120,-150]){
-        if(clear(hx+dx, hy-46+dy)){ cx = hx+dx; base = hy-46+dy; found = true; break; }
-      }
-      if(found) break;
-    }
-    return {x:cx, base, text};
+    const obs = textObstacles(hx).concat(placed);
+    const p = placeText(hx, hy-46, hw, 20, 30, obs,               // text plus the arrow mark under it
+      [0, 120, -120, 240, -240, 360, -360], [0,-30,-60,30,-90,60,-120,-150,-180]);
+    placed.push(p.box);
+    return {x:p.x, base:p.base, text, box:p.box};
   });
+}
+// the handover line and the speaker's name above it, kept off hints and props (not off the speakers)
+function placeDialogue(sx, sy, line){
+  ctx.font = '17px "Marcellus SC", serif';
+  const hw = ctx.measureText(line).width/2 + 10;
+  const obs = textObstacles(sx, {noNpc:true}).concat(level.hintsPlaced.map(h=>h.box));
+  return placeText(sx, sy, hw, 40, 8, obs, [0, 80, -80, 160, -160], [0,-26,-52,-78,-104,-130,26]);
 }
 function prepLinks(){
   level.links = (level.links||[]).map(k=>{
@@ -674,8 +903,7 @@ function prepLinks(){
 
 function loadLevel(i){
   levelIdx = i; level = LEVELS[i]();
-  level.palFront = dimPal(level.pal, -22);
-  level.palBack  = dimPal(level.pal, 10);
+  applyGrade(level);
   prepLinks();
   player.x = level.start[0]; player.y = level.start[1];
   player.vx = player.vy = 0; player.hp = 3; player.jumps = 0; player.lane = 1;
@@ -1127,7 +1355,7 @@ function updateGuards(dt){
       const hx = p.x + p.face*30;
       if(rectsOverlap(hx-26, p.y-p.h, 52, p.h, g.x-g.w/2, g.y-g.h, g.w, g.h)){
         g.dead = true; sfx.kill(); shake = 6;
-        spawnBurst(g.x, g.y-30, '#8C2F22', 16, g.lane);
+        spawnBurst(g.x, g.y-30, INK, 16, g.lane);
         floats.push({x:g.x, y:g.y-70, t:0.9, text:'Guard felled'});
         continue;
       }
@@ -1324,7 +1552,7 @@ function drawPalm(x, y, sc, col){
 function drawFarLayer(){
   const px = cam.x*0.10;
   ctx.save(); ctx.translate(-px, 0);
-  const col = 'rgba(72,60,44,0.38)';
+  const col = level.farCol || 'rgba(72,60,44,0.38)';
   if(level.far==='gopuram'){
     for(let i=0;i<10;i++){
       const x = i*760 + hash(i)*300;
@@ -1332,18 +1560,18 @@ function drawFarLayer(){
       drawGopuram(x, 560, 130+hash(i*7)*70, h, col);
     }
   } else if(level.far==='ships'){
-    ctx.fillStyle = 'rgba(84,70,52,0.30)';
+    ctx.fillStyle = level.farCol || 'rgba(84,70,52,0.30)';
     ctx.fillRect(px, 498, W, 224);
     for(let i=0;i<12;i++){
       const x = i*620 + hash(i)*280;
-      drawShipSil(x, 505 - hash(i*5)*10, 0.8+hash(i*3)*0.7, 'rgba(66,52,38,0.42)');
+      drawShipSil(x, 505 - hash(i*5)*10, 0.8+hash(i*3)*0.7, col);
     }
   } else {
     for(let i=0;i<9;i++){
       const x = i*820 + hash(i)*300;
-      ctx.fillStyle = 'rgba(56,66,48,0.35)';
+      ctx.fillStyle = col;
       ctx.beginPath(); ctx.arc(x, 660, 260+hash(i*2)*160, Math.PI, 0); ctx.fill();
-      if(hash(i*9)>0.4) drawStupa(x+120, 560-hash(i*4)*60, 90+hash(i*6)*50, 120, 'rgba(48,56,40,0.42)');
+      if(hash(i*9)>0.4) drawStupa(x+120, 560-hash(i*4)*60, 90+hash(i*6)*50, 120, col);
     }
   }
   ctx.restore();
@@ -1354,10 +1582,10 @@ function drawMidLayer(){
   if(level.mid==='palms'){
     for(let i=0;i<26;i++){
       const x = i*430 + hash(i*11)*260;
-      drawPalm(x, 640, 0.9+hash(i*13)*0.5, 'rgba(58,44,32,0.55)');
+      drawPalm(x, 640, 0.9+hash(i*13)*0.5, level.midCol || 'rgba(58,44,32,0.55)');
     }
   } else if(level.mid==='docks'){
-    ctx.fillStyle = 'rgba(60,44,34,0.6)';
+    ctx.fillStyle = level.midCol || 'rgba(60,44,34,0.6)';
     for(let i=0;i<40;i++){
       const x = i*300 + hash(i*17)*140;
       ctx.fillRect(x, 560+hash(i)*30, 14, 160);
@@ -1366,7 +1594,7 @@ function drawMidLayer(){
   } else {
     for(let i=0;i<30;i++){
       const x = i*380 + hash(i*23)*220;
-      const c = 'rgba(42,54,40,0.6)';
+      const c = level.midCol || 'rgba(42,54,40,0.6)';
       drawPalm(x, 650, 1.1+hash(i*29)*0.6, c);
       ctx.fillStyle = c;
       ctx.beginPath(); ctx.arc(x+150, 660, 90+hash(i*5)*60, Math.PI, 0); ctx.fill();
@@ -1394,7 +1622,7 @@ function drawWallLayer(){
     }
     if(level.banners && hash(i*47)>0.55){          // long crimson banner
       const bx = x+128, sway = Math.sin(time*1.4+i)*5;
-      ctx.fillStyle = 'rgba(150,44,34,0.75)';
+      ctx.fillStyle = 'rgba(181,52,42,0.75)';
       ctx.beginPath();
       ctx.moveTo(bx, 452); ctx.lineTo(bx+26, 452);
       ctx.lineTo(bx+26+sway, 600); ctx.lineTo(bx+13+sway, 622); ctx.lineTo(bx+sway, 600);
@@ -1411,7 +1639,8 @@ function drawRays(){
   for(let i=0;i<5;i++){
     const a = 0.6 + i*0.22 + Math.sin(time*0.13+i)*0.03;
     const g = ctx.createLinearGradient(sx, sy, sx+Math.cos(a)*900, sy+Math.sin(a)*900);
-    g.addColorStop(0,'rgba(255,240,200,0.14)'); g.addColorStop(1,'rgba(255,240,200,0)');
+    const [rr,rg,rb,ra] = level.rays || [255,240,200,0.14];
+    g.addColorStop(0,`rgba(${rr},${rg},${rb},${ra})`); g.addColorStop(1,`rgba(${rr},${rg},${rb},0)`);
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.moveTo(sx, sy);
@@ -1434,7 +1663,7 @@ function inkLine(x1,y1,x2,y2,seed){
   }
   ctx.stroke();
 }
-const AWNINGS = ['#4C7A5C','#6E4664','#3E6E7A','#8A4A3A'];
+const AWNINGS = ['#E6D9A8','#3F5A80','#DDB02F','#7FA3A0'];   // ASSETS.md: undyed, indigo, turmeric, sea-grey
 
 function drawPlatform(bx,by,bw,bh,lane,kind,pal){
   const D = 18, DY = 10;
@@ -1499,7 +1728,7 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
       ctx.beginPath(); ctx.moveTo(bx+4, by-34); ctx.lineTo(bx+bw-4, by-34); ctx.stroke();
       for(let x=bx+10; x<bx+bw; x+=88){
         ctx.fillStyle = '#6B4E31'; ctx.fillRect(x-3, by-40, 7, 40);
-        ctx.fillStyle = '#A8402F'; ctx.fillRect(x-3, by-40, 7, 7);
+        ctx.fillStyle = level.gateCrimson === false ? level.accent : CRIMSON; ctx.fillRect(x-3, by-40, 7, 7);
         ctx.fillStyle = '#D8C8A4'; ctx.fillRect(x-3, by-31, 7, 4);
       }
     }
@@ -1517,8 +1746,9 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
     }
     // occasional red paint remnant on tall faces, like weathered lacquer
     if(bh > 100 && hash(bx*1.7)>0.55){
-      ctx.fillStyle = 'rgba(150,48,36,0.16)';
+      ctx.fillStyle = level.accent || '#6B4E33'; ctx.globalAlpha = 0.16;   // weathered paint in the level accent, not red
       ctx.fillRect(bx+8+hash(bx)*20, by+14, 26, Math.min(90, bh-30));
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -1561,7 +1791,7 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
       }
       // goods under the awning
       ctx.fillStyle = '#C98A3C'; ctx.beginPath(); ctx.arc(x+30, by-8, 10, Math.PI, 0); ctx.fill();
-      ctx.fillStyle = '#9A4A34'; ctx.beginPath(); ctx.arc(x+56, by-8, 8, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = '#7C6E55'; ctx.beginPath(); ctx.arc(x+56, by-8, 8, Math.PI, 0); ctx.fill();
     }
   }
 }
@@ -1667,7 +1897,7 @@ function drawGate(cx, gy){
     gg.addColorStop(0,'rgba(240,205,130,0.22)'); gg.addColorStop(1,'rgba(240,205,130,0)');
     ctx.fillStyle = gg; ctx.fillRect(cx-54, gy-114, 108, 108);
     const pul0 = 0.4+0.3*Math.sin(time*3+cx);
-    ctx.fillStyle = 'rgba(180,60,42,'+pul0+')';
+    ctx.fillStyle = level.gateCrimson === false ? 'rgba(30,22,16,'+pul0+')' : 'rgba(181,52,42,'+pul0+')';
     ctx.beginPath(); ctx.moveTo(cx, gy-172); ctx.lineTo(cx-7, gy-164); ctx.lineTo(cx+7, gy-164); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(cx, gy-154); ctx.lineTo(cx-7, gy-162); ctx.lineTo(cx+7, gy-162); ctx.closePath(); ctx.fill();
     return;
@@ -1690,11 +1920,13 @@ function drawGate(cx, gy){
   ctx.quadraticCurveTo(cx, gy-90, cx+42, gy-78);
   ctx.lineTo(cx+44, gy-71); ctx.quadraticCurveTo(cx, gy-83, cx-44, gy-71);
   ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#A8402F';                        // hanging pennant
+  if(level.gateCrimson !== false){                  // hanging pennant (none in level 3, DECISIONS 7)
+  ctx.fillStyle = CRIMSON;
   ctx.beginPath();
   ctx.moveTo(cx-8, gy-77); ctx.lineTo(cx+8, gy-77);
   ctx.lineTo(cx+6+sway, gy-46); ctx.lineTo(cx+sway, gy-38); ctx.lineTo(cx-6+sway, gy-46);
   ctx.closePath(); ctx.fill();
+  }
   const g = ctx.createRadialGradient(cx, gy-54, 0, cx, gy-54, 50);
   g.addColorStop(0,'rgba(240,205,130,0.22)'); g.addColorStop(1,'rgba(240,205,130,0)');
   ctx.fillStyle = g; ctx.fillRect(cx-50, gy-104, 100, 100);
@@ -1706,13 +1938,13 @@ function drawGate(cx, gy){
   }
   // pulsing chevrons above the lintel
   const pul = 0.4+0.3*Math.sin(time*3+cx);
-  ctx.fillStyle = 'rgba(180,60,42,'+pul+')';
+  ctx.fillStyle = level.gateCrimson === false ? 'rgba(30,22,16,'+pul+')' : 'rgba(181,52,42,'+pul+')';
   ctx.beginPath(); ctx.moveTo(cx, gy-108); ctx.lineTo(cx-7, gy-100); ctx.lineTo(cx+7, gy-100); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(cx, gy-90); ctx.lineTo(cx-7, gy-98); ctx.lineTo(cx+7, gy-98); ctx.closePath(); ctx.fill();
 }
 
 function drawBird(b){
-  ctx.fillStyle = '#B5342A';
+  ctx.fillStyle = '#3A2A1C';                       // umber, never red (crimson rule)
   ctx.save(); ctx.translate(b.x, b.y-6);
   if(b.flying){
     const flap = Math.sin(time*22+b.seed)*8;
@@ -1722,7 +1954,7 @@ function drawBird(b){
   } else {
     ctx.beginPath(); ctx.ellipse(0,-2,6,4.5,0,0,7); ctx.fill();
     ctx.beginPath(); ctx.arc(5,-6,3,0,7); ctx.fill();
-    ctx.fillStyle = '#7A2018';
+    ctx.fillStyle = '#20160E';
     ctx.beginPath(); ctx.moveTo(-4,-2); ctx.lineTo(-12,1); ctx.lineTo(-4,2); ctx.fill();
   }
   ctx.restore();
@@ -1731,6 +1963,11 @@ function drawBird(b){
 // figures ---------------------------------------------------------
 function drawFigure(x, y, face, phase, opts){
   const {skin, cloth, sashC, isGuard, attackT=0, vy=0, onGround=true, hurt=false, vx=0, procedural=false, unarmed=false, elder=false} = opts;
+  if(opts.rig && RIGS[opts.rig] && !procedural){
+    drawRig(opts.rig, x, y, face, opts.pose || {}, 106,
+            {alpha: hurt && (time*20|0)%2 ? 0.45 : 1, blade: attackT > 0});
+    return;
+  }
   // painted sprite path: pose picked from the asset slots, procedural rig as fallback
   const poseKey = isGuard
     ? (Math.sin(phase) > 0 ? 'guard_walk_a' : 'guard_walk_b')
@@ -1910,7 +2147,7 @@ function drawFigure(x, y, face, phase, opts){
   ctx.fillStyle = skin;
   ctx.beginPath(); ctx.arc(5.5,-62, 5.2, -1.5, 1.3); ctx.fill();
   if(isGuard){
-    ctx.fillStyle = '#8C2F22';
+    ctx.fillStyle = levelIdx >= TUNE.SWORD_FROM_LEVEL ? '#C9A24A' : CRIMSON;   // head cloth: ochre in Kadaram
     ctx.beginPath(); ctx.arc(4,-64, 7.6, Math.PI*0.95, Math.PI*2.05); ctx.fill();
     ctx.fillRect(-3,-66, 15, 3);
     ctx.fillStyle = '#C99A3F'; ctx.fillRect(2,-73, 4, 6);
@@ -1944,8 +2181,9 @@ function drawMist(yc, alpha){               // slow horizontal mist banks (scree
     const x = ((i*470 + drift) % (W+560)) - 280;
     const y = yc + Math.sin(time*0.4+i*2)*14 + hash(i*91)*36 - 18;
     const g = ctx.createRadialGradient(x, y, 20, x, y, 280);
-    g.addColorStop(0,'rgba(236,226,198,'+alpha+')');
-    g.addColorStop(1,'rgba(236,226,198,0)');
+    const mc = level.mistCol || '236,226,198';
+    g.addColorStop(0,'rgba('+mc+','+alpha+')');
+    g.addColorStop(1,'rgba('+mc+',0)');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.ellipse(x, y, 300, 58, 0, 0, 7); ctx.fill();
   }
@@ -1982,7 +2220,7 @@ function drawLaneContents(l){
     for(const h of level.hintsPlaced){
       ctx.fillStyle = 'rgba(70,52,32,'+(0.55+0.3*Math.sin(time*2.4))+')';
       ctx.fillText(h.text, h.x, h.base);
-      ctx.fillStyle = 'rgba(150,44,34,0.8)';
+      ctx.fillStyle = level.gateCrimson === false ? 'rgba(30,22,16,0.8)' : 'rgba(181,52,42,0.8)';
       const ay = h.base + 16;
       ctx.beginPath(); ctx.moveTo(h.x, ay); ctx.lineTo(h.x-7, ay+12); ctx.lineTo(h.x+7, ay+12); ctx.closePath(); ctx.fill();
     }
@@ -1992,7 +2230,8 @@ function drawLaneContents(l){
   for(const g of level.guards){
     if(g.dead || g.lane!==l) continue;
     drawFigure(g.x, g.y, g.dir, g.phase, {
-      skin:'#6E4530', cloth:'#8C2F22', sashC:'#3A2A1C', isGuard:true, vx:95, onGround:true,
+      skin:'#6E4530', cloth: levelIdx >= TUNE.SWORD_FROM_LEVEL ? '#4B5E9A' : CRIMSON,   // Srivijayan carries no red
+      sashC:'#3A2A1C', isGuard:true, vx:95, onGround:true,
     });
     const mark = g.mode === 'chase' ? '!' : (g.mode === 'look' || g.seeT > 0) ? '?' : '';
     if(mark){                                    // §3: ink "?" then "!"
@@ -2013,7 +2252,7 @@ function drawLaneContents(l){
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
     ctx.translate(lerp(A[0],B[0],k), lerp(A[1],B[1],k)); const sc = lerp(A[2],B[2],k); ctx.scale(sc, sc);
     drawFigure(0, 0, player.face, player.runPhase, {skin:'#8A5A3B', cloth:'#EDE2C4', sashC:'#B5342A',
-      vx:0, vy:-200, onGround:false, unarmed:!player.hasSword});
+      vx:0, vy:-200, onGround:false, unarmed:!player.hasSword, rig:'hero', pose:player.rigS});
     ctx.restore();
   } else if(player.lane === l && state==='play'){
     // ghost flash during a plane shift
@@ -2029,6 +2268,7 @@ function drawLaneContents(l){
       skin:'#8A5A3B', cloth:'#EDE2C4', sashC:'#B5342A',
       attackT:player.attackT, vx:player.climb ? 0 : player.vx, vy:player.vy,
       onGround:player.onGround || !!player.climb, hurt:player.hurtT>0, unarmed:!player.hasSword,
+      rig:'hero', pose:player.rigS,
     });
     if(player.sheathT > 0){                  // hand on the hilt: an ink tick at the hip
       ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
@@ -2111,15 +2351,17 @@ function render(){
   ctx.filter = 'none';
   if(!farIm) drawWallLayer();      // the painted backdrop carries its own architecture
 
+  if(state === 'play' && RIGS.hero) player.rigS = rigBlend(player.rigS || {}, heroPoseTarget(), 0.35);
+
   // ---- background lane, then atmospheric haze over it
   drawLaneContents(0);
   ctx.fillStyle = level.fogHaze;
   ctx.fillRect(0,0,W,H);
-  drawMist(468, 0.10);
+  drawMist(468, level.mistA ? level.mistA[0] : 0.10);
 
   // ---- main lane
   drawLaneContents(1);
-  drawMist(642, 0.07);
+  drawMist(642, level.mistA ? level.mistA[1] : 0.07);
 
   // water sits between main and near lanes
   laneBegin(1); drawWater(); laneEnd();
@@ -2139,10 +2381,11 @@ function render(){
   if(player.scene && level.npc){             // the handover, one line at a time over the speaker
     const i = Math.min(HANDOVER_LINES.length-1, player.scene.t/TUNE.HANDOVER_LINE|0);
     const [who, line] = HANDOVER_LINES[i];
-    const sx = who === 'Ilamaran' ? player.x : level.npc.x, sy = (who === 'Ilamaran' ? player.y : level.npc.y) - 104;
-    ctx.fillStyle = 'rgba(60,42,26,0.95)'; ctx.fillText(line, inView(sx, line), sy);
+    const spk = who === 'Ilamaran' ? player : level.npc;
+    const pl = placeDialogue(spk.x, spk.y - 112, line), dx = inView(pl.x, line);
+    ctx.fillStyle = 'rgba(60,42,26,0.95)'; ctx.fillText(line, dx, pl.base);
     ctx.font = '13px "Marcellus SC", serif'; ctx.fillStyle = 'rgba(90,64,36,0.85)';
-    ctx.fillText(who, inView(sx, line), sy - 22);
+    ctx.fillText(who, dx, pl.base - 22);
     ctx.font = '17px "Marcellus SC", serif';
   }
   ctx.textAlign='left';
@@ -2161,7 +2404,7 @@ function render(){
   // color grade + vignette + paper grain
   ctx.fillStyle = level.grade; ctx.fillRect(0,0,W,H);
   const v = ctx.createRadialGradient(W/2, H*0.45, H*0.42, W/2, H*0.55, H*0.85);
-  v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'rgba(30,20,10,0.45)');
+  v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1, level.vig || 'rgba(30,20,10,0.45)');
   ctx.fillStyle = v; ctx.fillRect(0,0,W,H);
   if(!grainPat) grainPat = ctx.createPattern(GRAIN,'repeat');
   ctx.fillStyle = grainPat; ctx.fillRect(0,0,W,H);
@@ -2192,8 +2435,7 @@ function render(){
 function renderTitleBG(){
   if(!level){
     level = LEVELS[0]();
-    level.palFront = dimPal(level.pal, -22);
-    level.palBack  = dimPal(level.pal, 10);
+    applyGrade(level);
     level.coins = level.coins.map(c=>({x:c[0],y:c[1],lane:c[2]??1,taken:false,spin:hash(c[0])*6}));
     level.guards = level.guards.map(makeGuard);
     level.checkpoints = level.checkpoints.map(c=>({x:c[0],y:c[1],lit:false}));

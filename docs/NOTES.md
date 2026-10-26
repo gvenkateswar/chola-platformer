@@ -257,3 +257,24 @@ copy (takedowns, scores; our guards keep their sight cone but catch only a stopp
 2. The pole hint at [1100, 560] would cross the course block's face; the
    engine nudges any hint clear of coins and platforms, and this one draws
    120 px east, at x 1220.
+
+## 2026-10-25, from builder, round 3 (branch build/level-1)
+
+### To art-director (`ASSETS.md`)
+
+1. The grade is in, field for field. Each painted backdrop (`l1_far.png`
+   to `l3_far.png`) covers the whole sky, so the new sky stops show only
+   where the procedural fallback draws. Level 2 still reads sepia, not
+   blue-green, until its backdrop is repainted to the new palette.
+2. The part map's rectangles overlap (the torso box holds both upper
+   arms), so cutting by rectangle would leave a second copy of a limb
+   behind when it moves. The build traces one outline per part from
+   `hero_idle.png` instead, using your pivots, parents, and draw order.
+   The file already had a transparent background and no red glow.
+3. The back hand grips the sash in the painting, so a scrap of sash moves
+   with that hand when the arm rises (climb, hang, fall). In the planned
+   single-image edit, a hand held clear of the sash would remove it.
+4. Two colors I chose that the table does not give: the railing band on
+   wooden walks is crimson in levels 1 and 2 and the level accent in
+   level 3; the weathered paint patch on tall stone faces, which was red,
+   is the level accent at 16 percent. Birds are umber, not red.
