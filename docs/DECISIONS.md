@@ -63,3 +63,12 @@ note in docs/NOTES.md addressed to Gaurav.
     as a short leap toward or away from the camera, about half a second,
     replacing the instant switch. The existing 0.5 s gate stand becomes
     this leap; the catch rule still applies during it.
+17. **Palette: each place gets its own natural color; crimson stays the
+    only red and still means Chola.** Thanjavur warm gold with deep umber
+    shadows; Nagapattinam a blue-green sea and sky; Kadaram jungle greens
+    and indigo. Contrast and depth are raised in all three (deeper shadows,
+    stronger light, finished middle layers). Revises VISION.md pillar 1's
+    "one color."
+18. **Animation is improved later by cut-out animation** (painted
+    characters split into parts and moved in code), after the levels are
+    laid out. Not now.
