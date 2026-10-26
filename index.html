@@ -160,7 +160,18 @@ const TUNE = {
   POLE_DOWN:        220,   // §2a scaffold pole: climb down, px/s
   ROPE_CLIMB:       130,   // §2a hauling rope: climb, px/s
   ROPE_SWAY:         12,   // §2a hauling rope: sway at the free end, ±px
-  ROPE_PERIOD:      2.0,   // §2a hauling rope: sway period, s
+  ROPE_PERIOD:      2.0,   // §2a hauling rope: sway period, s; also the swing's period at any grip (DECISIONS 20)
+  ROPE_MAX_ANGLE:    50,   // DECISIONS 20, builder's number: the swing's limit, degrees from vertical
+  ROPE_PUMP:        2.4,   // DECISIONS 20, builder's number: ← or → with the swing adds this, rad/s²
+  ROPE_DAMP:       0.12,   // DECISIONS 20, builder's number: swing loses this much speed per second
+  ROPE_SETTLE:      1.5,   // builder's number: a let-go rope damps back to its idle sway
+  ROPE_GRAB_KEEP:   0.8,   // DECISIONS 20, builder's number: share of his run speed the grab turns into swing
+  ROPE_RELEASE_GAIN: 1.3,  // DECISIONS 20, builder's number: release speed = swing speed at the hands × this
+  ROPE_RELEASE_VY: -420,   // DECISIONS 20, builder's number: the jump's own push off the rope, px/s (pole keeps -700)
+  ROPE_RELEASE_DOUBLE: false, // builder's choice: a rope release spends the double jump (DECISIONS 20: release aims the jump)
+  AIR_KEEP:         300,   // builder's number: speed above the run cap bleeds off at this rate in flight, px/s²
+  AIR_FRICTION:     500,   // builder's number: in a swing-release flight with no key held, drag is this, not 2200
+  CLIMB_STRIDE:      34,   // animation: px climbed per hand-over-hand reach (DECISIONS 21)
   HANG_HANDS:        50,   // hands above feet while hanging (hero is 56 tall, §2)
   GRAB_X:            16,   // §2a: horizontal reach to touch a pole or rope
   GRAB_COOL:       0.25,   // no re-grab right after letting go
@@ -459,18 +470,18 @@ function drawBackdrop(im, par){
 
 // Hero part map: ASSETS.md "Cut-out rigs", hero_idle.png 1024x1536. Pivots, parents and draw order
 // are the art director's; the cut outlines were traced offline from that image (each pixel to one
-// part, 3 px bleed, 22 px overlap into the parent at every joint, a shoulder
+// part, sash cloth in the hand to the sash with its finger gaps filled in sash color, 3 px bleed, 22 px overlap into the parent at every joint, a shoulder
 // cap kept on the torso) because a page opened from disk cannot read image pixels.
 const HERO_RIG = {
   file:'hero_idle', anchor:[620,1505], frameH:1536,
   order:['sash', 'bua', 'bfa', 'bth', 'bsh', 'fth', 'fsh', 'torso', 'pelvis', 'veshti', 'head', 'scab', 'fua', 'ffa'],
   parts:{
     sash:{pivot:[520,630], parent:'pelvis',   // Sash tails
-      cut:[[533,605,527,605,472,634,460,653,445,664,426,683,410,710,409,721,411,729,432,719,445,704,449,703,417,753,426,791,422,843,381,846,355,823,295,842,271,846,222,860,169,885,141,905,117,928,63,961,50,989,59,984,60,981,74,976,89,985,96,994,88,1012,89,1029,96,1043,108,1037,117,1029,122,1032,121,1036,124,1036,141,1023,209,938,241,926,273,920,309,906,331,894,333,895,307,925,263,952,219,985,203,1006,194,1024,168,1050,150,1080,121,1102,98,1127,83,1167,90,1161,96,1165,93,1171,95,1171,103,1164,106,1164,120,1148,130,1142,139,1140,152,1131,173,1137,180,1141,186,1150,185,1169,178,1184,180,1203,182,1206,194,1205,197,1209,196,1221,204,1241,207,1242,212,1236,213,1238,218,1234,226,1221,239,1187,241,1168,260,1103,269,1059,284,1042,315,1018,341,989,376,919,413,879,437,843,458,805,460,806,460,814,464,813,507,734,567,645,568,637]]},
+      cut:[[533,605,527,605,472,634,460,653,445,664,426,683,410,710,408,730,432,719,448,702,449,705,412,760,406,749,406,753,391,758,393,774,398,784,388,796,381,786,377,771,377,756,384,750,390,756,390,752,387,752,383,746,383,750,376,755,378,760,377,772,342,799,345,804,368,813,368,816,354,823,295,842,271,846,222,860,185,876,141,905,117,928,63,961,50,989,59,984,60,981,74,976,89,985,96,994,88,1012,89,1029,96,1043,108,1037,117,1029,122,1032,121,1036,124,1036,141,1023,209,938,241,926,273,920,309,906,331,894,333,895,307,925,263,952,219,985,203,1006,194,1024,168,1050,150,1080,121,1102,98,1127,83,1167,90,1161,96,1165,93,1171,95,1171,103,1164,106,1164,120,1148,130,1142,139,1140,152,1131,173,1137,180,1141,186,1150,185,1169,178,1184,180,1203,182,1206,194,1205,197,1209,196,1221,204,1241,207,1242,212,1236,213,1238,218,1234,226,1221,239,1187,241,1168,260,1103,269,1059,284,1042,315,1018,341,989,376,919,413,879,437,843,458,805,460,806,460,814,464,813,507,734,567,645,568,637]], patch:{color:'#671A10', cut:[[343,798,345,801,344,803,343,802,345,804,347,803,350,806,353,805,356,809,358,807,360,810,361,808,362,811,366,810,377,816,381,816,383,814,386,817,390,816,392,818,391,819,396,817,394,816,401,810,399,808,400,806,397,808,391,804,390,801,392,800,390,799,395,798,388,798,386,796,387,794,386,795,384,793,385,792,380,792,381,788,383,790,382,787,380,787,381,782,380,784,380,778,379,780,378,779,379,775,378,777,376,773],[395,755,390,760,394,763,394,765,392,765,392,770,394,772,393,774,395,775,394,777,402,783,401,785,403,787,407,787,408,789,411,789,411,791,413,789,414,779,413,777,412,778,411,776,406,775,411,773,409,770,410,760,406,753]]}},
     bua:{pivot:[470,345], parent:'torso',   // Back upper arm
       cut:[[481,283,474,289,453,292,438,299,424,311,412,329,402,356,400,380,388,401,383,404,372,438,373,457,365,488,349,514,347,522,422,522,443,496,455,474,462,469,470,449,479,462,480,443,489,418,498,326]]},
     bfa:{pivot:[385,540], parent:'bua',   // Back forearm and hand
-      cut:[[348,517,345,535,337,553,332,573,330,668,323,674,320,681,320,704,322,709,328,713,322,768,345,804,369,814,364,819,349,824,348,827,375,851,428,848,431,785,422,746,412,760,406,751,404,732,393,713,379,699,383,694,384,675,377,666,378,656,387,632,409,592,416,535,426,517]]},
+      cut:[[348,517,345,535,337,553,332,573,330,668,323,674,320,681,320,704,322,709,328,713,324,751,325,761,323,760,324,765,322,765,322,768,323,766,324,773,333,781,332,783,336,786,339,795,342,795,345,804,353,805,356,809,358,807,362,811,366,810,377,816,383,814,386,817,390,816,391,820,401,824,404,821,404,814,409,812,404,813,399,808,400,806,397,808,392,805,390,799,395,798,388,798,385,792,380,792,381,788,383,790,380,787,379,775,378,777,375,771,377,764,375,755,378,754,378,757,382,752,387,753,389,750,390,760,394,763,392,765,394,777,402,783,403,787,407,787,411,791,415,788,413,777,406,775,411,773,409,770,410,760,403,743,404,732,396,724,397,720,391,714,393,713,378,699,383,694,384,675,377,666,377,660,387,632,408,595,412,578,416,535,426,517]]},
     bth:{pivot:[530,700], parent:'pelvis',   // Back thigh
       cut:[[440,680,439,711,448,702,449,705,438,721,434,847,458,805,460,806,461,817,459,821,460,837,450,858,454,884,450,897,450,907,435,919,430,934,428,1001,450,1065,528,1065,538,1050,565,1037,565,680]]},
     bsh:{pivot:[470,1045], parent:'bth',   // Back shin and foot
@@ -509,7 +520,7 @@ function buildRig(name, im){
   for(const k of d.order){
     const p = d.parts[k];
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-    for(const c of p.cut) for(let i=0;i<c.length;i+=2){
+    for(const c of p.cut.concat(p.patch ? p.patch.cut : [])) for(let i=0;i<c.length;i+=2){
       x0 = Math.min(x0, c[i]); x1 = Math.max(x1, c[i]); y0 = Math.min(y0, c[i+1]); y1 = Math.max(y1, c[i+1]);
     }
     x0 -= 2; y0 -= 2; x1 += 2; y1 += 2;
@@ -520,8 +531,14 @@ function buildRig(name, im){
     g.scale(RIG_BAKE, RIG_BAKE); g.translate(-x0, -y0);
     g.beginPath();
     for(const c of p.cut){ g.moveTo(c[0], c[1]); for(let i=2;i<c.length;i+=2) g.lineTo(c[i], c[i+1]); g.closePath(); }
+    if(p.patch) for(const c of p.patch.cut){ g.moveTo(c[0], c[1]); for(let i=2;i<c.length;i+=2) g.lineTo(c[i], c[i+1]); g.closePath(); }
     g.clip();
     g.drawImage(im, 0, 0);                     // drawing a file:// image is allowed; reading it back is not
+    if(p.patch){                               // cloth that a hand covered in the painting, filled in
+      g.fillStyle = p.patch.color; g.beginPath();
+      for(const c of p.patch.cut){ g.moveTo(c[0], c[1]); for(let i=2;i<c.length;i+=2) g.lineTo(c[i], c[i+1]); g.closePath(); }
+      g.fill();
+    }
     parts[k] = {cv, x0, y0, w:x1-x0, h:y1-y0, pivot:p.pivot, parent:p.parent};
   }
   RIGS[name] = {def:d, parts};
@@ -548,12 +565,15 @@ function drawRig(name, x, y, face, pose, h, opts={}){
   ctx.scale(face*S, S);
   ctx.translate(-d.anchor[0] + (pose.dx||0), -d.anchor[1] + (pose.dy||0));
   const rad = Math.PI/180, ang = pose.ang || {};
+  if(pose.rotPivot && pose.rot){             // tilt the whole figure about a point (his grip on a rope)
+    ctx.translate(pose.rotPivot[0], pose.rotPivot[1]); ctx.rotate(pose.rot*rad); ctx.translate(-pose.rotPivot[0], -pose.rotPivot[1]);
+  }
   for(const k of d.order){
     const chain = [];
     for(let q = k; q; q = R.parts[q].parent) chain.unshift(q);
     ctx.save();
     for(const q of chain){
-      const P = R.parts[q], a = (ang[q] || 0) + (q === chain[0] ? (pose.rot || 0) : 0);
+      const P = R.parts[q], a = (ang[q] || 0) + (q === chain[0] && !pose.rotPivot ? (pose.rot || 0) : 0);
       if(a){ ctx.translate(P.pivot[0], P.pivot[1]); ctx.rotate(a*rad); ctx.translate(-P.pivot[0], -P.pivot[1]); }
     }
     const P = R.parts[k];
@@ -569,6 +589,58 @@ function drawRig(name, x, y, face, pose, h, opts={}){
     ctx.restore();
   }
   ctx.restore();
+}
+
+// where a point of a part ends up under a pose (image coordinates, before the root offset and tilt)
+function rigPoint(name, ang, part, pt){
+  const R = RIGS[name]; let [x, y] = pt;
+  for(let q = part; q; q = R.parts[q].parent){
+    const a = (ang[q] || 0)*Math.PI/180, [px, py] = R.parts[q].pivot, c = Math.cos(a), s = Math.sin(a);
+    const dx = x - px, dy = y - py; x = px + dx*c - dy*s; y = py + dx*s + dy*c;
+  }
+  return [x, y];
+}
+const HERO_HANDS = {ffa:[868, 835], bfa:[372, 805]};   // palms on hero_idle.png
+// follow-through and overlap (DECISIONS 21): the sash and the head (with the hair and topknot) ride on
+// springs, so they trail the body and settle after it stops. Called once a frame after rigBlend.
+function heroSecondary(st, target, dt){
+  const p = player, c = p.climb; st.ang = st.ang || {};
+  const sp = st.spring || (st.spring = {sash:[target.ang.sash||0,0], head:[target.ang.head||0,0], fth:[0,0], bth:[0,0]});
+  dt = Math.min(dt, 1/30);
+  // the hero's world velocity, in the facing frame
+  let vx = p.vx, vy = p.vy;
+  if(c && c.kind === 'rope'){ const w = c.r*c.o.angV; vx = w*Math.cos(c.o.ang); vy = -w*Math.sin(c.o.ang); }
+  if(c && c.kind === 'pole') vy = (p.y - (st.lastY ?? p.y))/Math.max(dt, 1e-3);
+  st.lastY = p.y;
+  const fwd = vx*p.face;
+  const rotVel = ((target.rot||0) - (st.lastRot ?? (target.rot||0)))/Math.max(dt, 1e-3); st.lastRot = target.rot || 0;
+  const goal = {
+    sash: (target.ang.sash||0) + clamp(0.045*fwd + 0.03*vy, -25, 40),
+    head: (target.ang.head||0) - clamp(0.12*rotVel + 0.004*vy, -10, 10),
+    fth: c && c.kind === 'rope' ? clamp(-0.06*fwd, -25, 25) : 0,      // legs trail the swing
+    bth: c && c.kind === 'rope' ? clamp(-0.05*fwd, -25, 25) : 0,
+  };
+  const K = {sash:[70, 7], head:[120, 12], fth:[50, 6], bth:[45, 6]};  // stiffness, damping
+  for(const k in sp){
+    const s = sp[k], [kk, dd] = K[k];
+    s[1] += ((goal[k] - s[0])*kk - s[1]*dd)*dt; s[0] += s[1]*dt;
+  }
+  target.ang.fth = (target.ang.fth||0) + sp.fth[0]; target.ang.bth = (target.ang.bth||0) + sp.bth[0];
+  st.sashA = sp.sash[0]; st.headA = sp.head[0];
+}
+// after the blend: the sprung parts, and on a rope the palms pinned to his grip
+function heroPin(st, target){
+  const p = player, c = p.climb;
+  st.ang.sash = st.sashA; st.ang.head = st.headA;
+  // hanging: pin the posed palms to his grip, and tilt about them with the rope
+  if(c && c.kind === 'rope'){
+    const S = 106/HERO_RIG.frameH;
+    const a = rigPoint('hero', st.ang, 'ffa', HERO_HANDS.ffa), b = rigPoint('hero', st.ang, 'bfa', HERO_HANDS.bfa);
+    const hx = (a[0]+b[0])/2, hy = Math.min(a[1], b[1]);
+    st.dx = HERO_RIG.anchor[0] - hx; st.dy = HERO_RIG.anchor[1] - TUNE.HANG_HANDS/S - hy;
+    st.rotPivot = [hx, hy];
+  } else st.rotPivot = null;
+  st.rot = target.rot || 0;
 }
 
 // ---- hero poses, all from the one cut image. Angles in degrees, + is clockwise in the right-facing
@@ -589,16 +661,37 @@ function heroPoseTarget(){
     A.fth = -55*t; A.fsh = 75*t; A.bth = -25*t; A.bsh = 70*t; A.fua = -70*t; A.bua = -45*t; A.ffa = -30*t; A.bfa = -30*t;
     A.torso = 8*t; A.sash = 25*t; tag = 'leap';
   } else if(p.climb){
-    const moving = p.stillT < 0.05, c = moving ? Math.sin(time*9) : 0;
+    // hand over hand (DECISIONS 21): one reach per CLIMB_STRIDE px, eased in and out; the arms alternate,
+    // and the leg under the low hand tucks to grip, then pushes as that hand reaches
+    const ph = p.climbPhase, e = 0.5 - 0.5*Math.cos(ph), push = Math.abs(Math.sin(ph));
+    const still = p.stillT > 0.1, br = Math.sin(time*2.4);
     if(p.climb.kind === 'pole'){
-      A.fua = -160 + 14*c; A.bua = -150 - 14*c; A.ffa = 12; A.bfa = 12;
-      A.fth = -38 + 16*c; A.fsh = 55; A.bth = -12 - 16*c; A.bsh = 45; A.torso = 4; A.sash = -6; tag = 'climb';
+      A.fua = lerp(-128, -176, e); A.ffa = lerp(-52, 6, e);
+      A.bua = lerp(-176, -128, e); A.bfa = lerp(6, -52, e);
+      A.fth = lerp(-62, -18, e);   A.fsh = lerp(88, 26, e);
+      A.bth = lerp(-18, -62, e);   A.bsh = lerp(26, 88, e);
+      A.torso = 5 + 3*Math.sin(ph); A.head = -2*Math.sin(ph);
+      dy = -14*push;                           // the push lifts him; the pull settles him
+      if(still){ A.torso += 0.8*br; dy += 3*br; }
+      tag = still ? 'grip' : 'climb';
     } else {
-      A.fua = -172 + 8*c; A.bua = -166 - 8*c; A.ffa = 4; A.bfa = 4;
-      A.fth = -12 + 10*c; A.fsh = 14; A.bth = 6 - 10*c; A.bsh = 16; A.sash = -10;
-      rot = -0.6*TUNE.ROPE_SWAY*Math.sin(time*2*Math.PI/TUNE.ROPE_PERIOD); tag = moving ? 'climb' : 'hang';
+      const o = p.climb.o, swing = Math.abs(o.angV) > 0.25 || Math.abs(o.ang) > 0.12;
+      A.fua = lerp(-150, -178, e); A.ffa = lerp(-34, 4, e);
+      A.bua = lerp(-178, -150, e); A.bfa = lerp(4, -34, e);
+      A.fth = lerp(-42, -14, e);   A.fsh = lerp(62, 20, e);
+      A.bth = lerp(-14, -42, e);   A.bsh = lerp(20, 62, e);
+      A.torso = 2; A.sash = -8;
+      if(swing){
+        // the body hangs along the rope; a pump kicks the legs through, the other way tucks them
+        const fwdPump = p.pumping * p.face;
+        A.fth += fwdPump > 0 ? -30 : fwdPump < 0 ? 18 : 0; A.bth += fwdPump > 0 ? -22 : fwdPump < 0 ? 22 : 0;
+        A.fsh = fwdPump < 0 ? 70 : 24; A.bsh = fwdPump < 0 ? 64 : 30;
+        A.torso += fwdPump > 0 ? -6 : fwdPump < 0 ? 6 : 0;
+        tag = 'swing';
+      } else tag = still ? 'hang' : 'climb';
+      if(still && !swing){ A.torso += 0.8*br; A.fth += 2*br; A.bth -= 2*br; }
+      rot = (o.ang*180/Math.PI)*p.face;          // tilt with the rope, in the mirrored image frame
     }
-    dy = -40;                                  // hands, not feet, carry him
   } else if(p.pushT >= TUNE.PUSH_DELAY && Math.abs(p.vx) > 0){
     dy = run(p.runPhase, 0.55);
     A.torso = 24; A.head = -12; A.fua = -82; A.ffa = -12; A.bua = -72; A.bfa = -18; tag = 'push';
@@ -622,7 +715,9 @@ function heroPoseTarget(){
     A.fua = lerp(-150, 15, Math.min(1, t*1.6)); A.ffa = -20; A.torso = (A.torso||0) + 8; tag = 'attack';
   } else if(p.sheathT > 0){                    // hand on the hilt pushes the blade home
     const t = Math.sin(Math.PI * p.sheathT / TUNE.SHEATH_PUSH);
-    A.fua = 40*t + (A.fua||0)*(1-t); A.ffa = -112*t + (A.ffa||0)*(1-t); A.scab = -3*t;
+    const e = t*t*(3 - 2*t);                   // ease into the hilt and out again
+    A.fua = 62*e + (A.fua||0)*(1-e); A.ffa = -118*e + (A.ffa||0)*(1-e);
+    A.torso = (A.torso||0) - 3*e; A.head = (A.head||0) + 4*e; A.scab = -4*e;
   }
   return {ang:A, dy, rot, tag};
 }
@@ -633,7 +728,8 @@ function heroPoseTarget(){
 function buildLevel1(){
   // docs/levels/LEVEL-1.md draft 3, section 9 (builder notes); beats, guards, checkpoints in sections 3 to 6
   const P = [
-    [-80,620,5640,240,1], [780,420,240,200,1], [1590,280,280,24,1], [2170,300,180,320,1],
+    [-80,620,5640,240,1], [780,420,240,200,1], [1700,280,170,24,1],   // cornice west edge 1590 -> 1700: rope 1 needs a swing (DECISIONS 20, NOTES.md)
+    [2170,300,180,320,1],
     [2640,492,1460,26,0], [3440,440,90,290,1], [3620,360,90,370,1], [3800,280,200,450,1],   // wall-walk, pillars
     [4300,656,740,64,2], [5460,514,900,30,0], [5800,420,300,24,0],
     [5460,656,140,64,2], [5720,656,140,64,2], [5980,656,140,64,2], [6240,656,320,64,2],     // canyon
@@ -804,6 +900,7 @@ const player = {
   stillT:0, sliding:false, shoveDir:0, shoveLeft:0,             // DESIGN.md §3
   leap:null, climb:null, grabCool:0, onPlank:false, dropT:0, pushT:0,   // §2, §2a
   hasSword:true, sheathT:0, scene:null, fadeT:0, fadeRefill:false, fadeDone:false,
+  overV:0, climbPhase:0, pumping:0,
 };
 
 // level fields beyond platforms: planks, poles, ropes, blocks, npc (DESIGN.md §2a, §2)
@@ -812,7 +909,7 @@ function prepTraversal(L){
   // planks and blocks live in platforms (kind 'plank' / 'block') so every reader of the level sees them
   for(const [x,y,w,lane] of L.planks) L.platforms.push([x, y, w, TUNE.PLANK_THICK, lane, 'plank']);
   L.poles = L.poles.map(([x,top,bot,lane])=>({x, top, bot, lane}));
-  L.ropes = L.ropes.map(([x,ay,len,lane])=>({x, ay, len, lane}));
+  L.ropes = L.ropes.map(([x,ay,len,lane])=>({x, ay, len, lane, ang:0, angV:0}));
   L.blocks = L.blocks.map(([x0,x1,lane])=>{
     let gy = null;
     for(const [bx,by,bw,,ln,kind] of L.platforms)
@@ -850,7 +947,8 @@ function textObstacles(cxRef, opts={}){
   for(const c of level.coins) B.push(box(c.x-14, c.y-14, c.x+14, c.y+14, c.lane));
   for(const [bx,by,bw,bh,ln] of level.platforms) B.push(box(bx, by-12, bx+bw+18, by+bh, ln));
   for(const o of level.poles) B.push(box(o.x-8, o.top-16, o.x+8, o.bot, o.lane));
-  for(const o of level.ropes) B.push(box(o.x-32, o.ay-12, o.x+32, o.ay+o.len+8, o.lane));   // includes the sway
+  for(const o of level.ropes){ const s = o.len*Math.sin(TUNE.ROPE_MAX_ANGLE*Math.PI/180);   // the whole swing
+    B.push(box(o.x-s-12, o.ay-12, o.x+s+12, o.ay+o.len+8, o.lane)); }
   for(const c of level.checkpoints) B.push(box(c.x-6, c.y-124, c.x+62, c.y, 1));            // kodi on its staff
   for(const lk of level.links) for(const l of [lk.a, lk.b]) B.push(box(lk.cx-46, lk.gy[l]-112, lk.cx+46, lk.gy[l], l));
   if(level.npc && !opts.noNpc) B.push(box(level.npc.x-26, level.npc.y-112, level.npc.x+26, level.npc.y, 1));
@@ -1002,11 +1100,24 @@ function tryShift(dir){
 }
 
 // ---- traversal kit (DESIGN.md §2a)
-function ropeX(r, y){                       // the rope sways more toward its free end
-  const k = clamp((y - r.ay)/r.len, 0, 1);
-  return r.x + TUNE.ROPE_SWAY*Math.sin(time*2*Math.PI/TUNE.ROPE_PERIOD)*k;
+// ---- ropes swing with momentum (DECISIONS 20). A rope is a pendulum from its anchor: angle `ang`
+// from vertical (+ swings east), angular speed `angV`. The period is fixed (TUNE.ROPE_PERIOD) at any
+// grip height, so the rhythm a player learns holds all the way up the rope.
+const ROPE_W2 = ()=> Math.pow(2*Math.PI/TUNE.ROPE_PERIOD, 2);
+function ropeX(r, y){                       // x of the rope at height y
+  return r.x + (y - r.ay)*Math.tan(r.ang || 0);
 }
-// feet range while holding a pole or rope
+function ropeEnd(r){ return [r.x + r.len*Math.sin(r.ang||0), r.ay + r.len*Math.cos(r.ang||0)]; }
+// ropes nobody holds settle back to the idle sway (DESIGN.md §2a: ±12 px, period 2 s)
+function updateRopes(dt){
+  for(const o of level.ropes){
+    if(player.climb && player.climb.o === o) continue;
+    const idle = Math.asin(Math.min(1, TUNE.ROPE_SWAY/o.len))*Math.sin(time*2*Math.PI/TUNE.ROPE_PERIOD);
+    o.angV += ((idle - o.ang)*ROPE_W2() - o.angV*TUNE.ROPE_SETTLE)*dt;
+    o.ang += o.angV*dt;
+  }
+}
+// feet range while holding a pole or rope (for a rope, measured along it: grip distance r from the anchor)
 function climbRange(c){
   return c.kind === 'pole' ? [c.o.top, c.o.bot]
                            : [c.o.ay + TUNE.HANG_HANDS + 10, c.o.ay + c.o.len + TUNE.HANG_HANDS];
@@ -1025,28 +1136,67 @@ function findClimbable(){
   }
   return null;
 }
+function grabRope(c){                       // the grab turns his run into swing (DECISIONS 20)
+  const p = player, o = c.o;
+  c.r = clamp((p.y - TUNE.HANG_HANDS - o.ay)/Math.cos(o.ang), 10, o.len);
+  o.angV += clamp(p.vx*Math.cos(o.ang)*TUNE.ROPE_GRAB_KEEP/c.r, -3, 3);
+  p.climbPhase = 0;
+}
+function ropeRelease(c, hop){
+  const p = player, o = c.o, v = c.r*o.angV*TUNE.ROPE_RELEASE_GAIN;
+  // along the tangent of the swing, with its speed; the hop is a jump's push off the rope
+  p.vx = v*Math.cos(o.ang); p.vy = -v*Math.sin(o.ang) + (hop ? TUNE.ROPE_RELEASE_VY : 0);
+  p.liftV = Math.min(0, -v*Math.sin(o.ang));   // the swing's own lift; letting go of jump trims only the hop
+  if(Math.abs(p.vx) > 30) p.face = Math.sign(p.vx);
+  p.overV = Math.abs(p.vx);                 // flight keeps speed above the run cap until it lands
+  // the release is the jump: no double jump after it, so the swing is what carries him
+  p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.jumps = TUNE.ROPE_RELEASE_DOUBLE ? 1 : 2;
+}
 function climbStep(dt){
   const p = player, c = p.climb;
-  const [lo, hi] = climbRange(c);
   const pole = c.kind === 'pole';
   const up = keys.U && !keys.F, down = keys.F && !keys.U;
-  let moved = false;
-  if(up && p.y > lo){ p.y = Math.max(lo, p.y - (pole ? TUNE.POLE_UP : TUNE.ROPE_CLIMB)*dt); moved = true; }
-  else if(down && p.y < hi){ p.y = Math.min(hi, p.y + (pole ? TUNE.POLE_DOWN : TUNE.ROPE_CLIMB)*dt); moved = true; }
   const lr = (keys.L?-1:0) + (keys.R?1:0);
-  if(lr) p.face = lr;
-  p.x = pole ? c.o.x : ropeX(c.o, p.y - TUNE.HANG_HANDS);
+  let moved = false;
+  if(pole){
+    const [lo, hi] = climbRange(c);
+    if(up && p.y > lo){ const y0 = p.y; p.y = Math.max(lo, p.y - TUNE.POLE_UP*dt); p.climbPhase += (y0 - p.y)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
+    else if(down && p.y < hi){ const y0 = p.y; p.y = Math.min(hi, p.y + TUNE.POLE_DOWN*dt); p.climbPhase -= (p.y - y0)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
+    if(lr) p.face = lr;
+    p.x = c.o.x;
+  } else {
+    const o = c.o;
+    // climb along the rope
+    if(up && c.r > 10){ const r0 = c.r; c.r = Math.max(10, c.r - TUNE.ROPE_CLIMB*dt); p.climbPhase += (r0 - c.r)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
+    else if(down && c.r < o.len){ const r0 = c.r; c.r = Math.min(o.len, c.r + TUNE.ROPE_CLIMB*dt); p.climbPhase -= (c.r - r0)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
+    // pendulum, plus a pump: ← or → in the direction of the swing adds energy (or starts it from rest)
+    let acc = -ROPE_W2()*Math.sin(o.ang) - TUNE.ROPE_DAMP*o.angV;
+    p.pumping = 0;
+    if(lr){
+      p.face = lr;
+      if(Math.sign(o.angV) === lr || Math.abs(o.angV) < 0.15){ acc += lr*TUNE.ROPE_PUMP; p.pumping = lr; }
+    }
+    o.angV += acc*dt; o.ang += o.angV*dt;
+    const max = TUNE.ROPE_MAX_ANGLE*Math.PI/180;
+    if(Math.abs(o.ang) > max){ o.ang = Math.sign(o.ang)*max; o.angV = 0; }
+    p.x = o.x + c.r*Math.sin(o.ang);
+    p.y = o.ay + c.r*Math.cos(o.ang) + TUNE.HANG_HANDS;
+    if(Math.abs(c.r*o.angV) > TUNE.STOP_SPEED) moved = true;   // swinging is moving; hanging still is not
+  }
   p.vx = 0; p.vy = 0; p.onGround = false; p.wallDir = 0; p.sliding = false;
   p.stillT = moved ? 0 : p.stillT + dt;     // §2a: hanging still counts as stopped, climbing is moving
-  if(moved) p.runPhase += dt*6;
-  if(jumpQueued > 0){                       // §2a: jump leaves with vy -700, vx 300 away
-    const away = lr || p.face;
-    p.vy = TUNE.CLIMB_JUMP_VY; p.vx = away*TUNE.CLIMB_JUMP_VX; p.face = away;
-    p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.jumps = 1; jumpQueued = 0; sfx.jump();
+  if(jumpQueued > 0){
+    jumpQueued = 0; sfx.jump();
+    if(pole){                               // §2a: jump leaves a pole with vy -700, vx 300 away
+      const away = lr || p.face;
+      p.vy = TUNE.CLIMB_JUMP_VY; p.vx = away*TUNE.CLIMB_JUMP_VX; p.face = away;
+      p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.jumps = 1;
+    } else ropeRelease(c, true);
     return;
   }
-  if(down && p.y >= hi){                    // climbed off the bottom
-    p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.jumps = 1;
+  if(down && (pole ? p.y >= climbRange(c)[1] : c.r >= c.o.len)){   // climbed off the bottom
+    if(pole){ p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.jumps = 1; }
+    else ropeRelease(c, false);
   }
 }
 function blockOf(pl){ return level.blocks.find(b=>b.p === pl); }
@@ -1124,7 +1274,8 @@ function movePlayer(dt){
     const c = findClimbable();
     if(c && (!p.onGround || keys.U) && !(keys.U && shiftQueued < 0 && linkAtPlayer(p.lane-1))){
       p.climb = c; p.jumps = 0; p.shoveLeft = 0; shiftQueued = 0;
-      const [lo, hi] = climbRange(c); p.y = clamp(p.y, lo, hi);
+      if(c.kind === 'rope') grabRope(c);
+      else { const [lo, hi] = climbRange(c); p.y = clamp(p.y, lo, hi); p.climbPhase = 0; }
     }
   }
   if(p.climb){ shiftQueued = 0; climbStep(dt); jumpQueued = Math.max(0, jumpQueued - dt); return; }
@@ -1137,10 +1288,13 @@ function movePlayer(dt){
     p.vx += dir*ACCEL*dt;
     p.face = dir;
   } else {
-    const f = FRICTION*dt;
+    const f = (p.overV > 0 && !p.onGround ? TUNE.AIR_FRICTION : FRICTION)*dt;
     p.vx = Math.abs(p.vx) <= f ? 0 : p.vx - Math.sign(p.vx)*f;
   }
-  p.vx = clamp(p.vx, -MAXV, MAXV);
+  // a swing release may fly faster than he runs; the excess bleeds off, and landing ends it
+  p.overV = p.onGround ? 0 : Math.max(0, (p.overV||0) - TUNE.AIR_KEEP*dt);
+  const cap = Math.max(MAXV, p.overV);
+  p.vx = clamp(p.vx, -cap, cap);
 
   const sliding = !p.onGround && p.wallDir !== 0 && dir === p.wallDir && p.vy > 0;
   p.sliding = sliding;
@@ -1163,7 +1317,8 @@ function movePlayer(dt){
     }
   }
   jumpQueued = Math.max(0, jumpQueued - dt);
-  if(!keys.J && p.vy < -300) p.vy = -300;
+  if(!keys.J && p.vy < -300 + (p.liftV||0)) p.vy = -300 + (p.liftV||0);
+  if(p.onGround) p.liftV = 0;
   p.dropT = Math.max(0, p.dropT - dt);
 
   if(shiftQueued !== 0){ if(!shoved) tryShift(shiftQueued); shiftQueued = 0; }
@@ -1428,6 +1583,7 @@ function updateWorld(dt){
   const ty = clamp(p.y - H*0.62, -60, 40);
   cam.y = lerp(cam.y, ty, 1-Math.pow(0.02, dt));
   shake = Math.max(0, shake - dt*40);
+  updateRopes(dt);
 }
 
 // ============================================================ particles
@@ -1823,10 +1979,12 @@ function drawPole(o){                        // §2a scaffold pole, lashed bambo
 function drawRope(o){                        // §2a hauling rope from a beam, swaying
   ctx.fillStyle = '#5E4429'; ctx.fillRect(o.x-30, o.ay-10, 60, 10);
   ctx.strokeStyle = '#8A6A44'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  // a little sag toward the trailing side, so a fast swing reads as a rope and not a rod
+  const [ex, ey] = ropeEnd(o), bend = clamp(-o.angV*6, -10, 10);
   ctx.beginPath(); ctx.moveTo(o.x, o.ay);
-  for(let i=1;i<=10;i++){ const y = o.ay + o.len*i/10; ctx.lineTo(ropeX(o, y), y); }
+  ctx.quadraticCurveTo((o.x+ex)/2 + bend*Math.cos(o.ang), (o.ay+ey)/2 - bend*Math.sin(o.ang), ex, ey);
   ctx.stroke();
-  ctx.fillStyle = '#5E4429'; ctx.beginPath(); ctx.arc(ropeX(o, o.ay+o.len), o.ay+o.len, 5, 0, 7); ctx.fill();
+  ctx.fillStyle = '#5E4429'; ctx.beginPath(); ctx.arc(ex, ey, 5, 0, 7); ctx.fill();
 }
 function drawSwordGlyph(x, y){               // §2 sign 2: an ink sword after the hearts, a sign, never a count
   if(!player.hasSword) return;
@@ -2351,7 +2509,12 @@ function render(){
   ctx.filter = 'none';
   if(!farIm) drawWallLayer();      // the painted backdrop carries its own architecture
 
-  if(state === 'play' && RIGS.hero) player.rigS = rigBlend(player.rigS || {}, heroPoseTarget(), 0.35);
+  if(state === 'play' && RIGS.hero){
+    const tgt = heroPoseTarget(), st = player.rigS || (player.rigS = {ang:{}});
+    heroSecondary(st, tgt, frameDt);
+    rigBlend(st, tgt, 0.35);
+    heroPin(st, tgt);
+  }
 
   // ---- background lane, then atmospheric haze over it
   drawLaneContents(0);
@@ -2448,10 +2611,10 @@ function renderTitleBG(){
 }
 
 // ============================================================ main loop
-let last = performance.now();
+let last = performance.now(), frameDt = 1/60;
 function frame(now){
   let dt = Math.min(0.033, (now-last)/1000);
-  last = now; time += dt;
+  last = now; time += dt; frameDt = dt;
   if(state === 'play'){
     movePlayer(dt);
     if(state === 'play') updateWorld(dt);

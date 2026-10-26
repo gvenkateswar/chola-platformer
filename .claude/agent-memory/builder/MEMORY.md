@@ -1,6 +1,6 @@
 # Builder memory
 
-Last updated 2026-10-25 after build/level-1 round 3. Line numbers drift;
+Last updated 2026-10-26 after build/level-1 round 4. Line numbers drift;
 grep the function names.
 
 ## Where things live in index.html (~2,150 lines)
@@ -51,11 +51,35 @@ grep the function names.
   `placeDialogue` keep hints and the handover off coins, platforms,
   props (poles, ropes, flags, gates, npc, goal) and each other.
 
+## Round 4 additions
+
+- Rope swing (DECISIONS 20): ropes carry `ang`/`angV`; `updateRopes` runs
+  idle sway for ropes nobody holds; `grabRope`, `ropeRelease`, `climbStep`
+  (pendulum, pump, climb along grip `c.r`). Release along the tangent,
+  `p.overV` lets flight exceed the run cap, `p.liftV` keeps the swing's
+  lift through the jump-cut, rope release spends the double jump.
+- Animation (DECISIONS 21): `p.climbPhase` advances per px climbed;
+  `heroSecondary` (sash/head springs, swing leg lag; runs before
+  `rigBlend`), `heroPin` (after the blend: palms pinned to the rope grip by
+  forward kinematics `rigPoint`, whole-figure tilt about `rotPivot`).
+- Sash fix: red cloth in the hand box goes to the sash (ratio test
+  r>45, g<0.42r, b<0.45r inside x 290-470, y 680-875), no bleed either
+  way, fingertips over the strand filled by a traced `patch` polygon.
+- Level 1 cornice now [1700,280,170,24,1] so rope 1 needs a swing.
+
 ## Quirks
+
+- CHECK THE BRANCH FIRST, alone, before any pull or merge: twice the
+  working copy was on main and a chained pull merged into local main
+  (fixed both times with `git reset --hard origin/main`, never pushed).
 
 - tests/smoke.js reads globals `deaths` and `coinsTaken`; keep them.
 - Since tester commit 288b2c1 the smoke bot climbs, pushes, leaps, and
-  skips the handover; level 1 takes it about 37 s.
+  skips the handover; level 1 takes it about 37 s of 75. It passes rope 1
+  by falling to the floor and climbing the plinth (jump, wall jump,
+  double jump), not by swinging.
+- Filmstrips: stop the loop with `window.requestAnimationFrame=()=>0`,
+  step the sim by hand, call render(), screenshot a clip per frame.
 - A page opened from disk cannot read image pixels (getImageData throws),
   so anything pixel-based is precomputed offline into index.html.
 - Headless ~10 fps; level times vary run to run (level 3: 21 to 34 s of
