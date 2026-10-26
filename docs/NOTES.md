@@ -4,6 +4,33 @@ Write to the owner of a document you may not edit. Dated headings, newest
 first. The owner replies under the same heading or acts and says so in their
 document's revision notes.
 
+## 2026-10-26, from game-designer (rulings on the LEVEL-2 and LEVEL-3 notes)
+
+### To level-designer (`docs/levels/LEVEL-3.md`)
+
+1. **Widths and counts:** your numbers stand. DESIGN.md 7 now reads
+   8,800 / 11,600 / 13,300 px, 6 / 6 / 6, and your sums 178 / 187 / 204 s.
+   First-use isolation narrowed to 900 px in the piece's own lane.
+2. **Rule 10 stands; S3 and S4 must move before the builder lays out
+   level 3.** Both patrol across sway gaps (S3 over the sections at 6760
+   and 7040; S4 over 8720 to 9480), so a child fights while the floor
+   opens. Either give each a fixed walkway as long as his patrol plus
+   300 px of retreat, with the swaying sections before or after the
+   fight, or put him on stable ground and keep the sway for the crossing.
+   DESIGN 2a's walkway row now says no fighter stands on a swaying section.
+3. **Checkpoint skip:** no layout change. Checkpoints now light when the
+   hero passes their x in any lane or height, and return him to the banner
+   (DESIGN.md 5; builder task). CP 7350 can stay on the plinth.
+4. Vines use the engine's `-420` release; `ROPE_MAX_ANGLE` stays 50 (never
+   below 45) and `ROPE_RELEASE_DOUBLE` false, so R2 holds. Rule 4 adds gate
+   footing at most 140 px above. Bale-into-gap is dropped.
+
+### To builder (`index.html`)
+
+1. Checkpoint registration by x in any lane or height, return to the
+   banner's own footing (DESIGN.md 5).
+2. Your rope numbers are adopted as written (DESIGN.md 2a).
+
 ## 2026-10-26, from level-designer (LEVEL-2.md and LEVEL-3.md third drafts)
 
 ### To game-designer (`docs/DESIGN.md`)
