@@ -197,13 +197,21 @@ const TUNE = {
   CAST_OFF_SPEED:   140,   // builder's number: px/s the shore drifts west in the cast-off
   // ---- Srivijayan fighters (DESIGN.md §4)
   FIGHT_ADVANCE:    180,   // §4: seen, he advances at 180 px/s...
-  FIGHT_STOP:        90,   // §4: ...and stops 90 px from the hero
+  FIGHT_STOP:        60,   // research report table #1 (was §4's 90): he halts inside the hero's reach
   FIGHT_RAISE:      0.5,   // §4: telegraph, weapon raised with an ink flare at the tip
   FIGHT_THRUST:    0.15,   // §4: thrust, one heart
   FIGHT_REACH:       70,   // §4: thrust hitbox reaches 70 px ahead of his front edge
   FIGHT_RECOVER:    0.7,   // §4: recovery, when a cut lands (the shield-bearer's only open window)
   FIGHT_HP:           2,   // §4: two cuts defeat him
-  FIGHT_CUT_REACH:   56,   // §4: the hero's cut lands within 56 px ahead
+  FIGHT_CUT_REACH:   64,   // report #1 (was 56): cut lands within 64 px past his edge, 77 px center to center
+  ATTACK_BUFFER:   0.13,   // report #3: a press during a swing is kept this long (same as the jump buffer)
+  CUT_TIME:        0.28,   // §2: one cut lasts 0.28 s
+  CUT_ACTIVE_START:0.07,   // report #4: the hitbox is live only while the blade is forward...
+  CUT_ACTIVE_END:  0.14,   // ...from 0.07 to 0.14 s into the cut (frames 4 to 8)
+  HITSTOP_HIT:   5/60,     // report #2: both fighters freeze 5 frames on a hit...
+  HITSTOP_KILL: 10/60,     // ...9 to 10 on the defeating hit
+  HITSTOP_BLOCK: 3/60,     // report #7 (inference): a short freeze when the shield takes the cut
+  HITSTOP_SHAKE:      5,   // report #2 (Sakurai): victim shakes side to side, px, shrinking over the freeze
   FIGHT_KNOCK:      120,   // builder's number: a thrust staggers the hero back this far (§4 "a stagger")
   FIGHT_KNEEL:      1.5,   // §4: a defeated fighter kneels, raises an open hand, washes out in 1.5 s
   FIGHT_DROP:       420,   // §3, §4: engagement ends at this distance (and leaving the lane or band)
@@ -281,7 +289,7 @@ function dimPal(p, amt){ return {top:shade(p.top,amt), topD:shade(p.topD,amt), f
 
 // ============================================================ input
 const keys = {};
-let jumpQueued = 0, attackQueued = false, shiftQueued = 0;
+let jumpQueued = 0, attackQueued = 0, shiftQueued = 0;
 const KEYMAP = {ArrowLeft:'L', a:'L', A:'L', ArrowRight:'R', d:'R', D:'R',
                 ' ':'J', w:'J', W:'J', ArrowUp:'U', ArrowDown:'F',
                 j:'X', J:'X', x:'X', X:'X', s:'F', S:'F'};
@@ -291,7 +299,7 @@ addEventListener('keydown', e=>{
   if(!keys[k]){
     keys[k]=true;
     if(k==='J') jumpQueued = 0.13;
-    if(k==='X') attackQueued = true;
+    if(k==='X') attackQueued = TUNE.ATTACK_BUFFER;
     if(k==='U') shiftQueued = -1;         // toward background
     if(k==='F') shiftQueued = +1;         // toward foreground
   }
@@ -307,7 +315,7 @@ function bindTouch(id, fn, k){
 }
 bindTouch('tL', null, 'L'); bindTouch('tR', null, 'R');
 bindTouch('tJ', ()=>{ jumpQueued=0.13; }, 'J');
-bindTouch('tA', ()=>{ attackQueued=true; });
+bindTouch('tA', ()=>{ attackQueued=TUNE.ATTACK_BUFFER; });
 bindTouch('tU', ()=>{ shiftQueued=-1; }, 'U');   // held for climbing (§2a)
 bindTouch('tD', ()=>{ shiftQueued=+1; }, 'F');
 
@@ -1370,12 +1378,12 @@ function movePlayer(dt){
   p.grabCool = Math.max(0, p.grabCool - dt);
   p.sheathT = Math.max(0, p.sheathT - dt);
 
-  if(level.castOff){ p.vx = 0; jumpQueued = 0; shiftQueued = 0; attackQueued = false; return; }
+  if(level.castOff){ p.vx = 0; jumpQueued = 0; shiftQueued = 0; attackQueued = 0; return; }
   // ink-wash return to the checkpoint (§3, §5)
   if(p.fadeT > 0){
     p.fadeT -= dt;
     if(!p.fadeDone && p.fadeT <= TUNE.FADE_TIME/2){ p.fadeDone = true; backToBanner(); }
-    p.vx = 0; p.vy = 0; jumpQueued = 0; shiftQueued = 0; attackQueued = false;
+    p.vx = 0; p.vy = 0; jumpQueued = 0; shiftQueued = 0; attackQueued = 0;
     if(p.fadeT <= 0) p.fadeT = 0;
     return;
   }
@@ -1384,7 +1392,7 @@ function movePlayer(dt){
     p.scene.t += dt;
     const total = HANDOVER_LINES.length*TUNE.HANDOVER_LINE;
     if(p.scene.t >= total || (p.scene.t > 0.25 && (jumpQueued > 0 || attackQueued))) endHandover();
-    jumpQueued = 0; attackQueued = false; shiftQueued = 0;
+    jumpQueued = 0; attackQueued = 0; shiftQueued = 0;
     p.vx = 0;
   }
   // the gate leap: input ignored, x kept, 40 px arc to the target footing
@@ -1395,7 +1403,7 @@ function movePlayer(dt){
     p.x = lerp(L.x0, L.x1, k);
     p.y = lerp(L.y0, L.y1, k) - L.arc*Math.sin(Math.PI*k);
     p.vx = 0; p.vy = 0; p.onGround = false; p.sliding = false; p.stillT = 0;
-    jumpQueued = 0; shiftQueued = 0; attackQueued = false;
+    jumpQueued = 0; shiftQueued = 0; attackQueued = 0;
     if(k >= 1){
       p.y = L.y1; p.onGround = true; p.jumps = 0; p.leap = null;
       spawnInk(p.x, p.y-28, p.lane); spawnDust(p.x, p.y, 5);
@@ -1404,7 +1412,8 @@ function movePlayer(dt){
   }
 
   // attack: a sword that waits in levels 1 and 2 (§2 "The sheathed sword", DECISIONS 3, 10)
-  if(attackQueued && levelIdx < TUNE.SWORD_FROM_LEVEL){
+  if(attackQueued > 0 && levelIdx < TUNE.SWORD_FROM_LEVEL){
+    attackQueued = 0;
     if(p.hasSword && p.sheathT <= 0){
       p.sheathT = TUNE.SHEATH_PUSH; sfx.click();
       const line = SHEATH_LINES[levelIdx];
@@ -1413,15 +1422,16 @@ function movePlayer(dt){
         floats.push({x:p.x, y:p.y-88, t:1.8, text:line});
       }
     }
-  } else if(attackQueued && p.attackT <= 0){
-    p.attackT = 0.28; sfx.slash(); level.swordDrawn = true; p.swingId = (p.swingId||0) + 1;
+  } else if(attackQueued > 0 && p.attackT <= 0){
+    attackQueued = 0;
+    p.attackT = TUNE.CUT_TIME; sfx.slash(); level.swordDrawn = true; p.swingId = (p.swingId||0) + 1;
     if(!level.firstCut){                    // §2 sign 4: the first cut sweeps an ink stroke along the blade
       level.firstCut = true; p.strokeT = TUNE.FIRST_STROKE;
       floats.push({x:p.x, y:p.y-96, t:2.0, text:LINE_FIRST_CUT});
     }
   }
   p.strokeT = Math.max(0, (p.strokeT||0) - dt);
-  attackQueued = false;
+  attackQueued = Math.max(0, attackQueued - dt);     // report #3: kept for 0.13 s if he is mid-swing
   p.attackT = Math.max(0, p.attackT - dt);
 
   // grab a pole or rope: touch it airborne, or hold ↑ beside it
@@ -1724,14 +1734,17 @@ function updateFighter(g, dt){
     if(guardSees(g)){ g.seeT += dt; if(g.seeT >= TUNE.SEEN_TIME){ g.mode = 'engage'; g.atk = 'approach'; g.outBandT = 0; } }
     else g.seeT = 0;
   }
-  // the hero's cut: within 56 px ahead, once per swing
-  if(p.attackT > 0.1 && g.lane === p.lane && g.cutBy !== p.swingId && Math.abs(p.y - g.y) < TUNE.SIGHT_BAND){
+  // the hero's cut: live only while the blade is forward (report #4), within reach, once per swing
+  const cutU = TUNE.CUT_TIME - p.attackT;
+  if(p.attackT > 0 && cutU >= TUNE.CUT_ACTIVE_START && cutU <= TUNE.CUT_ACTIVE_END &&
+     g.lane === p.lane && g.cutBy !== p.swingId && Math.abs(p.y - g.y) < TUNE.SIGHT_BAND){
     const ahead = (g.x - p.x)*p.face;
     if(ahead > -g.w/2 && ahead - g.w/2 <= TUNE.FIGHT_CUT_REACH){
       g.cutBy = p.swingId;
       const fromFront = Math.sign(p.x - g.x) === g.dir;
       if(g.type === 'shield' && fromFront && g.atk !== 'recover'){   // §4: an ink puff on the shield
         g.puffT = 0.3; sfx.block(); spawnInk(g.x + g.dir*16, g.y - 34, g.lane);
+        startHitstop(TUNE.HITSTOP_BLOCK, null);
       } else {
         g.hp -= 1; g.hitT = 0.25; shake = 6; sfx.kill();
         spawnBurst(g.x, g.y - 30, INK, 14, g.lane);
@@ -1739,9 +1752,18 @@ function updateFighter(g, dt){
         if(g.mode !== 'engage'){ g.mode = 'engage'; g.outBandT = 0; }
         g.atk = 'recover'; g.atkT = TUNE.FIGHT_RECOVER;
         if(g.hp <= 0){ g.mode = 'kneel'; g.kneelT = TUNE.FIGHT_KNEEL; g.atk = null; }
+        startHitstop(g.hp <= 0 ? TUNE.HITSTOP_KILL : TUNE.HITSTOP_HIT, g);
       }
     }
   }
+}
+// ---- hitstop (report #2): both fighters, and the world, freeze for a few frames on contact; the
+// victim shakes side to side with a shrinking amplitude, his hurtbox unmoved (only his drawing shakes)
+let hitstopT = 0, hitstopLen = 0, hitstopVictim = null, hitstopFrame = 0;
+function startHitstop(len, victim){ hitstopT = hitstopLen = len; hitstopVictim = victim; }
+function hitstopOffset(g){
+  if(hitstopT <= 0 || g !== hitstopVictim) return 0;
+  return (hitstopFrame % 2 ? 1 : -1) * TUNE.HITSTOP_SHAKE * (hitstopT/hitstopLen);
 }
 function updateGuards(dt){
   const p = player;
@@ -2511,7 +2533,7 @@ function drawGate(cx, gy){
 // Srivijayan fighter (DESIGN.md §4): indigo waist cloth, ochre head cloth, a short straight sword; the
 // shield-bearer carries an oblong hide shield. Procedural until rig sheet 39 exists. No red anywhere.
 function drawFighter(g){
-  const f = g.dir, x = g.x, y = g.y;
+  const f = g.dir, x = g.x + hitstopOffset(g), y = g.y;
   ctx.save();
   if(g.mode === 'kneel'){                    // one knee, an open hand raised, washing out to paper
     const a = clamp(g.kneelT/TUNE.FIGHT_KNEEL, 0, 1);
@@ -3067,7 +3089,14 @@ function renderTitleBG(){
 let last = performance.now(), frameDt = 1/60;
 function frame(now){
   let dt = Math.min(0.033, (now-last)/1000);
-  last = now; time += dt; frameDt = dt;
+  last = now;
+  if(state === 'play' && hitstopT > 0){       // frozen on contact: draw, but do not advance the world
+    hitstopT -= dt; hitstopFrame++; frameDt = 0;
+    render();
+    requestAnimationFrame(frame);
+    return;
+  }
+  time += dt; frameDt = dt;
   if(state === 'play'){
     movePlayer(dt);
     if(state === 'play') updateWorld(dt);
