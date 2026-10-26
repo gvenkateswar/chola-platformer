@@ -51,3 +51,7 @@ note in docs/NOTES.md addressed to Gaurav.
 13. **Gameplay references from the owner.** Donkey Kong Country,
     Prince of Persia (the newer games), Assassin's Creed Chronicles: India.
     VISION.md section 5 is updated to name what we take from each.
+14. **Another reference: The Jungle Book (SNES).** Take from it pushing
+    blocks to reach or open a path, and swinging on vines. Push blocks fit
+    Thanjavur (stone being hauled for the temple) and Nagapattinam (cargo
+    bales and crates). Vine swinging fits Kadaram.
