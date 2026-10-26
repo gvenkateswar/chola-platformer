@@ -126,6 +126,28 @@ to 717, `updateWorld` 719 to 800. Canvas 1280 by 720. Lanes 0 far (scale
 - Still unanswered builder questions: handover 1 vs 3 lines
   (HANDOVER_LINE 1.4 s × 3), grab-on-touch catching passers-by.
 
+## Fourth draft 2026-10-26 (Decisions 24 to 26, game-feel report)
+
+- Budget raised to 4,000 words.
+- Parry: attack key against a gold thrust; window 10 frames (-7..+3), 14
+  for S1; good parry = 14-frame hitstop, 0.3 s at 40% speed, camera 8%
+  closer, 0.9 s stun, counter cut counts two. Mistimed (-18..-8, +4..+9)
+  = guard, slide back 24, no heart. Earlier = clash, 16 px apart. 0.4 s
+  lockout. Black seal (overhead cut, 0.6 s, 80 px, recovery 1.0) can't be
+  guarded. Pattern thrust, thrust, overhead. Shield-bearer: gold thrust +
+  black-seal bash; parry opens shield 1.2 s (counter counts one) or jump
+  over and cut his back (0.8 s before he turns); two hits. Hitstop 5 /
+  10 on defeat. Fighter stop 60, hero reach 64 past edge (report item 1).
+  Black over indigo because Kadaram palette is indigo.
+- Rope: ω² = 2300 / r (grip distance, min 120), period 2π√(r/2300);
+  energy cap at 50°, safety clamp 70°.
+- Kasu: trail ~24/level; 2 detours/level (cluster 5-7, 300-800 px, 15-30
+  s, rejoin east); 6 named kasu = 6 cards = 6 map lamps; purse shown only
+  at ports. Ports: market (L1→L2) and quay before sailing (L2→L3). Goods
+  12 (4th heart next level), 10 (lamps at next level's detour entrances),
+  6 (crew line + map pennant). Nothing required; no persistence.
+- Runtime: 569 s play; 11-14 min full run with detours and ports.
+
 ## Open with Gaurav
 
 - Ship-deck closing beat in level 2: keep (recommended) or end at quay.

@@ -1,28 +1,21 @@
 # Chola: Tides of Bronze — Script
 
 Owner: narrative-designer. Readers: builder, design-critic, level-designer.
-Third draft, 2026-10-25. Budget 1,700 words including the text itself
-(raised from 1,500 for the handover scene, DECISIONS.md 10).
-Every fact follows `docs/RESEARCH.md`; every fight and kill follows
-`docs/DECISIONS.md` 3 and 4.
+Fourth draft, 2026-10-26. Budget 2,600 words (raised from 1,500 for the
+handover, DECISIONS.md 10, then for ports and cards, DECISIONS.md 26).
+Facts follow `docs/RESEARCH.md`.
 
 ## 1. Voice
 
-Two registers. Ilamaran speaks in the level cards, the hints, the floats,
-and the body of the ending. The record speaks in eyebrows, date lines, one
-closing line on the end screen, and the sources screen: plain, dated,
-no adjectives.
+Two registers. Ilamaran speaks in level cards, hints, floats, and the
+ending's body. The record speaks in eyebrows, date lines, the ending's
+closing line, history cards, and the sources screen: plain, dated.
 
-Ilamaran's three rules:
-
-1. **He reports what is in front of him.** Stone, rope, rain, a lamp. He
-   names a thing before he judges it, and he rarely judges. No "epic," no
-   "legendary," no "destiny."
-2. **He knows his station.** A sevagan of fifteen years. He has heard the
-   king's name and the king's son's name; he has seen neither close. Rumor
-   arrives as "they say." He never knows what comes after 1025.
-3. **Short sentences, one breath each.** The longest thing he says is a
-   fact he has checked with his own hands.
+1. **He reports what is in front of him.** He names a thing before he
+   judges it. No "epic," "legendary," or "destiny."
+2. **He knows his station.** A sevagan of fifteen years. Rumor arrives as
+   "they say." He never knows what comes after 1025.
+3. **Short sentences, one breath each.**
 
 ## 2. Title screen
 
@@ -33,7 +26,7 @@ Ilamaran's three rules:
 **Subtitle:** One soldier of the fleet, from the temple at Thanjavur to the
 Srivijaya shore.
 
-**Under the subtitle (replaces the "warrior of the Chola navy" paragraph):**
+**Under the subtitle:**
 You are Ilamaran. Nobody will write your name on a wall. Run, climb, and
 cross between the near and far paths of the painting at the lamplit gates.
 The sword stays in its scabbard until Kadaram.
@@ -79,49 +72,180 @@ sword fifteen years without drawing it on a man. (70 words)
 ### The handover (level 1, start; DESIGN.md 2, "The sheathed sword")
 
 Adittan, an older man of Ilamaran's company, waits by the first stairs.
-Walking into him plays the scene. If the 2 s scene holds one line, use
-the third.
+If the 2 s scene holds one line, use the third.
 
 > **Adittan:** Your father carried this. Now you do.
 > **Ilamaran:** Do I draw it here?
 > **Adittan:** Never among our own. Draw it where the king's son sends you.
 
-Adittan knows a muster, not a voyage: he cannot name Kadaram in 1010.
-
 ## 4. In-level hints and floats
 
-Positions follow `docs/levels/LEVEL-N.md` section 9, still in revision;
-the x values here may shift, and the four traversal lines wait for the
-level designer to place each piece's first use (DESIGN.md 2a). Each
-level's first gate links lanes 0 and 1 only, so the gate lines promise ↑
-and nothing else. All under 12 words. Touch versions swap "↑" for "tap
-▲" and "J or X" for "tap ⚔" (DESIGN.md 8).
+Positions from the level documents' fourth drafts. First gates link lanes
+0 and 1; level 2's player arrives from the far gallery, so ↓. Touch swaps
+"↑ ↓" for "tap ▲ ▼," "J or X" for "tap ⚔."
 
-| Where | Text |
+| Where (x) | Text |
 |---|---|
-| Level 1, double jump (x 1000) | Jump again in the air. The step is high. |
-| Level 1, first scaffold pole | A scaffold pole. Hold ↑ to climb. |
-| Level 1, first scaffold planks | ↓ and jump to drop through the planks. |
-| Level 1, first hauling rope | A hauling rope. Jump to it, then climb. |
-| Level 1, first block on rollers | Stone on rollers. Lean into it to push. |
-| Level 1, first gate (x 1740) | The lamp marks a gate. ↑ the cloister roof. |
-| Level 2, first gate (x 260) | Lamplit again. ↑ the warehouse ledge. |
-| Level 2, climb (x 320) | Up the bales. Height hides you. |
-| Level 3, draw prompt before the first fighter (x 200) | Here the sword comes out. J or X. |
-| Level 3, first cut, once (optional) | My father's blade, out for the first time. |
-| Level 3, first gate (x 340) | A lamp in the rain. ↑ the stilt walk. |
-| Up or down pressed away from a gate (replaces "no crossing here") | No gate here. Find the lamp. |
-| Attack in level 1: blade pushed home; first press and after 30 s | Back in the sheath. Not among our own. |
-| Attack in level 2, same rule | Back in the sheath. Not before the far shore. |
-| Checkpoint reached (replaces "Banner planted") | The banner is planted. Breathe. |
-| Level 1, CP2 (x 2900), replaces the checkpoint line | The tower. I did not know stone went that high. |
-| Level 2, CP2 (x 3030), replaces the checkpoint line | A foreign king's house of monks. Nobody minds it. |
-| Level 3, CP4 (x 5100), replaces the checkpoint line | A wall of timber. Men in front. No way round. |
-| Return to checkpoint after a fall or third heart (replaces "Fallen") | Back to the banner. |
-| Guard spots the hero (DESIGN.md 3 asks for a shout) | Hoi! You there! |
+| L1 push (500) | Stone on rollers. Lean into it to push. |
+| L1 detour D1 (880) | Copper up the scaffold. Somebody went this way. |
+| L1 climb (1100) | A scaffold pole. Hold ↑ to climb. |
+| L1 double jump (1900) | Jump again in the air. The step is high. |
+| L1 first gate (2700) | The lamp marks a gate. ↑ the wall-walk. |
+| L2 bounce (560) | Undyed cloth, stretched tight. Land on it. |
+| L2 hold jump (1240) | Hold the jump as you land. Higher. |
+| L2 push (1860) | A bale of cloth. Push it to the dock. |
+| L2 gangplank (2600) | The gangplank. Up onto the hull. |
+| L2 climb (3260) | Climb the mast by the lashings. |
+| L2 marked rope (3500) | A lamp on the rope. Grab it, then ↑. |
+| L2 first gate (4700) | Lamplit again. ↓ back down to the quay. |
+| L3 vine (640) | Vines over the water. Let go on the forward swing. |
+| L3 slide (1960) | Mud. Lean back to slow down. |
+| L3 marked vine (3040) | A ring on the vine. Grab it, then ↑. |
+| L3 draw prompt (4800) | Here the sword comes out. J or X. |
+| L3 first gate (5060) | A lamp in the rain. ↑ the stilt walk. |
+| L3 S1's first telegraph (5340) | Gold on his blade. Meet it as it comes: J or X. |
+| L3 S2's first black seal (6800) | Black ink over his head. Don't meet it. Step back. |
+| L3 first cut, once (optional) | My father's blade, out for the first time. |
+| Mistimed parry that still guards | Steel on steel. No opening. |
+| Good parry, first time only | He reels. Cut now. |
+| First named kasu, after its name | An old coin. Its story is kept on the map. |
+| ↑ or ↓ away from a gate | No gate here. Find the lamp. |
+| Attack, level 1 (first press, then after 30 s) | Back in the sheath. Not among our own. |
+| Attack, level 2 | Back in the sheath. Not before the far shore. |
+| Checkpoint reached | The banner is planted. Breathe. |
+| L1 CP2 (3860), in place of the line above | The tower. I did not know stone went that high. |
+| L2 CP (4780), same | A foreign king's house of monks. Nobody minds it. |
+| L2 the swing (8900) | Water to the next ship. No way but over. |
+| L3 CP (9800), same | A wall of timber. Men in front. No way round. |
+| Return to a checkpoint | Back to the banner. |
+| Guard spots the hero | Hoi! You there! |
 
-Struck from the build: "+1 kasu," "Guard felled," and the end-screen
-stats line (DESIGN.md 4, 5, 6).
+Struck: "+1 kasu," "Guard felled," end stats, and the plank and rope
+hints the level documents dropped.
+
+## 4a. Ports, the voyage map, and cards (DECISIONS.md 26)
+
+Trail kasu are copper; named kasu are gold, silver, or bronze coin types
+(RESEARCH.md 6a). Sellers ask in copper. "Onward" always leaves.
+
+### The market, Nagapattinam
+
+**Setting:** Nagapattinam, the market behind the warehouses. 1025 CE.
+
+| Seller | Offer and price |
+|---|---|
+| Ghee seller (opens the scene) | Copper from the road spends here same as anywhere. Show me. |
+| Ghee seller | Ghee for a lamp at the shrine before you sail. Twelve copper. |
+| Boatman | I'll hang a lamp where each side way starts. Ten copper. |
+| Fish and rice woman | Fried fish and rice for your whole crew. Six copper. |
+
+**Short of a price (Ilamaran):** Not enough copper. The road east will
+have more.
+
+**Leaving:** The ships are loading. Onward.
+
+### The quay, the night before sailing
+
+**Setting:** Nagapattinam, the quay at night. The fleet sails at first
+light.
+
+| Seller | Offer and price |
+|---|---|
+| Shrine keeper | A lamp and flowers at the shore shrine. Twelve copper. |
+| Pilot | I know the Kadaram river. I'll tell your helmsman where it branches. Ten copper. |
+| Provisioner | Water jars, dried fish, coconuts for the crossing. Six copper. |
+
+**Short of a price (Ilamaran):** My purse is light. The sea will not
+wait for it.
+
+**Leaving:** Sleep on deck. We sail at first light.
+
+Order problem for the game designer: the quay plays after the Chapter III
+card, already in Kadaram; play it before that card.
+
+### Crew lines (shown on the next card)
+
+- **Market fish and rice** (Chapter III card): The crew ate fried fish on
+  the quay. Sattan ate mine too.
+- **Quay provisions** (end screen, before the cost): The water held
+  to Kadaram. Nobody aboard went thirsty.
+- **Both bought** (replaces the line above): Sattan shared my fish in port
+  and my water at sea.
+
+### The voyage map
+
+**Labels:** Thanjavur · 1010 / Nagapattinam · 1025 / Kadaram · 1025. No
+route line: the route is unrecorded.
+
+**A lit lamp, on tap:** place line, coin name, "Read the card." The coin name also floats 1.5 s at pickup.
+
+| Detour | Place line | Named kasu float (RESEARCH.md 6a type) |
+|---|---|---|
+| D1 | The masons' lamp-niche, up on the scaffold. | Rajaraja's gold kasu (1) |
+| D2 | The lamp shelf at the inner gateway. | An older king's tiger silver (3) |
+| D3 | A merchants' loft above the awnings. | Rajaraja's copper, from Lanka (2) |
+| D4 | A Srivijayan ship's stern lantern, in our own port. | A Chinese coin with a square hole (4) |
+| D5 | A small brick shrine on the hill. | Rajendra's silver, Ganges title (5) |
+| D6 | A porch on stilts, its lamp still lit. | A small gold coin with a flower (6) |
+
+**A crew pennant:** The crew ate well here.
+
+**Card viewer frame:** title; "Kept from [place], with [coin name]" under
+the image; "Back to the map." With none kept: "No cards yet. Old coins lie
+off the path."
+
+### The six cards
+
+RESEARCH.md 6a texts, trimmed; tags in comments.
+
+**Gold for the Top of the Tower** (Rajaraja's gold kasu)
+In the 25th year of his reign, Rajaraja gave a copper pot to crown the
+great tower, covered with 2,926 and a half karanju of gold plate. The
+weight is carved in Tamil on the temple wall. The round cap at the very
+top is what he gilded. Nobody wrote down how they
+raised the stones, but they recorded the gold.
+<!-- [documented] SII II no. 1, para. 18 -->
+
+**The Guards of the King's Gate** (tiger silver)
+The guards you slipped past had a name. This temple's inscriptions list
+the "sacred bodyguard" of the Keralantaka gate and the inner gate, among
+about thirty regiments named for the king's titles. Soldiers gave gifts
+to the temple with their regiment's name carved beside them, so a
+thousand years later we know who stood here.
+<!-- [documented] SII II, Hultzsch's introduction and no. 57 n. 2 -->
+
+**A Sumatran King's Monastery** (Rajaraja's copper)
+Nagapattinam's tall brick tower was built by a Buddhist king from across
+the sea. In 1006 his monastery received a whole village, Anaimangalam,
+from Rajaraja, who worshiped Shiva. The grant, on copper plates under the
+Chola tiger seal, is now in the Netherlands. The tower stood until 1867,
+when it was pulled down for its bricks.
+<!-- [documented] Larger Leiden plates (Mahalingam 1948); Elliot 1878 -->
+
+**Pearls for the Emperor of China** (Chinese coin)
+In 1015 a Chola mission of 52 people reached the Song court. The Chinese
+court history lists its gifts: 21,100 liang of pearls, a coat and a cap
+of pearls, 60 elephant tusks, and 60 jin of frankincense. That is roughly
+800 kilograms of pearls. Ships like Ilamaran's carried them, their planks
+sewn with coconut-fiber rope.
+<!-- [documented] Song Shi 489; weight [plausible] at about 37 g to the liang -->
+
+**The Jeweled Gate** (Rajendra's silver)
+Rajendra's inscription at Thanjavur says his ships took "the jeweled
+gate" of Srivijaya and captured the king of Kadaram, Sangrama
+Vijayottungavarman, with his elephants. It names thirteen places across
+the sea. It does not say why the fleet came, and historians still
+disagree: trade, treasure, or glory. It does not say what became of the
+captured king.
+<!-- [documented] Thanjavur inscription of Rajendra (Kulke 2009; Sastri 1955) -->
+
+**A Kingdom That Endured** (gold flower coin)
+The brick shrines along the Merbok river were centuries old when the
+Chola ships came. Kedah's port had traded with China, India, and Arabia
+for hundreds of years. Srivijaya was not destroyed. In 1028 its king sent
+an embassy to the Chinese emperor, and the kingdom went on trading and
+building for another century and more.
+<!-- [documented] Bujang Valley survey (RESEARCH 3.3); Song Shi 489 -->
 
 ## 5. The ending
 
@@ -138,15 +262,12 @@ I did not see his face.
 Sattan, son of Kandan, of Anaimangalam, who slept on the deck beside me
 from Nagapattinam, is in the river, and his mother does not know.
 
-**Closing line (record, replaces "the only great overseas naval
-expedition"):**
+**Closing line (record):**
 This was the largest overseas expedition any Indian ruler is known to have
 sent. It was a raid; no Chola rule followed. Three years later Srivijaya
 sent envoys to China, as it always had.
 
 **Button:** Sail again
-
-No numbers appear on this screen (Pillar 3).
 
 ## 6. Sources screen
 
@@ -157,31 +278,31 @@ Leiden plates, 1006); sewn-plank hulls; the 1025 raid, the captured king,
 the seized gateway (Rajendra's Thanjavur inscription); Srivijaya's embassy
 to China in 1028 (*Song Shi* 489). Whether the thirteen places fell in one
 campaign is disputed; the game follows Kulke. **Invented:** Ilamaran,
-Adittan, Sattan, every guard, fighter, and route, the lamplit gates, and the gold
-kasu scattered on the road. Nobody knows how many ships sailed or how long
-the crossing took.
+Adittan, Sattan, the sellers, every guard, fighter, and route, the
+lamplit gates, and copper kasu lying on the road. Nobody knows how many
+ships sailed or how long the crossing took.
 
 **Read further:** Nilakanta Sastri, *The Cōḷas* (1955). Kulke, Kesavapany
 and Sakhuja, eds., *Nagapattinam to Suvarnadwipa* (2009). Balasubrahmanyam,
-*Middle Chola Temples* (1975). (118 words)
+*Middle Chola Temples* (1975).
 
 ## 7. Names and terms
 
 | On screen | What it is |
 |---|---|
-| Ilamaran | The hero, a common soldier (sevagan) of the fleet. Invented; RESEARCH.md 4 does not object. |
-| Adittan | Older man of Ilamaran's company; hands him his father's sword. Invented, attested name, no rank. |
-| Sattan, son of Kandan | Ilamaran's deckmate, lost at Kadaram. Invented, attested "X son of Y of village Z" form. |
-| Rajaraja | Rajaraja I, king 985–1014, builder of the temple. "The king," never "emperor." |
-| Rajendra | Rajendra I, the king's son; co-regent 1012; king 1014–1044; sent the fleet of 1025. |
-| Thanjavur | Chola capital; the Brihadisvara temple, finished 1010, tower over sixty metres. |
-| Nagapattinam | Main eastern port; the Chudamani vihara, a Buddhist monastery funded by Srivijaya. |
+| Ilamaran | The hero, a common soldier of the fleet. Invented. |
+| Adittan | Older man of Ilamaran's company. Invented, attested name, no rank. |
+| Sattan, son of Kandan | Ilamaran's deckmate, lost at Kadaram. Invented, attested form. |
+| Rajaraja | Rajaraja I, king 985–1014, builder of the temple. Never "emperor." |
+| Rajendra | Rajendra I, the king's son; co-regent 1012; king 1014–1044. |
+| Thanjavur | Chola capital; the Brihadisvara temple, finished 1010. |
+| Nagapattinam | Main eastern port; the Chudamani vihara, funded by Srivijaya. |
 | Anaimangalam | Village granted to the vihara in 1006; Sattan's home. |
-| Srivijaya | Malay Buddhist kingdom centered on Palembang, Sumatra. |
-| Kadaram | Kedah, Malay peninsula. "Kadaram has fallen" is a Chola boast. |
-| kasu | Chola coin and unit of account (SII II). Gold by game convention. Never counted. |
-| sevagan | A common soldier. Glossed here; used once in Chapter II. |
-| tiger | The Chola emblem, on a crimson field on a pole (DECISIONS.md 4). |
+| Srivijaya | Malay Buddhist kingdom, centered on Palembang. |
+| Kadaram | Kedah, Malay peninsula. |
+| kasu | Chola coin and unit of account (SII II). Copper on the road; named kasu gold, silver, or bronze. |
+| sevagan | A common soldier. |
+| tiger | The Chola emblem, on a crimson field on a pole. |
 
 ## Open questions for Gaurav
 
@@ -189,11 +310,10 @@ None.
 
 ## Revision notes
 
-- 2026-10-25, third draft (DECISIONS.md 10; NOTES.md request): handover
-  scene, per-level push-home lines, draw prompt, first-cut line, four
-  traversal hints, title key text. Budget raised to 1,700.
-- 2026-10-25, second draft: all seven findings of the script review taken
-  (hint positions, ↑-only gates, mid-level lines, gateway, no rowing,
-  Kadaram shore, Rajendra's tag).
-- 2026-10-25, first draft: every `index.html` string rewritten against
-  RESEARCH.md.
+- 2026-10-26, fourth draft (DECISIONS.md 24, 26): section 4a (ports,
+  crew lines, map, card viewer, named kasu, six cards), parry and detour
+  hints, copper kasu per RESEARCH.md 6a. Budget 2,600.
+- 2026-10-26, fourth draft, second pass: hint table rechecked against the
+  level documents' fourth drafts (new hints, positions, L2 gate now ↓);
+  map place lines for D1 to D6, merged with the named kasu.
+- 2026-10-25, drafts one to three: strings, review fixes, sword handover.

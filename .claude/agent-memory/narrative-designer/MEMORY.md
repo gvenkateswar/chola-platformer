@@ -44,6 +44,22 @@ the sheath. Not before the far shore." Draw prompt L3 x 200. Title key
 "sword, sheathed until Kadaram." Budget now 1,700. Traversal hints for
 pole, planks, rope, block await level-designer positions.
 
+## Kasu and ports (DECISIONS 24, 26; fourth draft 2026-10-26)
+Trail kasu are copper; named kasu gold/silver/bronze types (RESEARCH 6a).
+Sellers ask in copper ("Twelve copper"), never gold for small goods.
+Budget now 2,600. Six named kasu floats and six history cards in SCRIPT
+4a, tags kept in HTML comments. Cards are record register (modern names
+allowed); Ilamaran never uses Merbok/Kedah. Parry: gold = meet it, black
+seal = step back; mistimed guard float "Steel on steel. No opening."
+Crew lines tie to Sattan (sharpens the line of cost).
+Open: quay scene plays after the Chapter III card (order problem, flagged
+to game designer).
+Done 2026-10-26: D1-D6 map place lines (merged table with named kasu);
+hint table matched to level docs' fourth drafts. L2's first gate is ↓
+(player arrives from the far gallery). Script sits at exactly 2,600
+words: any addition needs an equal cut. History cards must stay 60-90
+words each (DESIGN 6).
+
 ## Open
 - Brief said vimana "about sixty-five metres"; RESEARCH.md 3.1 says
   "over sixty metres." Glossary uses the research wording.

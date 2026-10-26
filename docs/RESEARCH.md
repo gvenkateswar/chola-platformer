@@ -437,6 +437,81 @@ pola perunilacchelviyum," the first words of Rajaraja's eulogy.
 [documented] Sastri 1955. The king is "perumal" or "udaiyar"; a commander
 "nayakar"; respectful suffix "-ar." [plausible]
 
+## 6a. Cards and port goods (outside the word limit; DECISIONS.md 26)
+
+**History cards.**
+
+*Level 1. Gold for the Top of the Tower.* "On the 275th day of his 25th
+year as king, Rajaraja gave a copper pot to crown the great tower. It was
+covered with plates of gold weighing 2,926 and a half karanju, a weight
+carved in Tamil on the temple wall. Look up: the
+round cap at the very top is what he gilded. Nobody wrote down how they
+raised the stones, but they recorded the gold." [documented] SII II no. 1,
+para. 18.
+
+*Level 1. The Guards of the King's Gate.* "The guards you slipped past
+had a name. Inscriptions on this temple list the 'sacred bodyguard' of
+the Keralantaka gate and the inner gate, and about thirty regiments, each
+named for one of the king's titles. Soldiers gave gifts to the temple
+too, with their regiment's name carved beside the gift, so a thousand
+years later we know who stood here." [documented]
+SII II, Hultzsch's introduction and no. 57 n. 2.
+
+*Level 2. A Sumatran King's Monastery.* "Nagapattinam's tall brick tower
+was built by a Buddhist king from across the sea. In 1006 the Srivijayan
+king's monastery received a whole village, Anaimangalam, from Rajaraja,
+who prayed to Shiva. The grant was cut on copper plates strung on a ring
+with the Chola tiger seal, now in the Netherlands. The tower stood until
+1867, when it was pulled down for its bricks." [documented]
+Larger Leiden plates (Mahalingam 1948); Elliot 1878.
+
+*Level 2. Pearls for the Emperor of China.* "In 1015 a Chola mission of
+52 people reached the Song court in China. Its gifts are written in the
+Chinese court history: 21,100 liang of pearls, a coat and a cap made of
+pearls, 60 elephant tusks and 60 jin of frankincense. That is roughly
+800 kilograms of pearls. Ships like the ones on this quay carried them,
+their planks sewn together with coconut-fiber rope." [documented] *Song
+Shi* 489; the weight [plausible] at about 37 g to the liang.
+
+*Level 3. The Jeweled Gate.* "Rajendra's inscription at Thanjavur says
+his ships took 'the jeweled gate' of Srivijaya and captured the king of
+Kadaram, Sangrama Vijayottungavarman, with his elephants. It names
+thirteen places across the sea. It does not say why the fleet came, and
+historians still disagree: trade, treasure, or glory. It also does not say
+what became of the captured king." [documented] Thanjavur inscription of
+Rajendra (Kulke 2009; Sastri 1955).
+
+*Level 3. A Kingdom That Endured.* "The brick shrines along the Merbok
+river were already centuries old when the Chola ships came. Kedah's port
+had traded with China, India and Arabia for hundreds of years. Srivijaya
+was not destroyed. Three years after the raid, in 1028, its king sent an
+embassy to the Chinese emperor, and the kingdom went on trading and
+building for another century and more." [documented] Bujang Valley survey (3.3); *Song Shi* 489.
+
+**Port goods.** Ghee lamp gifts are the commonest Chola temple record
+[documented] SII II; a sailor's small measure for a lamp is [plausible].
+A boatman to the anchored ships, rice and fish, an offering before
+sailing, provisions (rice, water jars, dried fish, coconuts), and a Merbok
+pilot are all [plausible]; no source names pilots. The route is
+unrecorded [invented]: the Nicobars (Manakkavaram, in Rajendra's list) are
+a defensible water stop, but the Nagapattinam quay is least wrong.
+
+**Is kasu the right price?** Kasu is a coin and a unit of account in the
+inscriptions; wages were paid in paddy. [documented] SII II nos. 1, 66.
+Gold for fish is wrong; small trade was likely in copper or paddy.
+[plausible]
+Honest fix: trail kasu in dark copper, named kasu in pale gold, and
+sellers who ask for "a few copper kasu."
+
+**Named kasu, six real types.** (1) Rajaraja gold: standing king with a lamp
+stand, seated figure with a conch, "Sri Raja Raja." [documented]
+Codrington 104; Mitchiner 318. (2) Rajaraja copper of that design, common
+in Sri Lanka. [plausible] (3) Uttama Chola silver, seated tiger, older
+than the temple. [documented] coins.lakdiva.org. (4) A Song bronze coin
+with a square hole. [plausible] (5) Rajendra silver, struck after his
+Gangaikonda title. [documented] coins.lakdiva.org. (6) A small Malay gold
+coin stamped with a flower. [plausible] No Kedah find verified.
+
 ## 7. Things to avoid
 
 - **Later gopurams and Nayak color.** Soaring painted gopurams, Nayak
@@ -530,3 +605,6 @@ origin of several Thanjavur figures, now re-sourced or retagged.
   push blocks and push cargo (DECISIONS.md 14) added.
 - 2026-10-26, 3.3: withdrew my own unsourced "tall tiered brick tower" for
   Kadaram; Bujang Valley candi were small. Found in the backdrop review.
+- 2026-10-26, added 6a "Cards and port goods" (DECISIONS.md 26): six
+  history cards, port goods checked, copper versus gold kasu, six named
+  coin types. Outside the 4,500-word limit, as the coordinator allowed.
