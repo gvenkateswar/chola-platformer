@@ -59,6 +59,23 @@
     box-shadow:0 0 0 1px #7A5326, 0 6px 22px rgba(192,138,46,.3), inset 0 1px 0 rgba(255,255,255,.45);
   }
   .btn:hover{filter:brightness(1.08);}
+  .btn2{margin-top:14px; font-size:13px; padding:9px 26px 8px 30px; background:transparent; color:var(--gold);
+    box-shadow:0 0 0 1px #7A5326;}
+  .crew{font-style:italic; color:#E2D3AE; margin-bottom:6px;}
+  .purse{display:flex; align-items:center; gap:12px; margin-bottom:10px; font-family:'Marcellus SC',serif; color:#D59A6E; font-size:20px;}
+  .heap{display:inline-block; width:12px; height:12px; border-radius:50%; background:#B8754A; box-shadow:inset -2px -2px 0 #6B3A1E; margin-left:-5px;}
+  #portGoods{display:flex; flex-direction:column; gap:10px; max-width:640px; width:100%; margin:6px auto;}
+  .good{display:flex; align-items:center; gap:14px; justify-content:space-between; text-align:left;
+    border:1px solid rgba(201,154,63,.35); border-radius:4px; padding:10px 14px; background:rgba(30,22,14,.45);}
+  .good .who{font-family:'Marcellus SC',serif; color:var(--gold); font-size:13px; letter-spacing:.1em;}
+  .good .line{color:#D3C6A6; font-size:15px; line-height:1.5;}
+  .good button{font-family:'Marcellus SC',serif; font-size:13px; padding:7px 14px; cursor:pointer; border:none; border-radius:3px;
+    background:linear-gradient(180deg,#E2BC6C,#C08A2E); color:var(--ink); white-space:nowrap;}
+  .good button:disabled{background:#4a3a28; color:#9a8a6a; cursor:default;}
+  .portMsg{min-height:1.6em; color:#E2D3AE;}
+  #mapCanvas{max-width:92vw; height:auto; border-radius:4px;}
+  #cardImage{margin:10px auto;}
+  .mapInfo{min-height:3em;}
   .btn:focus-visible{outline:2px solid var(--parchment); outline-offset:3px;}
   #touchui{position:absolute; inset:0; pointer-events:none; z-index:4; display:none;}
   #touchui.on{display:block;}
@@ -92,6 +109,7 @@
       <span><kbd>J</kbd>/<kbd>X</kbd> sword, sheathed until Kadaram</span>
     </div>
     <button class="btn" id="startBtn">Begin the voyage</button>
+    <button class="btn btn2" data-map>Voyage map</button>
   </div>
 
   <div class="overlay" id="interScreen" hidden>
@@ -100,17 +118,48 @@
     <div class="dateline" id="interDate" hidden></div>
     <div class="rule"></div>
     <p class="story" id="interStory"></p>
+    <p class="story crew" id="interCrew" hidden></p>
     <button class="btn" id="interBtn">Onward</button>
+    <button class="btn btn2" data-map>Voyage map</button>
   </div>
 
   <div class="overlay" id="endScreen" hidden>
     <div class="eyebrow">1025 CE · Kadaram has fallen</div>
     <h1 style="font-size:clamp(30px,5vw,58px)">The Sea Belongs<small style="letter-spacing:.2em">to the Tiger</small></h1>
     <div class="rule"></div>
+    <p class="story crew" id="endCrew" hidden></p>
     <p class="story">Rajendra Chola's fleet crossed the Bay of Bengal and broke the power of
     Srivijaya — the only great overseas naval expedition in Indian history. Trade with Song
     China flowed free, and Tamil merchant guilds rose across Southeast Asia.</p>
     <button class="btn" id="againBtn">Sail Again</button>
+  </div>
+
+  <!-- DESIGN §6 ports: the only place the purse is shown, at the point of trade -->
+  <div class="overlay" id="portScreen" hidden>
+    <div class="eyebrow" id="portSetting"></div>
+    <h1 style="font-size:clamp(28px,4.5vw,48px)" id="portTitle"></h1>
+    <div class="rule"></div>
+    <div class="purse"><span id="purseHeap"></span><span id="purseNum"></span></div>
+    <p class="story" id="portOpen"></p>
+    <div id="portGoods"></div>
+    <p class="story portMsg" id="portMsg"></p>
+    <button class="btn" id="portBtn">Onward</button>
+    <button class="btn btn2" data-map>Voyage map</button>
+  </div>
+  <!-- DESIGN §6 the voyage map: lamps for found detours, pennants for the crew; the cards are read here -->
+  <div class="overlay" id="mapScreen" hidden>
+    <canvas id="mapCanvas" width="900" height="520"></canvas>
+    <p class="story mapInfo" id="mapInfo"></p>
+    <button class="btn btn2" id="mapRead" hidden>Read the card.</button>
+    <button class="btn" id="mapBack">Back</button>
+  </div>
+  <div class="overlay" id="cardScreen" hidden>
+    <div class="eyebrow">A card kept on the voyage</div>
+    <h1 style="font-size:clamp(24px,3.8vw,40px)" id="cardTitle"></h1>
+    <canvas id="cardImage" width="220" height="140"></canvas>
+    <div class="eyebrow" id="cardKept"></div>
+    <p class="story" id="cardText"></p>
+    <button class="btn" id="cardBack">Back to the map.</button>
   </div>
 
   <div id="touchui">
@@ -269,6 +318,10 @@ const TUNE = {
   SHIELD_OPEN:      1.2,   // §4: a parried shield swings aside 1.2 s for one counter cut
   SHIELD_TURN:      0.8,   // §4: the shield-bearer turns 0.8 s after the hero gets behind him
   CLASH_PUSH:        16,   // §4: a cut into a raised blade pushes both 16 px apart
+  PRICE_HEART:       12,   // §6 ports: ghee / the offering: a fourth heart in the next level
+  PRICE_LAMPS:       10,   // §6: the boatman / the pilot: lamps at the next level's detour entrances
+  PRICE_CREW:         6,   // §6: rice and fish / provisions: a crew line and a pennant on the map
+  LAMP_POST:         70,   // §6 the boatman's lamp: post height above the floor where a detour leaves
   CLUSTER_CUE:      400,   // §6: a detour's cluster glints and sounds once within 400 px
   NAMED_FLOAT:      1.5,   // §6: a named kasu's name floats 1.5 s
   KEEP_MAP:        true,   // option (b): the voyage map and cards persist on this device (localStorage)
@@ -1042,6 +1095,7 @@ function buildLevel2(){
       [5000,60,0,'named','nk3'],[11860,430,0,'named','nk4'],
     ],
     goal:{x:12040,y:430}, start:[40,620], castOffAtGoal:true,
+    detourAt:[[4400,0],[11360,1]],   // LEVEL-2 D3 gallery step 2 (far lane), D4 ship 2's deck: the boatman's lamps
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#2F5E6E','#5E8F94','#A9C4B4','#E6D9A8'], sun:{x:.28,y:.32,r:70,c:'#FFF3D0'},
     far:'ships', mid:'docks',
@@ -1103,6 +1157,7 @@ function buildLevel3(){
       [2060,100,1,'named','nk5'],[11340,320,1,'named','nk6'],
     ],
     goal:{x:13300,y:620}, start:[50,620],
+    detourAt:[[1560,1],[10720,1]],   // LEVEL-3 D5 bank B1, D6 the wade after slide 2: the pilot's lamps
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#2E3A52','#4F6A6A','#86A08A','#C9D3B0'], sun:{x:.80,y:.22,r:52,c:'#F2F6DA'},
     far:'stupas', mid:'jungle',
@@ -1268,7 +1323,7 @@ function loadLevel(i){
   applyGrade(level);
   prepLinks();
   player.x = level.start[0]; player.y = level.start[1];
-  player.vx = player.vy = 0; player.hp = 3; player.jumps = 0; player.lane = 1;
+  player.vx = player.vy = 0; player.hp = maxHearts(); player.jumps = 0; player.lane = 1;
   player.checkpoint = [level.start[0], level.start[1]];
   player.hurtT = 0; player.attackT = 0; player.shiftFx = 0;
   level.coins = level.coins.map(c=>({x:c[0], y:c[1], lane:c[2]??1, kind:c[3]||'trail', detour:c[3]==='cluster'?c[4]:null,
@@ -1304,6 +1359,8 @@ function showInter(i){
   $('interStory').textContent = l.story;
   $('interDate').textContent = l.date || '';
   $('interDate').hidden = !l.date;
+  const crew = i === 2 && RUN.goods.fish ? CREW_LINES.market : '';   // SCRIPT §4a: market fish, on the Chapter III card
+  $('interCrew').textContent = crew; $('interCrew').hidden = !crew;
   $('interScreen').hidden = false;
   state = 'inter';
 }
@@ -1324,10 +1381,182 @@ $('againBtn').onclick = ()=>{
   showInter(0);
 };
 function queueLevel(i){ levelIdx = i; showInter(i); }
+// DESIGN §6: the market plays between levels 1 and 2; the quay after level 2, before the Chapter III card
 function finishLevel(){
-  if(levelIdx < LEVELS.length-1) queueLevel(levelIdx+1);
-  else { $('endScreen').hidden = false; state = 'end'; }
+  if(levelIdx === 0) showPort('market', 1);
+  else if(levelIdx === 1) showPort('quay', 2);
+  else showEnd();
 }
+function showEnd(){
+  const q = RUN.goods.provisions, m = RUN.goods.fish;
+  $('endCrew').textContent = q && m ? CREW_LINES.both : q ? CREW_LINES.quay : '';
+  $('endCrew').hidden = !q;
+  $('endScreen').hidden = false; state = 'end';
+}
+// ---- ports (DESIGN §6, SCRIPT §4a): three goods, each bought once; Onward always leaves
+const PORTS = {
+  market:{title:'The market', setting:'Nagapattinam, the market behind the warehouses. 1025 CE.',
+    open:'Copper from the road spends here same as anywhere. Show me.',
+    short:'Not enough copper. The road east will have more.', leave:'The ships are loading. Onward.',
+    goods:[{id:'ghee', who:'Ghee seller', line:'Ghee for a lamp at the shrine before you sail. Twelve copper.', price:TUNE.PRICE_HEART},
+           {id:'boatman', who:'Boatman', line:"I'll hang a lamp where each side way starts. Ten copper.", price:TUNE.PRICE_LAMPS},
+           {id:'fish', who:'Fish and rice woman', line:'Fried fish and rice for your whole crew. Six copper.', price:TUNE.PRICE_CREW}]},
+  quay:{title:'The quay', setting:'Nagapattinam, the quay at night. The fleet sails at first light.',
+    open:'',
+    short:'My purse is light. The sea will not wait for it.', leave:'Sleep on deck. We sail at first light.',
+    goods:[{id:'offering', who:'Shrine keeper', line:'A lamp and flowers at the shore shrine. Twelve copper.', price:TUNE.PRICE_HEART},
+           {id:'pilot', who:'Pilot', line:"I know the Kadaram river. I'll tell your helmsman where it branches. Ten copper.", price:TUNE.PRICE_LAMPS},
+           {id:'provisions', who:'Provisioner', line:'Water jars, dried fish, coconuts for the crossing. Six copper.', price:TUNE.PRICE_CREW}]},
+};
+const CREW_LINES = {   // SCRIPT §4a, shown on the next card
+  market:'The crew ate fried fish on the quay. Sattan ate mine too.',
+  quay:'The water held to Kadaram. Nobody aboard went thirsty.',
+  both:'Sattan shared my fish in port and my water at sea.',
+};
+let portNext = 0, portKey = null;
+function showPort(key, next){
+  portKey = key; portNext = next; const P = PORTS[key];
+  $('portTitle').textContent = P.title; $('portSetting').textContent = P.setting;
+  $('portOpen').textContent = P.open; $('portOpen').hidden = !P.open; $('portMsg').textContent = '';
+  const box = $('portGoods'); box.innerHTML = '';
+  P.goods.forEach((g, i)=>{
+    const row = document.createElement('div'); row.className = 'good';
+    row.innerHTML = '<div><div class="who"></div><div class="line"></div></div><button></button>';
+    row.querySelector('.who').textContent = g.who; row.querySelector('.line').textContent = g.line;
+    const b = row.querySelector('button'); b.id = 'buy_' + g.id;
+    b.textContent = RUN.goods[g.id] ? 'Bought' : 'Buy  (' + (i+1) + ')'; b.disabled = !!RUN.goods[g.id];
+    b.onclick = ()=>buyGood(g);
+    box.appendChild(row);
+  });
+  renderPurse();
+  $('portScreen').hidden = false; state = 'port';
+}
+function renderPurse(){
+  const n = RUN.purse, heap = $('purseHeap'); heap.innerHTML = '';
+  for(let i = 0; i < Math.min(n, 30); i++){ const c = document.createElement('span'); c.className = 'heap'; heap.appendChild(c); }
+  $('purseNum').textContent = n + ' copper';
+}
+function buyGood(g){
+  if(RUN.goods[g.id]) return;
+  if(RUN.purse < g.price){ $('portMsg').textContent = PORTS[portKey].short; sfx.deny(); return; }   // he keeps his coins
+  RUN.purse -= g.price; RUN.goods[g.id] = true; sfx.coin();
+  const b = $('buy_' + g.id); b.textContent = 'Bought'; b.disabled = true; $('portMsg').textContent = '';
+  renderPurse(); saveMap();
+}
+$('portBtn').onclick = ()=>{
+  $('portMsg').textContent = PORTS[portKey].leave;
+  $('portScreen').hidden = true; queueLevel(portNext);
+};
+// ---- the voyage map (DESIGN §6, SCRIPT §4a): three stops, no route line; a lamp per found named kasu
+const MAP_STOPS = [   // map canvas coordinates; levels 1, 2, 3
+  {label:'Thanjavur · 1010',    x:150, y:300, lx:-14, align:'right'},
+  {label:'Nagapattinam · 1025', x:212, y:338, lx:16,  align:'left'},
+  {label:'Kadaram · 1025',      x:742, y:268, lx:-14, align:'right'},
+];
+const PENNANT_LINE = 'The crew ate well here.';
+let mapReturn = null, mapPick = null, cardFrom = null, mapHits = [];
+function openMap(){
+  const open = ['titleScreen','interScreen','portScreen','endScreen'].find(id=>!$(id).hidden);
+  mapReturn = {id:open, state}; if(open) $(open).hidden = true;
+  mapPick = null; $('mapInfo').textContent = ''; $('mapRead').hidden = true;
+  const any = Object.keys(NAMED).some(k=>RUN.found[k]);
+  if(!any){ $('mapInfo').textContent = 'No cards yet. Old coins lie off the path.'; }
+  $('mapScreen').hidden = false; state = 'map'; drawMap();
+}
+function closeMap(){
+  $('mapScreen').hidden = true;
+  if(mapReturn){ if(mapReturn.id) $(mapReturn.id).hidden = false; state = mapReturn.state; }
+}
+function drawMap(){
+  const cv = $('mapCanvas'), m = cv.getContext('2d'), W2 = cv.width, H2 = cv.height;
+  m.fillStyle = '#2C3E4A'; m.fillRect(0, 0, W2, H2);                     // the sea
+  for(let i = 0; i < 40; i++){ m.strokeStyle = 'rgba(200,220,230,0.06)'; m.beginPath();
+    const y = hash(i*3.1)*H2, x = hash(i*5.7)*W2; m.moveTo(x, y); m.quadraticCurveTo(x+14, y-4, x+28, y); m.stroke(); }
+  const land = (pts)=>{ m.beginPath(); pts.forEach(([x,y],i)=> i ? m.lineTo(x,y) : m.moveTo(x,y)); m.closePath();
+    m.fillStyle = '#C9B48A'; m.fill(); m.strokeStyle = '#6B4E33'; m.lineWidth = 2; m.stroke(); };
+  // the Tamil coast and the tip of India, Lanka, then Sumatra and the peninsula (hand-drawn, not to scale)
+  land([[0,0],[260,0],[250,80],[232,160],[222,240],[214,320],[204,380],[176,430],[140,470],[110,520],[0,520]]);
+  land([[232,448],[256,440],[272,470],[266,510],[246,518],[230,490]]);
+  land([[700,0],[900,0],[900,520],[840,520],[790,430],[758,350],[736,280],[716,200],[706,110]]);
+  m.font = "italic 13px 'Cormorant Garamond', serif"; m.fillStyle = 'rgba(230,220,190,0.45)'; m.textAlign = 'center';
+  m.fillText('the Bay', 470, 260);
+  mapHits = [];
+  MAP_STOPS.forEach((st, li)=>{
+    m.fillStyle = '#3A2A1C'; m.beginPath(); m.arc(st.x, st.y, 5, 0, 7); m.fill();
+    m.font = "15px 'Marcellus SC', serif"; m.fillStyle = '#2A1E14'; m.textAlign = st.align;
+    m.fillText(st.label, st.x + st.lx, st.y + 5);
+    // lamps for found named kasu from this level's detours
+    Object.keys(NAMED).filter(k=>NAMED[k].level === li).forEach((k, j)=>{
+      if(!RUN.found[k]) return;                                            // unfound detours show nothing
+      const lx = st.x - 11 + j*22, ly = st.y - 30, on = mapPick === k;   // two lamps above the stop
+      const g = m.createRadialGradient(lx, ly, 0, lx, ly, 18);
+      g.addColorStop(0, 'rgba(255,205,120,'+(on ? 0.9 : 0.6)+')'); g.addColorStop(1, 'rgba(255,205,120,0)');
+      m.fillStyle = g; m.fillRect(lx-18, ly-18, 36, 36);
+      m.fillStyle = '#6B4A2A'; m.fillRect(lx-4, ly-3, 8, 9);
+      m.fillStyle = '#FFD488'; m.beginPath(); m.ellipse(lx, ly-1, 2.4, 4, 0, 0, 7); m.fill();
+      mapHits.push({x:lx, y:ly, r:18, kind:'lamp', k});
+    });
+  });
+  // crew pennants: the market's and the quay's, both at Nagapattinam
+  [['fish', 0], ['provisions', 1]].forEach(([id, j])=>{
+    if(!RUN.goods[id]) return;
+    const st = MAP_STOPS[1], px = st.x + 24 + j*26, py = st.y + 20;
+    m.fillStyle = '#3A2A1C'; m.fillRect(px, py, 2, 26);
+    m.fillStyle = '#B5342A'; m.beginPath(); m.moveTo(px+2, py); m.lineTo(px+18, py+5); m.lineTo(px+2, py+10); m.closePath(); m.fill();
+    mapHits.push({x:px+8, y:py+10, r:16, kind:'pennant'});
+  });
+}
+function mapTap(ev){
+  const cv = $('mapCanvas'), r = cv.getBoundingClientRect();
+  const x = (ev.clientX - r.left) * cv.width / r.width, y = (ev.clientY - r.top) * cv.height / r.height;
+  const h = mapHits.find(h=> Math.hypot(h.x - x, h.y - y) <= h.r);
+  if(!h) return;
+  if(h.kind === 'pennant'){ mapPick = null; $('mapInfo').textContent = PENNANT_LINE; $('mapRead').hidden = true; }
+  else pickLamp(h.k);
+  drawMap();
+}
+function pickLamp(k){
+  mapPick = k; const N = NAMED[k];
+  $('mapInfo').textContent = N.place + ' ' + N.name + '.';
+  $('mapRead').hidden = false;
+}
+function openCard(k){
+  const N = NAMED[k];
+  $('cardTitle').textContent = N.title; $('cardText').textContent = N.text;
+  $('cardKept').textContent = 'Kept from ' + placeName(N.place) + ', with ' + N.name;
+  const cv = $('cardImage'), c2 = cv.getContext('2d');
+  c2.clearRect(0, 0, cv.width, cv.height);
+  const keep = ctx; ctx = c2; ctx.save(); ctx.translate(cv.width/2, cv.height/2); ctx.scale(4, 4);
+  drawCoin({x:0, y:0, kind:'named', nk:k, spin:0, glintT:0}); ctx.restore(); ctx = keep;
+  $('mapScreen').hidden = true; $('cardScreen').hidden = false; state = 'card';
+}
+// "Kept from [place]": the place line without its closing stop, lowercased at the start
+function placeName(line){ const t = line.replace(/\.$/, ''); return t.charAt(0).toLowerCase() + t.slice(1); }
+$('mapCanvas').addEventListener('pointerdown', mapTap);
+$('mapRead').onclick = ()=>{ if(mapPick) openCard(mapPick); };
+$('mapBack').onclick = closeMap;
+$('cardBack').onclick = ()=>{ $('cardScreen').hidden = true; $('mapScreen').hidden = false; state = 'map'; drawMap(); };
+document.querySelectorAll('[data-map]').forEach(b=> b.onclick = openMap);
+// keys on the menus: 1 2 3 buy at a port, Enter goes onward, M opens the map, Esc goes back
+addEventListener('keydown', e=>{
+  if(state === 'port'){
+    const g = PORTS[portKey].goods[+e.key - 1];
+    if(g){ buyGood(g); e.preventDefault(); }
+    else if(e.key === 'Enter'){ $('portBtn').click(); e.preventDefault(); }
+    else if(e.key === 'm' || e.key === 'M') openMap();
+  } else if(state === 'map'){
+    if(e.key === 'Escape' || e.key === 'Backspace'){ closeMap(); e.preventDefault(); }
+    const ks = Object.keys(NAMED).filter(k=>RUN.found[k]);
+    if(+e.key >= 1 && +e.key <= ks.length){ pickLamp(ks[+e.key-1]); drawMap(); }
+    if(e.key === 'Enter' && mapPick){ openCard(mapPick); e.preventDefault(); }
+  } else if(state === 'card'){
+    if(e.key === 'Escape' || e.key === 'Backspace' || e.key === 'Enter'){ $('cardBack').click(); e.preventDefault(); }
+  }
+});
+// the fourth heart (ghee in level 2, the offering in level 3)
+function maxHearts(){ return 3 + ((levelIdx === 1 && RUN.goods.ghee) || (levelIdx === 2 && RUN.goods.offering) ? 1 : 0); }
+// detour lamps (boatman in level 2, pilot in level 3): a lamp where each side way starts
+function detourLamps(){ return (levelIdx === 1 && RUN.goods.boatman) || (levelIdx === 2 && RUN.goods.pilot); }
 
 // ============================================================ physics
 function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh){
@@ -1577,7 +1806,7 @@ function startBackToBanner(refill){
 }
 function backToBanner(){                    // the midpoint of the ink-wash: move him and reset the blocks
   const p = player;
-  if(p.fadeRefill) p.hp = 3;
+  if(p.fadeRefill) p.hp = maxHearts();
   p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1; p.vx = p.vy = 0;
   p.stillT = 0; p.onGround = false;
   for(const b of level.blocks){ b.p[0] = b.sx; b.p[1] = b.sy; b.vy = 0; }   // §2a: blocks and bales return to their start
@@ -2137,7 +2366,7 @@ function updateWorld(dt){
   // a checkpoint lights when he passes it in any lane (ruled 2026-10-26); the return is to its banner
   level.checkpoints.forEach((c, i)=>{
     if(!c.lit && p.x >= c.x - 30 && p.fadeT <= 0 && !p.leap){
-      c.lit = true; p.checkpoint = [c.x, c.y]; sfx.check();
+      c.lit = true; p.checkpoint = [c.x, c.y]; sfx.check(); p.hp = maxHearts();   // §5: hearts refill at every checkpoint
       floats.push({x:c.x, y:c.y-120, t:1.6, text:(level.cpLines && level.cpLines[i]) || LINE_CHECKPOINT});
     }
   });
@@ -2804,6 +3033,17 @@ function drawCoin(c){
   ctx.strokeStyle = 'rgba(60,44,28,0.5)'; ctx.lineWidth = 0.9; lumpy(10); ctx.stroke();
   ctx.restore();
 }
+// the boatman's / pilot's lamp on a post where a side way starts (DESIGN §6)
+function drawDetourLamp(x, y){
+  ctx.fillStyle = '#3A2A1C'; ctx.fillRect(x-2, y-TUNE.LAMP_POST, 4, TUNE.LAMP_POST);
+  ctx.fillRect(x-2, y-TUNE.LAMP_POST, 14, 3);
+  const fl = 0.8 + 0.2*Math.sin(time*9 + x), ly = y - TUNE.LAMP_POST + 12;
+  const g = ctx.createRadialGradient(x+10, ly, 0, x+10, ly, 34);
+  g.addColorStop(0, 'rgba(255,200,110,'+(0.45*fl)+')'); g.addColorStop(1, 'rgba(255,200,110,0)');
+  ctx.fillStyle = g; ctx.fillRect(x-24, ly-34, 68, 68);
+  ctx.fillStyle = '#6B4A2A'; ctx.fillRect(x+6, ly-5, 8, 10);
+  ctx.fillStyle = 'rgba(255,214,130,'+fl+')'; ctx.beginPath(); ctx.ellipse(x+10, ly-1, 2.2, 3.6, 0, 0, 7); ctx.fill();
+}
 function drawFlag(x, y, lit){
   ctx.fillStyle = '#3A2A1C'; ctx.fillRect(x-3, y-120, 6, 120);
   ctx.fillStyle = lit ? '#B5342A' : 'rgba(110,88,66,0.7)';
@@ -3264,6 +3504,7 @@ function drawLaneContents(l){
     }
     ctx.textAlign='left';
   }
+  if(detourLamps() && level.detourAt) for(const [dx, dl] of level.detourAt) if(dl === l) drawDetourLamp(dx, topAt(dl, dx));
   for(const c of level.coins) if(c.lane===l) drawCoin(c);
   for(const g of level.guards){
     if(g.dead || g.lane!==l) continue;
@@ -3367,7 +3608,7 @@ function drawForegroundDressing(){
 }
 
 function drawHUD(){
-  for(let i=0;i<3;i++){
+  for(let i=0;i<maxHearts();i++){
     const x = 30 + i*34, y = 30;
     ctx.fillStyle = i < player.hp ? '#B5342A' : 'rgba(110,95,80,0.35)';
     ctx.beginPath();
@@ -3376,7 +3617,7 @@ function drawHUD(){
     ctx.bezierCurveTo(x+4, y-14, x+12, y-6, x, y+6);
     ctx.fill();
   }
-  drawSwordGlyph(140, 30);
+  drawSwordGlyph(140 + (maxHearts()-3)*34, 30);
   // no coin counter (DESIGN.md §6, Pillar 3)
   ctx.textAlign = 'left'; ctx.textBaseline='middle';
   // depth-plane indicator
