@@ -52,9 +52,12 @@
 - L2: six guards, 11,600 px, forced beat = 190 px hull side of ship 1.
   L3: six fighters, 13,300 px, S1 is the telegraph teacher, sentinels
   1,000 apart with a checkpoint between.
-- Open with the designer: vine hop -300 vs -420; rule 10 vs fighters on
-  walkways; widths over the DESIGN 7 targets; rule 5 for optional
-  step-offs (from draft 3 of level 1).
+- Ruled 2026-10-26: rule 10 stands, no fighter on a swaying section.
+  Put fighters on fixed walkways with 300 px flat retreat; keep a sway
+  section before or after for the beat's texture. Checkpoints now light
+  in any lane (builder task), so far-lane CPs are fine.
+- Still open with the designer: vine hop -300 vs -420; widths over the
+  DESIGN 7 targets; rule 5 for optional step-offs.
 
 ## Third draft of level 1 (2026-10-25), after Gaurav's playtest
 
