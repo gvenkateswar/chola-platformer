@@ -1,16 +1,17 @@
 # Level 1 — Thanjavur, 1010
 
-Owner: level-designer. Third draft, 2026-10-25, under DESIGN.md draft 3
-(sections 2, 2a, 9). Budget raised to 1,100 words of prose and table cells
-for the longer level (coordinator, 2026-10-25). Units px; lanes 0 far, 1
-main, 2 near; y is a platform's top.
+Owner: level-designer. Fourth draft, 2026-10-26, under DESIGN.md draft 4
+(sections 2, 2a, 6, 9). Budget 1,250 words including the builder block
+(coordinator, 2026-10-26). Units px; lanes 0 far, 1 main, 2 near; y is a
+platform's top.
 
 ## 1. Purpose
 
 Hands Ilamaran his sheathed sword, teaches climbing (pole, plank, rope)
 and pushing (a block on rollers) over safe ground, then the gate leap and
 the guard who sees forward only; it ends combining all of it beside two
-guards. A work site at a new temple. Pillar 1.
+guards. Two detours reward a look upward. A work site at a new temple.
+Pillar 1.
 
 ## 2. The place
 
@@ -38,17 +39,20 @@ Tension 1 to 5. s: seconds for a first-time player, one wait or retry in.
 | Rollers at the gate | 4000–5000 | Pushes the block before G3, leaps behind it, up at G4 | M2 | 3 | 22 | 3, 5 |
 | Canyon | 5340–6460 | Banner; far: hide over F2; near: three jumps | The drop | 4 | 24 | 3, 8 |
 | Gateway yard | 6840–8220 | Main: block, course, pole, walk over M3, rope down. Near: G7, ledge over N3, G8 | Scaffolded gateway | 5 | 45 | 2, 3, 5 |
-| Summons | 8260–8600 | Banner, walks to the flag | Nandi, the vimana | 1 | 6 | — |
+| Summons | 8260–8900 | Banner, walks to the flag | Nandi, the vimana | 1 | 7 | — |
 
-Sum 178 s, about 3 minutes; DESIGN.md 7 allows 193. Peak at 80 percent:
-the combination is the level's end by design (2a), the summons the breath.
+Sum 179 s; each detour adds 15 to 25. Peak at 80 percent, then the
+summons.
 
 ## 4. Critical path and side paths
 
-Each piece is met first over floor, no guard within 1,280 px. **Block**:
-needed for the 200 px course (an expert double jump skips it). **Pole**:
-the only way to plank A, 220 up. **Rope**: the only way to the cornice;
-rope D is reached by walking off the plank end, not a full jump. **Rollers at the gate**: pushed to its stop, the
+Each piece is met first over floor, no guard near. **Block**: needed for
+the 200 px course. **Pole**: the way to plank A. **Rope 1**: the only way
+to the cornice; a ledger over plank A's east end stops any jump, so walk
+off into the rope, pump, release. On the grip-length period a release
+lands from 35 degrees; a running grab gives 23. The plinth is raised to
+420 px so the floor cannot climb it; the cornice double jump still
+reaches it. Rope D: walk off the yard plank. **Rollers at the gate**: pushed to its stop, the
 block shields G3 from M2's cone, so the leap needs no timing; without it,
 leap as M2 walks east. **Canyon**: far safer, near richer.
 **Gateway yard**: main is the combination (block as step and cover, pole
@@ -59,6 +63,15 @@ pillars (the forced beat's tax) and east off course C (NOTES.md).
 Gates, slot 13: G1 2700, G2 3360; G3 4350, G4 5000; canyon 5480 in, far
 6320 and near 6460 out; G7 7000, G8 8000.
 
+**Detours** (DESIGN 6: no guard, no `killY`, a lit place, a named kasu).
+
+| # | Place, for the historian | Leaves at | Kit and twist | Rejoins | Named |
+|---|---|---|---|---|---|
+| D1 | The masons' lamp-niche on the cloister scaffold | The course top, 780 (hint at 880) | Two one-way planks stacked above the course: jump up through, drop through to leave | Plank A, 1120 | nk1 |
+| D2 | The lamp shelf of the inner gateway | The floor after CP5, 8300 | Rope R3: the shelf is 360 up and floats; climb near the top before jumping (grip matters) | The floor, 8800 | nk2 |
+
+D1 skips the pole; that is its reward.
+
 ## 5. Guards and enemies
 
 Sight per DESIGN.md 3. All start at x1 + 30 walking east, so M3 and N3
@@ -66,7 +79,7 @@ run in phase.
 
 | id | lane | patrol | y | Unseen way past | If seen |
 |---|---|---|---|---|---|
-| M1 | 1 | 2860–3260 | 620 | Wait at 2500; G1 up as he walks east, walk, G2 down as he walks west | Run; a slide on the pillar wall is caught |
+| M1 | 1 | 2860–3260 | 620 | Wait at 2500; G1 up as he walks east, G2 down as he walks west | Run; a slide on the pillar wall is caught |
 | F1 | 0 | 3660–4060 | 492 | Not passed: G2 at his sweep's edge says "come down" | Leap down |
 | M2 | 1 | 4480–4880 | 620 | Push the block to 4400; he turns 80 px off it; leap at G3 behind it; G4 up as he walks west | Run west |
 | F2 | 0 | 5600–6000 | 514 | Up as he walks east; raised walk; drop behind him; out at 6320, past his cone | Back to the gate |
@@ -81,62 +94,69 @@ CP0 1050 (before the climb). CP1 2400 (before the first gate). CP2 3860
 on the terrace, y 280 (after the forced beat). CP3 5340 (before the
 canyon). CP4 6840 (before the yard). CP5 8260 (after).
 Spacing 1350, 1460, 1480, 1500, 1420; none within 150 px of a cone.
+Banners light in any lane (DESIGN 5).
 
 ## 7. Props and set dressing
 
 ASSETS.md: `kodi.png` 19, `lamp.png` 20, `nandi.png` 21,
 `guard_reach.png` 22, `kasu.png` 36; backdrop 1, stone 4, guards 11–12,
-gate 13, band 14. New, by name (art-director to number): older man of
-the company; hero unarmed idle; hero hand on hilt; hero climb (two
-frames), hang, push; scaffold pole; scaffold plank; hauling rope with
-beam; block on wooden rollers (plain, undressed); scaffolding dressing
-for the cloister and the inner gateway.
+gate 13, band 14, existing scaffold, rope, block and hero poses. New,
+by name: scaffold ledger beam; masons' lamp-niche (D1) and the gateway
+lamp shelf (D2), each lit; two named kasu, coin types from the
+historian.
 
 ## 8. Story hooks
 
-Intro: dawn, an errand. The handover line (NOTES.md). Inert-press line
-on the first J/X. Mid at CP2 (the vimana close; awe). End: summons east,
-no triumph.
+Intro: dawn, an errand. The handover line. Inert-press line on the
+first J/X. D1's hint and the first named kasu's float ("a card is
+kept"). Mid at CP2 (the vimana close; awe). End: summons east.
 
 ## 9. Builder notes
 
-Width 8800, killY 820 (canyon only), `banners:false`, start [60,620], npc
-[300,620], goal {8600,620}. New fields: K one-way planks `[x,y,w,lane]`
-(20 thick); POLE `[x,yTop,yBottom,lane]`; ROPE `[x,anchorY,length,lane]`;
-BLOCK `[startX,trackEndX,lane]`, 80 by 64.
+Width 9100, killY 820 (canyon only), `banners:false`, start [60,620], npc
+[300,620], goal {8900,620}. C trail kasu (26, each line traces a hop,
+climb, release or the safe lane; no flat rows); CL cluster kasu
+`[x,y,lane,detour]`; NK named kasu `[x,y,lane,id]`.
 
 ```
-P: [-80,620,5640,240,1] [780,420,240,200,1] [1590,280,280,24,1] [2170,300,180,320,1]
-   [2640,492,1460,26,0] [3440,440,90,290,1] [3620,360,90,370,1] [3800,280,200,450,1]
-   [4300,656,740,64,2] [5460,514,900,30,0] [5800,420,300,24,0]
-   [5460,656,140,64,2] [5720,656,140,64,2] [5980,656,140,64,2] [6240,656,320,64,2]
-   [6200,620,2600,240,1] [7160,420,120,200,1] [6960,656,1100,64,2] [7520,560,200,24,2]
-K: [1120,400,260,1] [7240,240,300,1] [7540,240,300,1] [7840,240,300,1]
+P: [-80,620,5640,240,1,stone] [780,420,240,200,1,stone] [1700,280,170,24,1,stone] [2170,200,180,420,1,stone]
+   [1180,290,260,34,1,wood] [2640,492,1460,26,0,stone] [3440,440,90,290,1,stone] [3620,360,90,370,1,stone]
+   [3800,280,200,450,1,stone] [4300,656,740,64,2,stone] [5460,514,900,30,0,stone] [5800,420,300,24,0,stone]
+   [5460,656,140,64,2,stone] [5720,656,140,64,2,stone] [5980,656,140,64,2,stone] [6240,656,320,64,2,stone]
+   [6200,620,2900,240,1,stone] [7160,420,120,200,1,stone] [6960,656,1100,64,2,stone] [7520,560,200,24,2,stone]
+K: [1120,400,260,1] [860,300,200,1] [820,180,200,1] [7240,240,300,1] [7540,240,300,1]
+   [7840,240,300,1] [8560,260,240,1]
 POLE: [1100,380,620,1] [7230,220,420,1]
-ROPE: [1490,160,260,1] [8220,200,220,1]
+ROPE: [1490,160,280,1] [8220,200,220,1] [8420,160,300,1]
 BLOCK: [460,700,1] [4220,4400,1] [6900,7080,1]
-G: [2860,3260,620,1] [3660,4060,492,0] [4480,4880,620,1] [5600,6000,514,0]
-   [7360,7760,620,1] [7400,7800,656,2]
+G: [2860,3260,620,1] [3660,4060,492,0] [4480,4880,620,1]
+   [5600,6000,514,0] [7360,7760,620,1] [7400,7800,656,2]
 links: [2640,120,0,1] [3300,120,0,1] [4320,60,1,2] [4970,60,1,2] [5420,120,0,1]
    [5450,60,1,2] [6260,120,0,1] [6430,60,1,2] [6970,60,1,2] [7970,60,1,2]
-checkpoints: [1050,620] [2400,620] [3860,280] [5340,620] [6840,620] [8260,620]
-hints: [500,560,push] [1100,560,climb] [1900,240,double jump] [2700,540,gate]
-C: [840,380,1] [900,380,1] [960,380,1] [1180,360,1] [1260,360,1] [1340,360,1]
-   [1560,180,1] [1640,210,1] [1720,240,1] [1960,220,1] [2020,200,1] [2080,220,1]
-   [2820,452,0] [2940,452,0] [3060,452,0] [3180,452,0] [3485,400,1] [3665,320,1] [3900,240,1]
-   [4500,616,2] [4650,616,2] [4800,616,2] [5530,616,2] [5790,616,2] [6050,616,2]
-   [5880,380,0] [5960,380,0] [6040,380,0] [7400,200,1] [7600,200,1] [7800,200,1] [8000,200,1]
-   [7560,520,2] [7620,520,2] [7680,520,2]
+CP: [1050,620] [2400,620] [3860,280] [5340,620] [6840,620] [8260,620]
+hints: [500,560,push] [880,370,detour] [1100,560,climb]
+   [1900,240,double jump] [2700,600,gate]
+C: [730,500,1] [770,440,1] [820,390,1] [1100,560,1] [1100,490,1] [1100,420,1] [1560,180,1] [1640,210,1]
+   [1720,240,1] [1940,210,1] [2020,150,1] [2100,140,1] [3485,400,1] [3575,340,1] [3665,320,1] [3755,270,1]
+   [3900,240,1] [4400,600,2] [4560,590,2] [4720,600,2] [5660,590,2] [5920,590,2] [6180,590,2] [8160,220,1]
+   [8220,300,1] [8220,380,1]
+CL: [880,380,1,1] [900,330,1,1] [940,260,1,1] [900,210,1,1] [860,150,1,1] [1000,250,1,1]
+   [8440,420,1,2] [8440,340,1,2] [8440,260,1,2] [8520,200,1,2] [8600,190,1,2] [8680,210,1,2]
+NK: [830,140,1,nk1] [8760,220,1,nk2]
 ```
 
-Not in the engine yet: one-way planks and drop-through; poles and ropes
-(grab, climb, sway, release); blocks (push, track, cone occlusion, reset
-on checkpoint return); guards turning 80 px off a block; the gate leap
-tween (`build/level-1` has the stand); the handover scene and NPC; the
-sword glyph and hand-on-hilt press.
+Changed from main: plinth, ledger, rope 1 length, R3, D1 planks,
+shelf, width, goal, all kasu. Not in the engine
+yet: cluster cue (glint, low note), named kasu pickup and float.
 
 ## Revision notes
 
+- 2026-10-26, fourth draft, for DESIGN.md draft 4: two detours with named
+  kasu; trail kasu cut from 35 to 26 and reshaped as route arcs (no flat
+  rows, none in a sweep); every rope re-checked on the grip-length
+  period. Fixed: rope 1 was bypassable by a double jump from plank A
+  (ledger added, rope lengthened to 280); the plinth was climbable from
+  the floor (raised 100). Checked by script.
 - 2026-10-25, third draft, after Gaurav's playtest (DECISIONS.md 10 to
   16) and DESIGN.md draft 3. Added the handover, a guard-free teaching
   run for block, pole, plank and rope, the M2 block beat (which also gives

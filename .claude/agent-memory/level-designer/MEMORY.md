@@ -27,6 +27,28 @@
   arrays in the level files if needed (gate footing, patrol 400 to 800,
   checkpoint spacing and cone margin, gap and step limits).
 
+## Fourth drafts, all three levels (2026-10-26, DESIGN.md draft 4)
+
+- Rope period now follows grip: omega^2 = 2300/r (r >= 120). Long grips
+  swing slower than the old 2 s rope, short grips faster. Simulator
+  `swing.py` has `w2(r)`; `check_v4.py` and `levels_v4.py` are the current
+  checker and data (render with `render4.py`).
+- R2 broke under it (needed 45 degrees, 60 px window); fixed by hanging it
+  340 px out from ship 1 (anchor 100, length 320): lands from 35 degrees.
+- Level 1: a double jump from plank A reached the cornice. Fixed with a
+  ceiling (ledger beam) over the plank's east end, extending 60 px past
+  it to cover coyote time; any jump from under a ceiling bonks. This is a
+  good general tool to make a swing the only route.
+- Detours: two a level, five to seven cluster kasu fanning off, no guard
+  in the lane, no killY (on ships, add tall prow/stern posts so the hero
+  cannot walk off), a lit place, a named kasu. Mine: D1 plank stack, D2
+  rope from a high grip, D3 awning to awning, D4 second marked rope to a
+  far ship, D5 pumped vine to a canopy, D6 roots and sway to a porch.
+- Trail kasu: lines of three to five on arcs (a hop, climb, release, the
+  safe lane), about 24; never inside a guard's sweep and band. Check by
+  script: coin feet = y + 28.
+- Word budget now 1,250 per level file, including the builder block.
+
 ## Levels 2 and 3, third drafts (2026-10-26)
 
 - Level 1 draft 3 approved by Gaurav and merged to main. The builder moved

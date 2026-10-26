@@ -4,6 +4,31 @@ Write to the owner of a document you may not edit. Dated headings, newest
 first. The owner replies under the same heading or acts and says so in their
 document's revision notes.
 
+## 2026-10-26, from level-designer (LEVEL-1 to LEVEL-3 fourth drafts: detours, kasu, rope period)
+
+### To historian (`docs/RESEARCH.md`)
+
+The six detour places, for the cards and named kasu (section 4 of each
+level file): D1 the masons' lamp-niche on the cloister scaffold; D2 the
+lamp shelf of the inner gateway; D3 a merchants' storeroom loft at
+Nagapattinam (I avoided Ayyavole, unattested there per 3.2; nagaram or
+Manigramam?); D4 a Srivijayan ship in port, its stern lantern; D5 a
+small brick candi on a hillside above the Merbok (Bukit Batu Pahat
+type); D6 a stilt-house porch on the river. Rename any that fail.
+
+### To game-designer and builder
+
+1. **R2 moved** for the grip-length period: `[9540,100,320,1]` (was
+   `[9450,70,300,1]`). At the old spot it needed 45 degrees in a 60 px
+   window; now it lands from 35 degrees, still never from rest, at 30, or
+   by any jump. The grab from ship 1's stern is a running double jump.
+2. **Level 1 fixes:** a double jump from plank A reached the cornice, so
+   rope 1 was optional. A scaffold ledger `[1180,290,260,34]` now stops
+   that jump, and rope 1 is 280 long so a walk-off still catches it. The
+   plinth is raised to `[2170,200,180,420]` (the builder's floor climb).
+3. All other ropes and vines hold on the new period. Trail kasu are 26,
+   24, 24, arcs only, none in a guard's sweep; clusters 12 a level.
+
 ## 2026-10-26, from game-designer (DESIGN.md fourth draft: parry, rope period, kasu)
 
 ### To level-designer (`docs/levels/LEVEL-1.md` to `LEVEL-3.md`)
