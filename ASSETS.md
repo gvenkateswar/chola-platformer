@@ -1,7 +1,8 @@
 # Painted Asset Kit — Chola: Tides of Bronze
 
-Owner: art-director. Readers: sprite-artist, builder (and Gaurav). Third
-edition, 2026-10-25, revised against `docs/RESEARCH.md` (second draft),
+Owner: art-director. Readers: sprite-artist, builder (and Gaurav). Fourth
+edition, 2026-10-25, after DECISIONS.md 17 (palette) and 19 (cut-out
+animation); third edition revised against `docs/RESEARCH.md` (second draft),
 `docs/VISION.md` (third draft), `docs/DECISIONS.md` 3, 6 and 7, the
 creative-director's and level-designer's notes in `docs/NOTES.md`,
 `docs/levels/LEVEL-1.md` to `LEVEL-3.md` section 7, `docs/DESIGN.md`
@@ -14,33 +15,56 @@ art, so you can add assets one at a time and the game keeps working at every ste
 
 ## Style sheet
 
-**Palette** (read from the painted kit):
+**Palettes** (DECISIONS.md 17). Sky stops run from top to horizon.
 
-- Warm beige `#D9C69A`: sky, haze, lit ground.
-- Parchment gold `#CDBA8C`: sun path, lit stone.
-- Umber `#6B4E33`: near silhouettes, wood, hair.
-- Olive-grey `#6E6A52`: shadow, far ridges, water.
-- Ink `#2B2520`: line, ink marks.
-- Bronze `#A86A3C`, old gold `#C9A24A`: skin, ornament.
-- Crimson `#B5342A`: Chola only.
-- Indigo `#3F4D73`: the Srivijayan only.
+| | Thanjavur | Nagapattinam | Kadaram |
+|---|---|---|---|
+| Sky | `#7A5F34` `#C2954A` `#E3BC6A` `#F2D894` | `#2F5E6E` `#5E8F94` `#A9C4B4` `#E6D9A8` | `#2E3A52` `#4F6A6A` `#86A08A` `#C9D3B0` |
+| Far | `#B08A52` | `#7FA3A0` | `#6F8C7C` |
+| Mid | `#7A5530` | `#3E6A6C` | `#355A45` |
+| Near | `#4A3220` | `#21393C` | `#1C3326` |
+| Shadow | `#2A1A10` | `#13222A` | `#101C1A` |
+| Light | `#F6E2A8` | `#F1E3B4` | `#E4EAC8` |
+| Accent | plantain green `#6E8B3D` | turmeric `#DDB02F` | indigo `#4B5E9A` |
 
-**Three rules of the look.**
+Shared: crimson `#B5342A`, ink `#2B2520`, skin bronze `#A86A3C`, gold `#C9A24A`.
 
-1. One painting, three depths. Far planes dissolve into haze, the near
-   plane goes dark and simple; distance is told by value, never by line.
-2. One loud color. Everything is parchment, umber, and grey; crimson is the
-   single saturated note, and it is small.
-3. The brush shows. Dry-brush strokes, watercolor blooms, edges that bleed,
-   matte gouache finish. No photo-realism, no 3D render.
+**Rules of the look.**
 
-**The crimson rule**, verbatim from `docs/VISION.md` pillar 1: "Crimson means
-Chola; nothing else gets it." Section 5 lists what gets it: "a sash, a
-banner, a bird, a guard's cloth." The Srivijayan, his buildings, and his
-shore carry none.
+1. Each place has its own natural color, and one red runs through all three.
+2. Depth by value: far is light and soft, mid is finished, near is dark and simple. Haze touches only the far plane, lightly.
+3. The brush shows: dry-brush, blooms, bleeding edges, matte gouache. No photo-realism, no 3D render.
 
-**Characters face right.** The engine flips them. If one comes back facing
-left, regenerate or mirror it.
+**Crimson rule.** "Crimson means Chola; nothing else gets it" (VISION.md pillar 1, kept by DECISIONS.md 17). Crimson is the only red: no other red, red-orange, rust, terracotta, or pink in any level. Brick is painted umber-ochre.
+
+**Contrast rule.** On a 0 to 100 value scale, darkest shadow 10 to 15, brightest light 88 to 92, near lane under 30, far plane 60 to 80. A result that reads as one mid-grey in grayscale is regenerated.
+
+**Characters face right.** The engine flips them.
+
+## Color grade for the builder
+
+`index.html` draws the sky, haze, mist, and procedural art in code. These values map onto the three level objects (`sky:` arrays at about lines 406, 453, 501) and `render()`. Replace field for field; fields marked *new* replace a hardcoded value.
+
+| Field | Level 1 Thanjavur | Level 2 Nagapattinam | Level 3 Kadaram |
+|---|---|---|---|
+| `sky` (stops 0, .42, .72, 1) | `'#7A5F34','#C2954A','#E3BC6A','#F2D894'` | `'#2F5E6E','#5E8F94','#A9C4B4','#E6D9A8'` | `'#2E3A52','#4F6A6A','#86A08A','#C9D3B0'` |
+| `sun.c` | `#FFF0C4` | `#FFF3D0` | `#F2F6DA` |
+| `fogHaze` (was alpha .34 / .32 / .36) | `rgba(236,206,140,0.16)` | `rgba(190,214,206,0.14)` | `rgba(184,204,178,0.20)` |
+| *new* `mist` color for `drawMist`, with the two call alphas (was `236,226,198` at .10 / .07) | `240,220,170` at .05 / .03 | `214,230,224` at .05 / .03 | `210,224,204` at .12 / .07 |
+| `pal = mkPal(top, face, side)` | `'#D2A85E','#9C6E3C','#5A3A1E'` | `'#C8B48A','#7C6E55','#3E3A33'` | `'#9DAA7C','#5E6B4A','#2E3A2C'` |
+| *new* `pal.ink`, the shadow tint (was `rgba(46,32,22,0.55)`) | `rgba(42,26,14,0.60)` | `rgba(18,34,42,0.55)` | `rgba(16,28,30,0.60)` |
+| `palFront` / `palBack` `dimPal` amounts (was -22 / +10) | -40 / +16 | -40 / +16 | -40 / +16 |
+| `grade`, the light tint (was alpha .05) | `rgba(160,110,30,0.07)` | `rgba(40,110,120,0.07)` | `rgba(40,60,110,0.07)` |
+| *new* `vig`, vignette edge (was `rgba(30,20,10,0.45)`) | `rgba(34,20,8,0.50)` | `rgba(10,26,34,0.48)` | `rgba(10,20,28,0.52)` |
+| *new* `rays`, `drawRays` color (was `255,240,200` at .14) | `rgba(255,228,160,0.20)` | `rgba(255,240,205,0.15)` | `rgba(226,240,210,0.10)` |
+| `motes` | `#F6E2A8` | `#E8F0E6` | `#DDE8B0` |
+| *new* `farCol`, `drawFarLayer` silhouettes | `rgba(122,90,48,0.45)` | `rgba(80,118,118,0.42)` | `rgba(60,96,80,0.45)` |
+| *new* `midCol`, `drawMidLayer` silhouettes | `rgba(58,36,18,0.70)` | `rgba(28,52,56,0.68)` | `rgba(24,44,32,0.70)` |
+| `banners` (wall streamers) | `false` | `false` | `false` |
+
+Haze is roughly halved; depth now comes from the wider `palFront` / `palBack` spread and the darker near lane. Textures (slots 4, 5, 23) are drawn under the `pal` tint, so one file serves every level.
+
+**Other reds in the code that break the crimson rule** (builder task): `AWNINGS` (line 1034) holds red-brown `#8A4A3A` and plum `#6E4664`; use `'#E6D9A8','#3F5A80','#DDB02F','#7FA3A0'` (undyed, indigo, turmeric, sea-grey). Stall goods `#9A4A34` (line 1160) become `#7C6E55`. Pennant and flag `#A8402F` (lines 1098, 1244) and guard cloth `#8C2F22` (lines 1462, 1541) become `#B5342A`. Wall banners `rgba(150,44,34,…)` go with `banners:false`. The gate arrow (line 1221) uses `181,52,42` and is off in level 3 (DECISIONS.md 7). Bursts at lines 705 and 751 and the hurt flash `rgba(140,30,20,…)` become black ink (DESIGN.md section 4, violence rule).
 
 ## Workflow
 
@@ -51,10 +75,9 @@ left, regenerate or mirror it.
    block (convert to `.png` if the download is `.webp`), and drop it in
    `assets/`.
 3. Open `chola-platformer/index.html` in a browser to see it in the game.
-4. Consistency: the prompts repeat the full character description so they
-   work in any order. For each character, generate the pose marked "first"
-   and pass that image as a reference when generating the others; see the
-   consistency notes under each character.
+4. Characters: each is one rig sheet (slots 37 to 39), generated once;
+   the hero is cut from the existing `hero_idle.png`. See Cut-out rigs
+   (DECISIONS.md 19). Per-pose slots are superseded.
 5. Transparency: the first hero set came back on an opaque dark vignette
    despite the prompt. Check every character PNG for a transparent
    background and remove the background in an editor if the generator
@@ -69,11 +92,11 @@ GitHub Pages.
 ## 1 · `l1_far.png` — Thanjavur backdrop
 
 ```
-Generate this image: a wide painted background for a 2.5D side-scrolling video game. Dawn over Thanjavur, capital of the Chola kingdom, 1010 CE. The Brihadisvara temple dominates the middle distance: a steep pyramidal granite vimana of thirteen diminishing storeys rising to an octagonal cupola and a single square capstone with a small gilded finial, standing inside a long walled rectangular courtyard with a low pillared cloister along the wall. On the east side of the courtyard, two low gateway towers stand in line, each a plain rectangular block with a barrel-vaulted roof, both well under half the vimana's height. The vimana is the only tall structure in the picture; no other towers, no fort wall, no moat. The architecture is rendered as layered watercolor silhouettes that fade into warm morning haze: the nearest stone deep umber, the farthest almost dissolving into a parchment-gold sky. A pale, hazy sun disc in the upper right with soft god-rays. A line of palm crowns and low flat city rooftops runs along the bottom edge. One tiny crimson flag on a tall flagstaff inside the courtyard is the only saturated accent; no banners or streamers hang on any wall.
+Generate this image: a wide painted background for a 2.5D side-scrolling video game. Dawn over Thanjavur, capital of the Chola kingdom, 1010 CE. The Brihadisvara temple dominates the middle distance: a steep pyramidal granite vimana of thirteen diminishing storeys rising to an octagonal cupola and a single square capstone with a small gilded finial, standing inside a long walled rectangular courtyard with a low pillared cloister along the wall. On the east side of the courtyard, two low gateway towers stand in line, each a plain rectangular block with a barrel-vaulted roof, both well under half the vimana's height. The vimana is the only tall structure in the picture; no other towers, no fort wall, no moat. The architecture is rendered as layered watercolor silhouettes that fade into a light morning haze: the nearest stone deep umber, the farthest softened against a bright gold sky. A pale, hazy sun disc in the upper right with soft god-rays. A line of palm crowns and low flat city rooftops runs along the bottom edge. One tiny crimson flag on a tall flagstaff inside the courtyard is the only saturated accent; no banners or streamers hang on any wall.
 
 Composition rules: horizon line in the lower third of the frame; the bottom 25% of the image stays simple, dark, and low-contrast so game platforms drawn in front of it stay readable; no object of interest at the exact left or right edge, and both edges must close in similar tone and value so the image can repeat sideways.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm beige #D9C69A, parchment gold #CDBA8C, umber #6B4E33, olive-grey shadows, with a single crimson accent #B5342A used sparingly. Soft atmospheric haze, visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges, cinematic side-lighting. The mood of a moody stealth-action side-scroller set in medieval South India. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Thanjavur palette, warm gold with deep umber shadows: sky from deep amber #7A5F34 at the top through #C2954A and #E3BC6A to a bright gold horizon #F2D894; far stone in hazy gold #B08A52; middle distance in burnt umber #7A5530; near silhouettes in deep umber #4A3220; darkest shadow #2A1A10; brightest light #F6E2A8; a small accent of plantain-leaf green #6E8B3D in the palm crowns. Strong value contrast: the darkest shadows are truly dark and the brightest light truly bright; haze is light and only on the farthest plane. Crimson #B5342A appears only on the one flag and is the only red in the picture: no other red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges, cinematic side-lighting. The mood of a stealth-action side-scroller set in medieval South India. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file. I will save this file as: l1_far.png
 ```
@@ -81,11 +104,11 @@ Output: a landscape image, 1536×1024 pixels, as a PNG file. I will save this fi
 ## 2 · `l2_far.png` — Nagapattinam harbor backdrop
 
 ```
-Generate this image: a wide painted background for a 2.5D side-scrolling video game. Late golden afternoon over Nagapattinam, the main eastern port of the Chola kingdom, circa 1020 CE. A calm sea horizon in the lower third of the frame on a flat sandy coast with no cliffs or hills. The water is crowded with anchored medieval Indian Ocean merchant ships: broad, beamy wooden hulls with high curved prows and no stern castles, the planks visibly stitched edge to edge with cord, one or two masts each carrying a square or canted rectangular sail of woven matting, furled or half-furled, with rigging lines. No triangular lateen sails. Small catamarans and dugout canoes move between the ships. The ships are painted as layered warm-grey and umber silhouettes receding into amber sea haze. Behind the quay on the right, a tall square plastered brick tower with a tiered top, a Buddhist monastery tower, stands among thatched sheds and palms. Along the bottom edge, hints of a busy quay: piling posts, coiled rope, stacked cloth bales and rice baskets, all in deep shadow. A low hazy sun on the left throws a broken golden path across the water; gulls appear as tiny ink flecks. One crimson pennant on the nearest mast is the only saturated accent.
+Generate this image: a wide painted background for a 2.5D side-scrolling video game. Late golden afternoon over Nagapattinam, the main eastern port of the Chola kingdom, circa 1020 CE. A calm sea horizon in the lower third of the frame on a flat sandy coast with no cliffs or hills. The water is crowded with anchored medieval Indian Ocean merchant ships: broad, beamy wooden hulls with high curved prows and no stern castles, the planks visibly stitched edge to edge with cord, one or two masts each carrying a square or canted rectangular sail of woven matting, furled or half-furled, with rigging lines. No triangular lateen sails. Small catamarans and dugout canoes move between the ships. The ships are painted as layered grey-teal and deep blue-green silhouettes receding into a light blue-green sea haze. Behind the quay on the right, a tall square plastered brick tower with a tiered top, a Buddhist monastery tower, stands among thatched sheds and palms. Along the bottom edge, hints of a busy quay: piling posts, coiled rope, stacked cloth bales and rice baskets, all in deep shadow. A low hazy sun on the left throws a broken golden path across the water; gulls appear as tiny ink flecks. One crimson pennant on the nearest mast is the only saturated accent.
 
 Composition rules: horizon in the lower third; the bottom 25% of the image stays simple, dark, and low-contrast so game platforms drawn in front of it stay readable; no object of interest at the exact left or right edge, and both edges must close in similar tone and value so the image can repeat sideways.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm beige #D9C69A, parchment gold #CDBA8C, umber #6B4E33, olive-grey shadows, with a single crimson accent #B5342A used sparingly. Soft atmospheric haze, visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges, cinematic side-lighting. The mood of a moody stealth-action side-scroller set in medieval South India. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Nagapattinam palette, blue-green sea and sky: sky from deep sea-teal #2F5E6E at the top through #5E8F94 and #A9C4B4 to a warm golden horizon band #E6D9A8 around the low sun; sea in blue-green #3E6A6C darkening to #21393C near the quay; far ships in soft grey-teal #7FA3A0; quay silhouettes in deep blue-black #21393C; darkest shadow #13222A; brightest light #F1E3B4 on the sun path; a small accent of turmeric yellow #DDB02F on a few cargo bales. Strong value contrast: the darkest shadows are truly dark and the brightest light truly bright; haze is light and only on the farthest plane. Crimson #B5342A appears only on the one pennant and is the only red in the picture: no other red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges, cinematic side-lighting. The mood of a stealth-action side-scroller set on the medieval South Indian coast. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file. I will save this file as: l2_far.png
 ```
@@ -93,11 +116,11 @@ Output: a landscape image, 1536×1024 pixels, as a PNG file. I will save this fi
 ## 3 · `l3_far.png` — Kedah shore backdrop
 
 ```
-Generate this image: a wide painted background for a 2.5D side-scrolling video game. Monsoon morning on the coast of Kedah in the kingdom of Srivijaya, Malay peninsula, 1025 CE. A flat mangrove river plain under low cloud: a wide calm estuary in the lower third of the frame with mist lying over the water, mangrove trees on arched roots along both banks, and thatched wooden houses on stilts standing over the river edge, some with small boats tied beneath. On the near bank, low square brick shrines on stepped plinths, and one tall tiered brick tower plastered white, half veiled in mist. Far behind everything, a single forested mountain rises in soft grey-green wash, its summit lost in cloud. Light rain falls in thin diagonal strokes on the left. A pale white-green sun glows in the upper right behind thin cloud. Nipa palm fronds and mangrove branches frame the very bottom edge in deep shadow. No steep jungle ridges, no stupas, no bell-shaped domes, no Borobudur. Nothing in the picture is red except one tiny crimson pennant on the mast of a single foreign ship anchored far out at the river mouth; that pennant is the only saturated accent.
+Generate this image: a wide painted background for a 2.5D side-scrolling video game. Monsoon morning on the coast of Kedah in the kingdom of Srivijaya, Malay peninsula, 1025 CE. A flat mangrove river plain under low cloud: a wide calm estuary in the lower third of the frame with mist lying over the water, mangrove trees on arched roots along both banks, and thatched wooden houses on stilts standing over the river edge, some with small boats tied beneath. On the near bank, low square brick shrines on stepped plinths, and one tall tiered brick tower plastered white, half veiled in mist. Far behind everything, a single forested mountain rises in blue-green wash, its summit lost in cloud. Light rain falls in thin diagonal strokes on the left. A pale white-green sun glows in the upper right behind thin cloud. Nipa palm fronds and mangrove branches frame the very bottom edge in deep shadow. No steep jungle ridges, no stupas, no bell-shaped domes, no Borobudur. Nothing in the picture is red except one tiny crimson pennant on the mast of a single foreign ship anchored far out at the river mouth; that pennant is the only saturated accent.
 
 Composition rules: horizon in the lower third; the bottom 25% of the image stays simple, dark, and low-contrast so game platforms drawn in front of it stay readable; no object of interest at the exact left or right edge, and both edges must close in similar tone and value so the image can repeat sideways.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette shifted toward grey-green: warm beige #D9C69A, parchment gold #CDBA8C, umber #6B4E33, olive-grey shadows, with a single crimson accent #B5342A used sparingly. Soft atmospheric haze, visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges, cinematic side-lighting. The mood of a moody action side-scroller set in medieval maritime Southeast Asia. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Kadaram palette, jungle greens and indigo: sky from deep indigo #2E3A52 at the top through #4F6A6A and #86A08A to a pale misty horizon #C9D3B0; far mountain in blue-green #6F8C7C; mangroves, shrines, and stilt houses in jungle green #355A45; near silhouettes in deep green #1C3326; darkest shadow #101C1A, a green-black; brightest light #E4EAC8 on the water; a small accent of indigo #4B5E9A in the sky reflected on the river. Brick is weathered umber-ochre with moss, never red. The mist lies over the water but the shrines and houses stay readable. Strong value contrast: the darkest shadows are truly dark and the brightest light truly bright; haze is light and only on the farthest plane. Crimson #B5342A appears only on the one far pennant and is the only red in the picture: no other red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges, cinematic side-lighting. The mood of an action side-scroller set in medieval maritime Southeast Asia. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file. I will save this file as: l3_far.png
 ```
@@ -107,7 +130,7 @@ Output: a landscape image, 1536×1024 pixels, as a PNG file. I will save this fi
 ```
 Generate this image: a perfectly seamless, tileable texture of newly dressed granite temple masonry, hand-painted. Courses of large rectangular blocks in warm grey-brown stone, staggered joints, fine chisel marks and a few small chips, thin watercolor staining and faint moss shadow in the mortar lines. No paint or lacquer traces on the stone; no red anywhere in this texture. Even, directionless lighting: no cast shadows from any single direction, no vignette, no darkening at the edges. All four edges must tile seamlessly with themselves. Flat frontal view, no perspective.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm beige #D9C69A, parchment gold #CDBA8C, umber #6B4E33, olive-grey shadows. Visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Thanjavur palette with strong contrast: granite in light #C9A46A, mid stone #8A6A44, deepest mortar shadow #2A1A10, a faint plantain-green #6E8B3D moss in a few joints. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a square image, 1024×1024 pixels, as a PNG file, seamlessly tileable on all four edges. I will save this file as: tex_stone.png
 ```
@@ -117,7 +140,7 @@ Output: a square image, 1024×1024 pixels, as a PNG file, seamlessly tileable on
 ```
 Generate this image: a perfectly seamless, tileable texture of weathered teak ship planking from a medieval Indian Ocean sewn-plank hull, hand-painted. Horizontal planks of warm brown wood with visible grain painted in dry-brush strokes. Along every plank edge runs a zigzag seam of dark coir cord stitched through small drilled holes, and a few round wooden dowel ends show in the plank faces. No iron nails, no nail heads, no metal fittings of any kind. Salt staining, small gaps of deep shadow between planks, and a rope-worn patch or two. No red anywhere in this texture. Even, directionless lighting: no cast shadows from any single direction, no vignette, no darkening at the edges. All four edges must tile seamlessly with themselves. Flat frontal view, no perspective.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm beige #D9C69A, parchment gold #CDBA8C, umber #6B4E33, olive-grey shadows. Visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Teak palette with strong contrast: wood in light #B48A58, mid wood #8A6743, deep shadow gaps #241810, coir seams near-black #1E1610. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a square image, 1024×1024 pixels, as a PNG file, seamlessly tileable on all four edges. I will save this file as: tex_wood.png
 ```
@@ -125,6 +148,8 @@ Output: a square image, 1024×1024 pixels, as a PNG file, seamlessly tileable on
 ---
 
 ### Consistency note: the hero (slots 6 to 10)
+
+**Superseded** by Cut-out rigs (DECISIONS.md 19); kept for reference.
 
 Generate slot 6 (`hero_idle.png`) first and approve it before the rest.
 Pass the approved idle image as a reference when generating slots 7 to 10
@@ -141,6 +166,8 @@ the Srivijayan carries a short sword low and nothing on his back.
 
 ## 6 · `hero_idle.png` — the hero, standing (generate this one first)
 
+**Superseded** (DECISIONS.md 19): the hero is rigged from the existing `hero_idle.png`; see Cut-out rigs. Do not generate. The character paragraph is the target for the single-image edit.
+
 ```
 Generate this image: a full-body 2D video-game character on a fully transparent background.
 
@@ -154,6 +181,8 @@ Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transpar
 ```
 
 ## 7 · `hero_run_a.png` — the hero, run stride A
+
+**Superseded** (DECISIONS.md 19): the hero is rigged from the existing `hero_idle.png`; see Cut-out rigs. Do not generate. The character paragraph is the target for the single-image edit.
 
 ```
 Generate this image: a full-body 2D video-game character on a fully transparent background.
@@ -169,6 +198,8 @@ Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transpar
 
 ## 8 · `hero_run_b.png` — the hero, run stride B
 
+**Superseded** (DECISIONS.md 19): the hero is rigged from the existing `hero_idle.png`; see Cut-out rigs. Do not generate. The character paragraph is the target for the single-image edit.
+
 ```
 Generate this image: a full-body 2D video-game character on a fully transparent background.
 
@@ -183,6 +214,8 @@ Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transpar
 
 ## 9 · `hero_jump.png` — the hero, airborne
 
+**Superseded** (DECISIONS.md 19): the hero is rigged from the existing `hero_idle.png`; see Cut-out rigs. Do not generate. The character paragraph is the target for the single-image edit.
+
 ```
 Generate this image: a full-body 2D video-game character on a fully transparent background.
 
@@ -196,6 +229,8 @@ Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transpar
 ```
 
 ## 10 · `hero_attack.png` — the hero, sword cut
+
+**Superseded** (DECISIONS.md 19): the hero is rigged from the existing `hero_idle.png`; see Cut-out rigs. Do not generate. The character paragraph is the target for the single-image edit.
 
 ```
 Generate this image: a full-body 2D video-game character on a fully transparent background.
@@ -213,6 +248,8 @@ Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transpar
 
 ### Consistency note: the Chola guard (slots 11 and 12)
 
+**Superseded** by Cut-out rigs (DECISIONS.md 19); kept for reference.
+
 Generate slot 11 (`guard_walk_a.png`) first and pass it as a reference for
 slot 12. He appears only in levels 1 and 2 as an obstacle to avoid
 (DECISIONS.md 3), so he is read at a glance from a distance: the tall
@@ -222,6 +259,8 @@ without putting metal on him. Check: no plates, no helmet, bare feet,
 crimson only on the head cloth and waist cloth, transparent background.
 
 ## 11 · `guard_walk_a.png` — Chola gate guard, stride A
+
+**Superseded** by slot 37 `rig_guard.png` (DECISIONS.md 19). Kept for reference; do not generate.
 
 ```
 Generate this image: a full-body 2D video-game enemy character on a fully transparent background.
@@ -236,6 +275,8 @@ Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transpar
 ```
 
 ## 12 · `guard_walk_b.png` — Chola gate guard, stride B
+
+**Superseded** by slot 37 `rig_guard.png` (DECISIONS.md 19). Kept for reference; do not generate.
 
 ```
 Generate this image: a full-body 2D video-game enemy character on a fully transparent background.
@@ -268,7 +309,7 @@ Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transpar
 ```
 Generate this image: a sparse horizontal band of palm trunks and palm crowns occupying ONLY the bottom half of the frame, painted as dark umber silhouettes with soft watercolor edges, for use as a parallax layer in a 2D video game. Nothing at all in the top half of the image; it must stay fully transparent. Left and right edges similar in density so the band can repeat sideways.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style, muted sepia and umber tones, visible dry-brush strokes, matte gouache finish. No text, no watermark, no signature, no border.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Thanjavur palette: deep umber #4A3220 silhouettes with a thin warm gold rim light #E3BC6A along one edge, darkest #2A1A10. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish. No text, no watermark, no signature, no border.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: l1_mid.png
 ```
@@ -276,9 +317,9 @@ Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transpa
 ## 15 · `l2_mid.png` — Nagapattinam mid-parallax band (advanced)
 
 ```
-Generate this image: a sparse horizontal band of wooden dock pilings with coiled rope and hanging fishing nets occupying ONLY the bottom half of the frame, painted as dark umber silhouettes with soft watercolor edges, for use as a parallax layer in a 2D video game. Nothing at all in the top half of the image; it must stay fully transparent. Left and right edges similar in density so the band can repeat sideways.
+Generate this image: a sparse horizontal band of wooden dock pilings with coiled rope and hanging fishing nets occupying ONLY the bottom half of the frame, painted as dark blue-green silhouettes with soft watercolor edges, for use as a parallax layer in a 2D video game. Nothing at all in the top half of the image; it must stay fully transparent. Left and right edges similar in density so the band can repeat sideways.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style, muted sepia and umber tones, visible dry-brush strokes, matte gouache finish. No text, no watermark, no signature, no border.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Nagapattinam palette: deep blue-black #21393C silhouettes with a thin pale sea-green rim light #A9C4B4 along one edge, darkest #13222A. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish. No text, no watermark, no signature, no border.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: l2_mid.png
 ```
@@ -286,9 +327,9 @@ Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transpa
 ## 16 · `l3_mid.png` — Kedah mid-parallax band (advanced)
 
 ```
-Generate this image: a sparse horizontal band of mangrove trees standing on arched prop roots, nipa palm fronds, and the posts of a stilt walkway over water, occupying ONLY the bottom half of the frame, painted as dark olive-umber silhouettes with soft watercolor edges, for use as a parallax layer in a 2D video game. Nothing at all in the top half of the image; it must stay fully transparent. Left and right edges similar in density so the band can repeat sideways.
+Generate this image: a sparse horizontal band of mangrove trees standing on arched prop roots, nipa palm fronds, and the posts of a stilt walkway over water, occupying ONLY the bottom half of the frame, painted as dark jungle-green silhouettes with soft watercolor edges, for use as a parallax layer in a 2D video game. Nothing at all in the top half of the image; it must stay fully transparent. Left and right edges similar in density so the band can repeat sideways.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style, muted grey-green and umber tones, visible dry-brush strokes, matte gouache finish. No text, no watermark, no signature, no border.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Kadaram palette: deep green #1C3326 silhouettes with a thin pale green rim light #86A08A along one edge, darkest #101C1A. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish. No text, no watermark, no signature, no border.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: l3_mid.png
 ```
@@ -297,11 +338,13 @@ Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transpa
 
 ### Consistency note: the Srivijayan fighter (slots 17 and 18)
 
+**Superseded** by Cut-out rigs (DECISIONS.md 19); kept for reference.
+
 Generate slot 17 (`srivijayan_walk_a.png`) first and pass it as a reference
 for slot 18. He is the only enemy in level 3 and the first person the hero
 ever draws a sword on (DECISIONS.md 3), so he gets the same care as the
 hero: a face of his own, ornament, and a weapon a kingdom's soldier would
-carry. His color is indigo (#3F4D73), a real Southeast Asian dye and the
+carry. His color is indigo (#4B5E9A), a real Southeast Asian dye and the
 one cool note in a warm kit, which is how the eye tells him from the Chola
 figures before it reads any detail. Silhouette: head cloth knotted flat,
 bare chest, short sword held low, a loose cloth end swinging at the front,
@@ -310,6 +353,8 @@ not on cord, border, or jewelry.
 
 ## 17 · `srivijayan_walk_a.png` — Srivijayan fighter, stride A
 
+**Superseded** by slot 39 `rig_srivijayan.png` (DECISIONS.md 19). Kept for reference; do not generate.
+
 ```
 Generate this image: a full-body 2D video-game enemy character on a fully transparent background.
 
@@ -317,12 +362,14 @@ The character: a Malay fighter of Kadaram in the kingdom of Srivijaya, 1025 CE, 
 
 The pose: a wary advancing stride in profile, FACING RIGHT: right leg forward taking his weight, left leg behind, knees bent low, torso turned slightly toward the viewer, sword held low and ready in the right hand, left hand open at his side, the loose cloth end swinging forward. Full body visible with roughly 5% empty margin; bare feet at the bottom of the frame.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth; his indigo waist cloth (#3F4D73) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth; his indigo waist cloth (#4B5E9A) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transparent background. I will save this file as: srivijayan_walk_a.png
 ```
 
 ## 18 · `srivijayan_walk_b.png` — Srivijayan fighter, stride B
+
+**Superseded** by slot 39 `rig_srivijayan.png` (DECISIONS.md 19). Kept for reference; do not generate.
 
 ```
 Generate this image: a full-body 2D video-game enemy character on a fully transparent background.
@@ -331,7 +378,7 @@ The character: a Malay fighter of Kadaram in the kingdom of Srivijaya, 1025 CE, 
 
 The pose: the opposite moment of the wary advancing stride in profile, FACING RIGHT: left leg forward and planted, right leg trailing behind, knees still bent low, torso turned slightly toward the viewer, sword held low in the right hand with the blade angled a little forward, the loose cloth end swinging back. Full body visible with roughly 5% empty margin; bare feet at the bottom of the frame.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth; his indigo waist cloth (#3F4D73) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth; his indigo waist cloth (#4B5E9A) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transparent background. I will save this file as: srivijayan_walk_b.png
 ```
@@ -379,7 +426,7 @@ Generate this image: a small standing oil lamp on a fully transparent background
 
 The object: a South Indian bronze standing lamp of the eleventh century: a round stepped foot, a slim turned stem about knee height, and a shallow round bowl at the top with one lit wick at its lip, the flame small and warm with a soft glow around it. The bronze is dark and dull with worn highlights, no ornament beyond simple turned rings on the stem. No niche, no wall, no crimson. The foot ends cleanly at the bottom edge of the image, centered.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: umber #6B4E33, bronze, parchment gold #CDBA8C for the flame glow. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Thanjavur palette with strong contrast: dark bronze #4A3220 in shadow, brass highlights #E3BC6A, flame glow #F6E2A8. No red, red-orange, or rust, not even in the flame. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a portrait image, 512×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: lamp.png
 ```
@@ -391,7 +438,7 @@ Generate this image: a large stone bull statue on a fully transparent background
 
 The object: a monolithic granite Nandi, the seated bull of Shiva, lying with its legs folded beneath it, head turned slightly toward the viewer, carved with a plain collar of bells and a hump, on a low plain granite plinth. New-cut stone of 1010 CE, warm grey-brown, no paint, no pavilion or canopy over it, no pillars around it, no crimson. The statue FACES LEFT, toward the sanctum behind the player. The plinth base ends cleanly at the bottom edge of the image.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style, softened for a far plane: muted sepia and parchment palette, warm beige #D9C69A on lit stone, umber #6B4E33 shadow, slightly hazy edges, lower contrast than a near object. Visible dry-brush strokes, matte gouache finish. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Thanjavur palette softened for a far plane: hazy gold stone #B08A52 in light, burnt umber #7A5530 in shadow, slightly hazy edges, lower contrast than a near object. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: nandi.png
 ```
@@ -401,6 +448,8 @@ it looks toward the sanctum. No pavilion: the Nandi hall at Thanjavur is
 Nayak work (RESEARCH.md section 7, later halls).
 
 ## 22 · `guard_reach.png` — Chola gate guard, the catch
+
+**Superseded** by slot 37 `rig_guard.png` (DECISIONS.md 19); the reach is an arm rotation. Kept for reference; do not generate.
 
 ```
 Generate this image: a full-body 2D video-game enemy character on a fully transparent background.
@@ -422,7 +471,7 @@ lands from either side.
 ```
 Generate this image: a perfectly seamless, tileable texture of port cargo stacked into a wall, hand-painted, flat frontal view. Rows of cloth bales wrapped in undyed cotton and bound with coir cord, woven rice baskets with lids, rounded clay jars, and a few pepper sacks, packed tight with small shadow gaps between them. Undyed cloth, cane, and clay only; no green, no striped awnings, no red anywhere. Even, directionless lighting: no cast shadows from any single direction, no vignette, no darkening at the edges. All four edges must tile seamlessly with themselves. No perspective.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm beige #D9C69A, parchment gold #CDBA8C, umber #6B4E33, olive-grey shadows. Visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Nagapattinam palette with strong contrast: undyed cloth #E6D9A8 in light, cane and coir #B59A62, clay #9C8A66, deep blue-black #13222A in the gaps. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes and watercolor blooms, matte gouache finish, painterly soft edges. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a square image, 1024×1024 pixels, as a PNG file, seamlessly tileable on all four edges. I will save this file as: bales.png
 ```
@@ -437,7 +486,7 @@ Generate this image: a moored dugout canoe on a fully transparent background, st
 
 The object: a long narrow dugout canoe hollowed from a single log, dark weathered wood, the gunwale running straight and level across the full width of the image at about 40% of the image height from the top, the hull curving down beneath it to a rounded bottom, a short upswept prow at the right end, a coil of coir rope and a wooden paddle laid inside. Still water is not shown; the hull ends cleanly with empty space below. No sail, no outrigger, no red anywhere.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: umber #6B4E33, olive-grey shadow, warm beige #D9C69A highlights. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Nagapattinam palette with strong contrast: dark wood #4A3A2A, lit wood #B48A58 along the gunwale, blue-black shadow #13222A, a touch of sea-teal #5E8F94 reflected under the hull. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: dugout.png
 ```
@@ -451,7 +500,7 @@ Generate this image: the side of a moored medieval Indian Ocean merchant ship on
 
 The object: a broad, beamy wooden hull seen from the quay, its planks visibly stitched edge to edge with zigzag seams of dark coir cord and fastened with wooden dowels, no iron nails or fittings, a high curved prow at the right, no stern castle. The deck rail runs level across the image at about 45% of the image height from the top. One mast rises from the deck with a yard carrying a furled sail of woven matting; a few rigging lines. A plank gangplank slopes from the deck rail down to the left toward the quay, its lower end at the bottom edge of the image. A single crimson pennant at the masthead is the only red in the picture. Water is not shown; the hull ends cleanly with empty space beneath.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: umber #6B4E33 hull, warm beige #D9C69A matting, olive-grey shadow, with the crimson pennant (#B5342A) as the strongest accent. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Nagapattinam palette with strong contrast: dark wood #4A3A2A, lit wood #B48A58, undyed matting #E6D9A8, blue-black shadow #13222A, a touch of sea-teal #5E8F94 reflected under the hull. Crimson #B5342A appears only on the masthead pennant and is the only red in the picture: no other red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: hull.png
 ```
@@ -466,7 +515,7 @@ Generate this image: a wooden walkway on stilts with the porch of a stilt house,
 
 The object: a plank walkway of split timber lashed with rattan cord, running level across the full width of the image at about 55% of the image height from the top, carried on slim timber stilts that run down to the bottom edge. At the right third, the walkway meets the raised porch of a small house on taller stilts: a plank floor, a low railing, and a steep thatched roof of nipa palm, the house wall of woven bamboo matting. A clay water jar and a fish trap stand on the porch. Everything is unpainted wood, thatch, and cane; no crimson, no red anywhere. Water is not shown; the stilts end cleanly at the bottom edge.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette shifted toward grey-green: umber #6B4E33, olive-grey shadow, warm beige #D9C69A thatch. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Kadaram palette with strong contrast: weathered timber #6B5A3E, thatch #C9C08A in light, jungle-green #355A45 moss and shadow, green-black #101C1A deepest shadow, pale light #E4EAC8. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: stilt_walk.png
 ```
@@ -481,7 +530,7 @@ Generate this image: a small brick shrine on a fully transparent background, str
 
 The object: a small square Buddhist shrine (candi) of the Bujang Valley type: a stepped plinth of three low terraces in laterite and brick, a short flight of steps up the front, and on top a plain square brick cella with a single dark doorway and a low tiered roof, the brick weathered and patched with moss, the plaster mostly gone. No stupa dome, no bell shape, no tall spire, no Borobudur, no crimson, no red anywhere. The lowest step ends cleanly at the bottom edge of the image, centered.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette shifted toward grey-green: umber #6B4E33, olive-grey shadow, warm beige #D9C69A on lit brick. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Kadaram palette with strong contrast: weathered brick and laterite in umber-ochre #8A6A44, never red; jungle-green #355A45 moss; green-black #101C1A shadow; pale light #E4EAC8. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a square image, 1024×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: candi.png
 ```
@@ -493,7 +542,7 @@ Generate this image: a timber fortification wall with a carved gateway, on a ful
 
 The object: a palisade of heavy upright timber posts, sharpened at the top, lashed with rattan, running the full width of the image. At the center, a gateway: two thick carved timber posts and a carved wooden lintel with gilded relief of lotus and scroll, a pair of small bronze bells hanging beneath the lintel, the passage through it open and empty, its floor at the bottom edge of the image. The gateway stands taller than the wall. Wood, gilt, and bronze only; no crimson, no red anywhere, no stone, no stupas.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette shifted toward grey-green: umber #6B4E33 timber, old gold gilt, olive-grey shadow. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Kadaram palette with strong contrast: dark timber #4A3E2C, gilt #C9A24A on the carving, dark bronze bells, jungle-green #355A45 in shadow, green-black #101C1A deepest. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: palisade.png
 ```
@@ -509,7 +558,7 @@ Generate this image: a hanging bronze gong on a fully transparent background, st
 
 The object: a round bronze gong with a raised central boss, hung by cord from a plain timber frame of two posts and a crossbar, with a cloth-headed wooden beater leaning against one post. The bronze is dark with a worn gold shine on the boss and rim. Wood and bronze only; no crimson, no red anywhere. The frame's feet end cleanly at the bottom edge of the image, centered.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: umber #6B4E33, bronze, old gold highlights, olive-grey shadow. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Kadaram palette with strong contrast: dark bronze #3E3424, gold shine #C9A24A on boss and rim, timber #6B5A3E, green-black #101C1A shadow. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a square image, 1024×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: gong.png
 ```
@@ -517,6 +566,8 @@ Output: a square image, 1024×1024 pixels, as a PNG file with a fully transparen
 ---
 
 ### Consistency note: the Srivijayan fighter, combat poses (slots 30 to 33)
+
+**Superseded** by Cut-out rigs (DECISIONS.md 19); kept for reference.
 
 Pass slot 17 (`srivijayan_walk_a.png`) as the reference image for all
 four. The character paragraph is slot 17's, verbatim except for where
@@ -530,6 +581,8 @@ wash-out. Check every result for red: none.
 
 ## 30 · `srivijayan_raise.png` — Srivijayan fighter, raise (telegraph)
 
+**Superseded** by slot 39 `rig_srivijayan.png` (DECISIONS.md 19). Kept for reference; do not generate.
+
 ```
 Generate this image: a full-body 2D video-game enemy character on a fully transparent background.
 
@@ -537,12 +590,14 @@ The character: a Malay fighter of Kadaram in the kingdom of Srivijaya, 1025 CE, 
 
 The pose: the moment before a thrust, in profile, FACING RIGHT: feet planted wide, knees bent, the sword drawn back high beside his right ear with the point aimed forward, left arm extended forward for balance, torso coiled. No motion lines, no glow, no effects. Full body visible with roughly 5% empty margin; bare feet at the bottom of the frame.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth; his indigo waist cloth (#3F4D73) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth; his indigo waist cloth (#4B5E9A) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transparent background. I will save this file as: srivijayan_raise.png
 ```
 
 ## 31 · `srivijayan_thrust.png` — Srivijayan fighter, thrust
+
+**Superseded** by slot 39 `rig_srivijayan.png` (DECISIONS.md 19). Kept for reference; do not generate.
 
 ```
 Generate this image: a full-body 2D video-game enemy character on a fully transparent background.
@@ -551,12 +606,14 @@ The character: a Malay fighter of Kadaram in the kingdom of Srivijaya, 1025 CE, 
 
 The pose: a full lunging thrust in profile, FACING RIGHT: right arm fully extended forward at chest height with the straight blade pointing dead ahead, front leg deep in a lunge, back leg straight, torso low and driving forward, left arm swept back, the loose cloth end streaming behind. No motion lines, no glow, no effects. Full body visible with roughly 5% empty margin; bare feet at the bottom of the frame.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth; his indigo waist cloth (#3F4D73) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth; his indigo waist cloth (#4B5E9A) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transparent background. I will save this file as: srivijayan_thrust.png
 ```
 
 ## 32 · `srivijayan_shield_walk.png` — Srivijayan shield-bearer, walk
+
+**Superseded** by slot 39 `rig_srivijayan.png` (DECISIONS.md 19). Kept for reference; do not generate.
 
 ```
 Generate this image: a full-body 2D video-game enemy character on a fully transparent background.
@@ -565,15 +622,16 @@ The character: a Malay fighter of Kadaram in the kingdom of Srivijaya, 1025 CE, 
 
 The pose: a wary advancing stride in profile, FACING RIGHT: right leg forward taking his weight, left leg behind, knees bent low, the oblong shield held forward and square to the viewer's right, the sword low behind it, the loose cloth end swinging forward. Full body visible with roughly 5% empty margin; bare feet at the bottom of the frame.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth, umber hide shield; his indigo waist cloth (#3F4D73) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth, umber hide shield; his indigo waist cloth (#4B5E9A) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transparent background. I will save this file as: srivijayan_shield_walk.png
 ```
 
-The engine uses this one frame for both strides of the shield-bearer's
-walk; if the builder wants a second stride, it is slot 37, not a redress.
+The shield in this block carries into slot 39, drawn as a separate part.
 
 ## 33 · `srivijayan_kneel.png` — Srivijayan fighter, kneel (before the wash-out)
+
+**Superseded** by slot 39 `rig_srivijayan.png` (DECISIONS.md 19). Kept for reference; do not generate.
 
 ```
 Generate this image: a full-body 2D video-game enemy character on a fully transparent background.
@@ -582,7 +640,7 @@ The character: a Malay fighter of Kadaram in the kingdom of Srivijaya, 1025 CE, 
 
 The pose: down on one knee in profile, FACING RIGHT: right knee on the ground, left foot planted forward, the sword point resting on the ground in his lowered right hand, his left hand raised open toward the viewer's right with the palm out, head bowed a little, face calm. No motion lines, no glow, no effects. Full body visible with roughly 5% empty margin; the grounded knee and foot at the bottom of the frame.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth; his indigo waist cloth (#3F4D73) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette: warm bronze skin, umber shadows, ochre head cloth; his indigo waist cloth (#4B5E9A) is the strongest accent, and there is no red on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette, cinematic side-lighting. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transparent background. I will save this file as: srivijayan_kneel.png
 ```
@@ -597,7 +655,7 @@ Generate this image: a knot of mangrove roots on a fully transparent background,
 
 The object: a dense tangle of arched mangrove prop roots rising from the bottom edge of the image, interlaced and crusted with mud and small barnacles, forming at the top a rough but level mound of packed mud and root about as wide as the image, its top surface at about 35% of the image height from the top. A few nipa fronds and a strand of weed hang from one side. Water is not shown; the roots end cleanly at the bottom edge. No crimson, no red anywhere.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette shifted toward grey-green: umber #6B4E33, olive-grey shadow, warm beige #D9C69A on lit mud. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Kadaram palette with strong contrast: dark root #2E2A1E, wet mud #5E5A3E, jungle-green #355A45 fronds, green-black #101C1A shadow, pale light #E4EAC8 on the mound top. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a landscape image, 1536×1024 pixels, as a PNG file with a fully transparent background. I will save this file as: root_knot.png
 ```
@@ -611,7 +669,7 @@ Generate this image: a free-standing timber gateway on a fully transparent backg
 
 The structure: a plain doorway of two upright timber posts, squared and weathered grey-brown, carrying a single straight timber lintel laid flat across them, lashed at the joints with rattan cord. No carving, no curve to the lintel, no arch, no doors. Nothing hangs from the lintel: no pennant, no banner, no cloth, no bells. At the base of each post stands a small bronze standing lamp, a slim stem on a round foot with one burning wick, casting a warm glow on the wood around it. No crimson, no red anywhere in the picture. The whole structure fills the frame height with small margins, and the post bases end cleanly at the bottom edge. Nothing behind the structure.
 
-Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Muted sepia and parchment palette shifted toward grey-green: umber #6B4E33 timber, olive-grey shadow, parchment gold #CDBA8C for the lamp glow, which is the strongest accent. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Kadaram palette with strong contrast: weathered timber #6B5A3E, green-black #101C1A shadow, lamp glow #F6E2A8 as the strongest accent. No red, red-orange, rust, terracotta, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
 
 Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transparent background. I will save this file as: gate_l3.png
 ```
@@ -635,11 +693,154 @@ Output: a square image, 256×256 pixels, as a PNG file with a fully transparent 
 One face only: the engine spins the coin by scaling it, so the reverse
 (seated figure with conch, RESEARCH.md section 6) is never seen.
 
+---
+
+## Cut-out rigs (DECISIONS.md 19)
+
+Characters are animated by cutting one painted image into parts and
+rotating them in code. No character is generated pose by pose again. Slots
+6 to 12, 17, 18, 22, and 30 to 33 are superseded and kept only as reference.
+
+### Hero part map: `assets/hero_idle.png` (1024×1536)
+
+Measured on the existing file. Coordinates are pixels, origin top left.
+"Back" is the limb on the image's left (away from the camera), "front" the
+one on the right. The figure stands in three-quarter view facing right.
+
+| Part | Cut region (x1, y1 – x2, y2) | Pivot (x, y) | Parent |
+|---|---|---|---|
+| Pelvis (root) | 500, 520 – 760, 660 | 620, 620 | none |
+| Torso | 430, 270 – 780, 600 | 620, 600 (waist) | pelvis |
+| Head with topknot and neck | 540, 10 – 760, 330 | 640, 300 (neck base) | torso |
+| Back upper arm | 400, 320 – 500, 560 | 470, 345 (shoulder) | torso |
+| Back forearm and hand | 330, 520 – 430, 830 | 385, 540 (elbow) | back upper arm |
+| Front upper arm | 710, 370 – 830, 590 | 740, 390 (shoulder) | torso |
+| Front forearm and hand | 770, 560 – 900, 850 | 790, 565 (elbow) | front upper arm |
+| Veshti | 430, 600 – 840, 1090 | 620, 630 | pelvis |
+| Sash tails | 40, 600 – 560, 1260 | 520, 630 | pelvis |
+| Back thigh | 420, 680 – 560, 1060 | 530, 700 (hip) | pelvis |
+| Back shin and foot | 300, 1030 – 520, 1510 | 470, 1045 (knee) | back thigh |
+| Front thigh | 640, 680 – 800, 1080 | 700, 700 (hip) | pelvis |
+| Front shin and foot | 700, 1050 – 970, 1460 | 760, 1065 (knee) | front thigh |
+| Scabbard and hilt | 720, 520 – 890, 975 | 745, 640 (belt) | pelvis |
+
+Ankles, if the builder wants a foot roll: back 400, 1320; front 790, 1330.
+
+**Draw order, back to front:** sash tails, back upper arm, back forearm,
+back thigh, back shin, front thigh, front shin, torso, pelvis, veshti,
+head, scabbard, front upper arm, front forearm. The veshti covers both
+thighs, so the thighs need only rough cuts; the knees sit at the veshti
+hem (y 1040 to 1065), which hides the seam. Each cut should extend 15 to
+20 px past its pivot into the parent so rotations do not open gaps.
+
+**Before cutting:** the file is opaque (dark vignette with a red glow
+behind the sash tails). Remove the background and the red glow first; the
+glow breaks the crimson rule and would ride along with the sash.
+
+**Edits that remain for one later single-image edit of `hero_idle.png`**
+(DECISIONS.md 19: edit that one image, never regenerate poses):
+
+1. Sandals to bare feet (RESEARCH.md section 4, footwear). Both feet, y
+   1340 to 1510.
+2. Sash to crimson `#B5342A` plain cotton: the painted sash runs brighter
+   and more orange than `#B5342A`, with a silk sheen (RESEARCH.md section 4).
+3. Background and red glow removed, as above.
+4. Not named in DECISIONS.md 19: the hilt has a hooked, back-curved pommel
+   and the scabbard curves backward, which reads as a talwar (RESEARCH.md
+   section 5). See the open question below.
+
+### Consistency note: rig sheets (slots 37 to 39)
+
+Each character is one image. Generate it once, check it, and do not
+regenerate for new moves; new moves are code. Every sheet uses the same
+neutral stance: standing upright in profile, FACING RIGHT, feet a little
+apart, arms held slightly away from the body so no limb overlaps the
+torso, fingers apart from the thigh, weapon held clear of the legs, even
+light with no strong cast shadows across joints. Elbows and knees are
+almost straight so they can bend either way in code. Check each sheet for:
+transparent background, no limb crossing another, the research items in
+the block, and red (crimson only where the block says, none on the
+Srivijayan). Silhouettes stay distinct: hero with topknot and sash tails;
+guard with tall spear and round shield on his back; Adittan lean, grey,
+unarmed but for a scabbard; fighter with head cloth knotted flat and a
+short sword, his oblong shield drawn apart.
+
+## 37 · `rig_guard.png` — Chola gate guard, rig sheet
+
+```
+Generate this image: a full-body 2D video-game character drawn as a cut-out animation rig sheet, on a fully transparent background.
+
+The character: a Chola gate guard of the king's bodyguard, Thanjavur, 1010 CE. Stocky and vigilant, heavier than a young man, with a thick mustache and warm brown skin, modeled on figures in Chola temple relief. He wears a sleeveless quilted cotton jacket, undyed off-white, stitched in vertical padded channels, over a short white cotton dhoti wrapped to the knee. A crimson cotton cloth is bound tight around his waist over the jacket, and a crimson cotton head cloth is wrapped as a low turban with a knot at the side. Bare feet, no footwear of any kind. A bronze bangle on one wrist, small gold ear studs. A round shield of ox-hide stretched over wicker, with a plain iron boss at its center, is slung on his back. He holds a long spear (vel) upright in his right hand: a plain wooden shaft taller than he is, tipped with a leaf-shaped iron head. IMPORTANT: no metal armor of any kind, no lamellar plates, no mail, no helmet, no plume, no sword; his arms, legs, and feet are bare.
+
+The pose: a neutral standing pose for rigging, in profile, FACING RIGHT. Upright, feet a little apart, knees almost straight. Both arms held slightly away from the body so neither arm overlaps the torso; the right hand grips the spear shaft at hip height with the spear upright and clear of his legs; the left hand open and away from the thigh. Elbows almost straight. Even light, no strong cast shadows across the joints. Full body visible with roughly 5% empty margin; bare feet at the bottom of the frame.
+
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Warm palette with strong value contrast: deep umber shadow #2A1A10, warm light #F6E2A8; his crimson head cloth and waist cloth (#B5342A) are the strongest accent and the only red on him: no other red, red-orange, rust, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+
+Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transparent background. I will save this file as: rig_guard.png
+```
+
+Replaces slots 11, 12, and 22: patrol strides and the catch reach are
+rotations of this sheet's arms and legs.
+
+## 38 · `rig_adittan.png` — Adittan, rig sheet
+
+```
+Generate this image: a full-body 2D video-game character drawn as a cut-out animation rig sheet, on a fully transparent background.
+
+The character: Adittan, an older Tamil soldier of the Chola fleet, about fifty, Thanjavur, 1010 CE, modeled on Chola bronze sculpture and temple relief. Lean and wiry, slightly stooped, warm brown skin with weathered lines, a grey mustache, and long grey-streaked hair tied in a low topknot. He is bare-chested, with a plain leather cross-belt over one shoulder. He wears a white cotton veshti tucked up to the knee in the kachcham style, bound by a narrow, faded crimson cotton waist cloth with short tails. Plain bronze ear hoops, one bronze bangle. Bare feet, no footwear of any kind. In his right hand he holds a sword in a plain wooden scabbard, point down: a straight, broad, double-edged blade with a short bronze grip and a flat round disc pommel, as on Chola bronzes of Durga and Bhairava. IMPORTANT: the sword is straight, never a curved talwar, scimitar, or katana. No shield, no spear, no armor, no helmet, no gold armlets; he is plainer than the young hero.
+
+The pose: a neutral standing pose for rigging, in profile, FACING RIGHT. Upright with a slight stoop, feet a little apart, knees almost straight. Both arms held slightly away from the body so neither arm overlaps the torso; the right hand holds the scabbarded sword by its middle, clear of his legs; the left hand open and away from the thigh. Elbows almost straight. Even light, no strong cast shadows across the joints. Full body visible with roughly 5% empty margin; bare feet at the bottom of the frame.
+
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Thanjavur palette with strong value contrast: deep umber shadow #2A1A10, warm gold light #F6E2A8, white veshti in warm off-white; his faded crimson waist cloth (#B5342A) is the only red on him: no other red, red-orange, rust, or pink anywhere. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+
+Output: a portrait image, 1024×1536 pixels, as a PNG file with a fully transparent background. I will save this file as: rig_adittan.png
+```
+
+Adittan is SCRIPT.md's older man of Ilamaran's company who hands him his
+father's sword. His dress follows the hero's (RESEARCH.md section 4),
+plainer; his age and stoop are [invented]. The sword he carries is the
+straight one RESEARCH.md section 5 prefers, which does not match the
+hilt now painted on `hero_idle.png`; see the open question.
+
+## 39 · `rig_srivijayan.png` — Srivijayan fighter, rig sheet
+
+```
+Generate this image: a full-body 2D video-game character drawn as a cut-out animation rig sheet, on a fully transparent background, with his shield drawn separately beside him.
+
+The character: a Malay fighter of Kadaram in the kingdom of Srivijaya, 1025 CE, lean and quick, a soldier of a kingdom with temples and a fleet. He has a watchful, individual face, warm brown skin, and long black hair tied up under a head cloth of ochre-yellow cotton knotted flat at the side of the head. He is bare-chested. He wears a wrapped waist cloth in deep indigo blue, woven with a fine ochre check and a narrow ochre border, wrapped to the knee with one loose end hanging at the front. Bare feet, no footwear of any kind. A plain bronze bangle at each wrist, small gold ear studs, a thin gold band on one upper arm. He carries a short straight sword, blade about the length of his forearm with a plain wooden grip, held in his right hand; no scabbard visible. IMPORTANT: absolutely no red or crimson anywhere on him, not on cloth, cord, border, shield, or jewelry. No kris or wavy blade, no feathers, no mask, no tusks, no tattoos, no bone ornament, no "savage" styling of any kind.
+
+The separate shield: to the right of the figure, not touching him, a tall oblong shield of ox-hide stretched over a wooden frame, plain and undecorated, seen flat from the front, about the height from his shoulder to his thigh, with its hand grip visible.
+
+The pose: a neutral standing pose for rigging, in profile, FACING RIGHT. Upright, feet a little apart, knees almost straight. Both arms held slightly away from the body so neither arm overlaps the torso; the right hand holds the sword low with the blade angled forward, clear of his legs; the left hand open and away from the thigh, ready to take the shield in code. Elbows almost straight. Even light, no strong cast shadows across the joints. The figure fills the left two-thirds of the frame with roughly 5% empty margin; bare feet at the bottom of the frame.
+
+Style: hand-painted 2D video-game concept art in an ink-and-watercolor wash style. Kadaram palette with strong value contrast: green-black shadow #101C1A, pale light #E4EAC8, warm bronze skin, ochre head cloth, umber hide shield; his indigo waist cloth (#4B5E9A) is the strongest accent, and there is no red, red-orange, rust, or pink anywhere on him. Visible dry-brush strokes, matte gouache finish, painterly soft edges, crisp readable silhouette. No text, no watermark, no signature, no border, no photo-realism, no 3D render look.
+
+Output: a square image, 1536×1536 pixels, as a PNG file with a fully transparent background. I will save this file as: rig_srivijayan.png
+```
+
+Replaces slots 17, 18, and 30 to 33. Walk, raise, thrust, and kneel are
+rotations; the shield-bearer is the same rig with the shield part attached
+to the left hand (the only silhouette change, as before). The kneel's
+open raised hand is a forearm rotation. The figure keeps the same scale as
+slot 37 so the builder sets one height for all characters.
+
+
 ## Open questions for Gaurav
 
-None. The level 3 gate was ruled on 2026-10-25 (DECISIONS.md 7).
+1. **The hero's sword in the rig.** DECISIONS.md 19 rigs the hero from
+   `hero_idle.png` and names two later edits, sandals and sash. The same
+   image has a hooked, back-curved pommel and a backward-curving scabbard,
+   which reads as a talwar, the one form RESEARCH.md section 5 rules out.
+   Adittan (slot 38) hands Ilamaran his father's sword, so the two must
+   match. Options: (a) add the sword to the single-image edit: repaint hilt
+   and scabbard as straight, with a disc pommel; (b) paint the sword as its
+   own rig part, which also lets the builder draw it for the cut in
+   Kadaram, and leave the hip scabbard to (a); (c) accept the painted
+   sword. Recommendation: (a) and (b) together. The attack needs a drawn
+   blade part in any case, since the idle image shows only a sheathed one.
+   Until you rule, the rig uses the image as painted.
 
-## Changelog and revision notes
+## Changelog
 
 2026-10-25, second edition. First edition was written from the build before
 `docs/RESEARCH.md` existed.
@@ -768,3 +969,45 @@ fixes") and the level documents.
 - Not done: no builder confirmation yet of the pixel heights for the wide
   pieces; the sprite-artist should wait for it on 24 to 28 and start on
   everything else.
+
+2026-10-25, fourth edition, after DECISIONS.md 17 and 19.
+
+- **Style sheet** rewritten for DECISIONS.md 17: a palette per level
+  (sky stops, far, mid, near, shadow, light, and an accent that is not
+  red: plantain green, turmeric, indigo), the crimson rule restated as
+  "the only red" with red-orange, rust, terracotta and pink named, and a
+  contrast rule with value targets. The old "one loud color" rule is gone,
+  since DECISIONS.md 17 revises VISION.md pillar 1's "one color" while
+  keeping its crimson sentence.
+- **Color grade for the builder** added: per-level values for every
+  color field in the three level objects and `render()`, plus six new
+  fields for values now hardcoded. Haze (`fogHaze`) roughly halved, mist
+  alphas halved in levels 1 and 2. Lists the stray reds in the code.
+- **Color in prompts**: Style lines of slots 1 to 5, 14 to 16, 20, 21,
+  23 to 29, 34, and 35 now carry their level's palette and the contrast
+  and red rules; color words in the bodies of slots 1, 2, 3, 15, 16
+  changed to match. Subject matter unchanged. Slots 13, 19, 36 are shared
+  across levels and stay neutral. Brick (slots 3, 27) is umber-ochre so it
+  never reads as a second red.
+- **Indigo** raised from `#3F4D73` to `#4B5E9A` everywhere: at the old
+  value it sat at the same value as Kadaram's jungle-green mid plane and
+  the fighter lost his silhouette. It is now Kadaram's accent too.
+- **Cut-out rigs** added for DECISIONS.md 19: a part map for the existing
+  `hero_idle.png` (14 parts, pivots and cut regions measured on the file,
+  draw order), the remaining single-image edits, and rig sheets for the
+  guard (37), Adittan (38, new character from SCRIPT.md), and the
+  Srivijayan fighter (39, shield drawn as a separate part). Slots 6 to 12,
+  17, 18, 22, and 30 to 33 marked superseded, not deleted. Slots 6 to 10
+  and 22 were not in the coordinator's list but follow from decision 19.
+- **Open question** added on the hero's painted sword (RESEARCH.md
+  section 5).
+- Not done: no pivots were tested in code, and the part map assumes the
+  builder removes the background first.
+
+## Revision notes
+
+- 2026-10-25: four editions in one day. First, written from the build.
+  Second, corrected against RESEARCH.md, slots 17 and 18 added. Third,
+  slots 19 to 36 from the level documents and the critic's six findings.
+  Fourth, per-level palettes and color grade (DECISIONS.md 17) and cut-out
+  rigs (DECISIONS.md 19). The changelog above has the detail.
