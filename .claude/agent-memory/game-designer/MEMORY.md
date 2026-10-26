@@ -75,6 +75,41 @@ to 717, `updateWorld` 719 to 800. Canvas 1280 by 720. Lanes 0 far (scale
 - Attack lock is 0.16 s (attackT 0.28, moves when <= 0.12), not 0.12.
 - Level 3 gate: timber post-and-lintel, lamps, no crimson (Decision 7).
 
+## Third draft rulings (2026-10-25, after Gaurav's level 1 playtest)
+
+- Budget raised to 3,200 words. New section "2a. Traversal kit" (numbered
+  2a so the level files' section citations stay valid).
+- Kit: L1 scaffold pole (160 up / 220 down), plank (one-way, down+jump
+  drops), hauling rope (130 px/s, sway ±12 px / 2 s), block on rollers
+  (80x64, push 120 px/s after 0.25 s hold, track only). L2 awning bounce
+  (vy -1000 / -1100 held = 217 / 263 px), bale (96x72, push 140, no
+  track), gangplank (≤25°, 330 up), rigging line and mast (130 px/s), yard
+  (300+ px up). L3 vine (auto-swing ±45°, period 2.0 s, release + vy -300,
+  ~500 px/s), prop roots, shallow water (wade 160, jump capped 77, never
+  death), stilt walkway (sway ±20 px, 2.4 s, opposite phase, gap 40-120),
+  mud slide (30°, 520 px/s, 380 held back).
+- Guards never climb/push/bounce/swing/slide. Hanging still in the band =
+  stopped. Block/bale occludes a cone; guard turns at a block.
+- Marked depth rope/vine: lamp + ink ring + arrow glyph (black in L3);
+  grab, ↑/↓, 1.0 s swing, 60 px arc, lands at set x 0-300 px east; moving,
+  so uncatchable. First in L2 rigging.
+- Gate leap: 0.5 s, keeps x, 40 px arc, scale tween 0.80/1.0/1.17, lane
+  changes at takeoff, catchable (counts as stopped).
+- Sword legibility: L1 handover by an older man of his company (2 s,
+  skippable), HUD sheathed-sword glyph, hilt-push response (0.3 s, no lock,
+  click, line on first press and after 30 s), ⚔ touch button dimmed not
+  hidden, L3 draw prompt and ink stroke on first cut. Strings asked of
+  narrative-designer in NOTES.md.
+- Difficulty: L1 193 s / 8,800 px / 6 guards / 1 forced; L2 211 s / 9,400
+  / 7 guards / 1 forced; L3 235 s / 10,000 / 6 fighters / 0 stealth, 1
+  forced fight + up to 4 optional. Total 10:39 play.
+- Risks: gangplank and mud slide need a slope primitive (engine has only
+  flat rects); ~20 new sprites/props; widths unbuilt; smoke bot can't test
+  swings.
+- Builder engine facts (build/level-1): TUNE block ~line 138,
+  GATE_STAND 0.5 in tryShift, LINE_INERT_ATTACK, SWORD_FROM_LEVEL gate on
+  attack-kill, guard modes patrol/return/look/chase/scold.
+
 ## Open with Gaurav
 
 - Ship-deck closing beat in level 2: keep (recommended) or end at quay.
@@ -84,3 +119,6 @@ to 717, `updateWorld` 719 to 800. Canvas 1280 by 720. Lanes 0 far (scale
 
 - Decision 8 replaced "contact = catch" with "stopped inside reach."
 - Decision 9 cut targets from 4 to 6 minutes to about 2 minutes a level.
+- Decision 12 superseded 9: 3 to 4 minutes a level. Decisions 10, 11, 14,
+  15, 16 added sword legibility, traversal kit, push blocks and vines,
+  marked depth ropes, and the gate leap.
