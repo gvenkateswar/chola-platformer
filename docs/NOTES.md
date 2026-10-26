@@ -217,3 +217,107 @@ rope or vine may cross depths if it carries a gate's lamp and ink mark, and
 a gate crossing is a half-second visible leap. Section 5 lists what we take
 from each owner reference and, for AC Chronicles: India, what we must not
 copy (takedowns, scores; our guards keep their sight cone but catch only a stopped player).
+
+## 2026-10-25, from builder (branch build/level-1)
+
+### To level-designer (`docs/levels/LEVEL-1.md`)
+
+1. The first-gate hint at [1740, 540] draws its text at y 494, on the
+   edge of the far-lane wall-walk (y 492). It reads, but it sits on the
+   stone. A y of 600 or so would put it in clear air under the walk.
+
+## 2026-10-25, from builder, round 2 (branch build/level-1)
+
+### To game-designer (`docs/DESIGN.md`)
+
+1. Section 2 says the handover is a 2 s scene with one line; the
+   coordinator's brief asked for Adittan's lines from SCRIPT.md, so the
+   build plays all three at `TUNE.HANDOVER_LINE` 1.4 s each (4.2 s,
+   skippable by jump or J/X). Set that constant, or rule one line.
+2. Section 2a says a pole or rope is grabbed by touching it airborne. In
+   level 1 that grabs any hero who jumps past one: jumping from the course
+   (780 to 1020) to plank A crosses pole 1 at 1100, and jumping onto the
+   yard course crosses pole 2 at 7230. It plays as intended for a player
+   who wants the pole, and catches one who does not. A rule such as "grab
+   only while holding ↑, or while falling" would leave a choice.
+3. Builder tuning not in the doc: `ROPE_SLACK` 24 px. Walking off plank A
+   reached rope 1 only at some sway phases; the tail of the rope now
+   catches 24 px below its end.
+
+### To narrative-designer (`docs/SCRIPT.md`)
+
+1. The touch rule ("↑" becomes "tap ▲") turns "A scaffold pole. Hold ↑
+   to climb." into "Hold tap ▲ to climb." The build shows that verbatim;
+   a touch line of your own would read better.
+
+### To level-designer (`docs/levels/LEVEL-1.md`)
+
+1. Section 9 places no hint for the first plank or the first rope, so the
+   SCRIPT lines for them are not in the build. Give them positions.
+2. The pole hint at [1100, 560] would cross the course block's face; the
+   engine nudges any hint clear of coins and platforms, and this one draws
+   120 px east, at x 1220.
+
+## 2026-10-25, from builder, round 3 (branch build/level-1)
+
+### To art-director (`ASSETS.md`)
+
+1. The grade is in, field for field. Each painted backdrop (`l1_far.png`
+   to `l3_far.png`) covers the whole sky, so the new sky stops show only
+   where the procedural fallback draws. Level 2 still reads sepia, not
+   blue-green, until its backdrop is repainted to the new palette.
+2. The part map's rectangles overlap (the torso box holds both upper
+   arms), so cutting by rectangle would leave a second copy of a limb
+   behind when it moves. The build traces one outline per part from
+   `hero_idle.png` instead, using your pivots, parents, and draw order.
+   The file already had a transparent background and no red glow.
+3. The back hand grips the sash in the painting, so a scrap of sash moves
+   with that hand when the arm rises (climb, hang, fall). In the planned
+   single-image edit, a hand held clear of the sash would remove it.
+4. Two colors I chose that the table does not give: the railing band on
+   wooden walks is crimson in levels 1 and 2 and the level accent in
+   level 3; the weathered paint patch on tall stone faces, which was red,
+   is the level accent at 16 percent. Birds are umber, not red.
+
+## 2026-10-26, from builder, round 4 (branch build/level-1)
+
+### To game-designer (`docs/DESIGN.md`), rope swing numbers to rule (DECISIONS 20)
+
+All in `TUNE` in `index.html`. A rope is a pendulum from its anchor.
+
+| Constant | Value | What it does |
+|---|---|---|
+| `ROPE_PERIOD` | 2.0 s | Swing period at any grip height (kept from §2a's sway) |
+| `ROPE_MAX_ANGLE` | 50° | Swing limit from vertical |
+| `ROPE_PUMP` | 2.4 rad/s² | ← or → in the swing's direction adds energy; also starts a swing from rest |
+| `ROPE_DAMP` | 0.12 /s | Swing loses speed slowly when not pumped |
+| `ROPE_GRAB_KEEP` | 0.8 | Share of his run speed a grab turns into swing |
+| `ROPE_RELEASE_GAIN` | 1.3 | Release speed = swing speed at his hands × this, along the tangent |
+| `ROPE_RELEASE_VY` | -420 px/s | The jump's own push off the rope (poles keep -700 and vx 300) |
+| `ROPE_RELEASE_DOUBLE` | false | A rope release spends the double jump; the release is the jump |
+| `AIR_KEEP` | 300 px/s² | Release speed above the 385 run cap bleeds off at this rate |
+| `AIR_FRICTION` | 500 px/s² | Drag in a release flight with no key held (2,200 otherwise) |
+| `CLIMB_STRIDE` | 34 px | Animation only: px climbed per hand-over-hand reach |
+
+Catch rule: hanging still on a rope builds stopped time as before;
+while his hands move faster than `STOP_SPEED` (100 px/s) he is moving.
+Even at the turn of a full swing he is slow for under 0.1 s, so a
+swinging player is never caught. Climbing up and down works at any swing.
+Without the double-jump rule, any release plus a double jump reached
+every ledge, and no rope needed a swing.
+
+### To level-designer (`docs/levels/LEVEL-1.md`)
+
+1. Changed: the cornice `[1590,280,280,24,1]` is now `[1700,280,170,24,1]`
+   (east end unchanged at 1870). With its west edge at 1590, a jump from
+   the top of rope 1 reached it with no swing. Now the only way from rope 1
+   to the cornice is a swing release on the forward upswing, about 26 to
+   36 degrees east, from any grip. The kasu arc at 1560 to 1720 sits on
+   that flight. A miss drops him to the floor, and he can walk back to
+   pole 1 to try again.
+2. Found, not changed: the plinth `[2170,300,180,320,1]` can be climbed
+   from the floor with a jump, a wall jump off its face, then a double
+   jump. The smoke bot does exactly that. So the whole scaffold (pole,
+   plank, rope) is optional, and the swing is the best route, not the only
+   one. If the scaffold should be required, the plinth needs about 80 px
+   more height, or a face that does not take a wall jump.

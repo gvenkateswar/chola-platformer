@@ -41,6 +41,10 @@
     background:linear-gradient(90deg,transparent,var(--gold),transparent);}
   .story{max-width:56ch; font-size:clamp(15px,1.8vw,18px); line-height:1.75; color:#D3C6A6; margin:0 auto;}
   .story b{color:var(--gold); font-weight:400;}
+  .subtitle{max-width:52ch; margin:16px auto 0; font-size:clamp(14px,1.7vw,17px); letter-spacing:.06em; color:var(--parchment);}
+  .dateline{margin-top:12px; font-family:'Marcellus SC','Marcellus',serif; letter-spacing:.22em;
+    font-size:clamp(11px,1.3vw,13px); color:var(--gold-dim);}
+  .dateline[hidden]{display:none;}
   .keys{margin-top:26px; display:flex; gap:22px; flex-wrap:wrap; justify-content:center;
     font-size:13px; letter-spacing:.08em; color:#A08C6B; max-width:820px;}
   .keys kbd{
@@ -74,25 +78,26 @@
   <canvas id="game" width="1280" height="720"></canvas>
 
   <div class="overlay" id="titleScreen">
-    <div class="eyebrow">A 2.5D Chronicle · 1010–1025 CE</div>
+    <div class="eyebrow">A voyage east · 1010–1025 CE</div>
     <h1>CHOLA<small>Tides of Bronze</small></h1>
+    <p class="subtitle">One soldier of the fleet, from the temple at Thanjavur to the Srivijaya shore.</p>
     <div class="rule"></div>
-    <p class="story">You are <b>Ilamaran</b>, a warrior of the Chola navy. From the shadow of
-    Rajaraja's great temple at <b>Thanjavur</b>, through the ship-crowded harbor of
-    <b>Nagapattinam</b>, to Emperor Rajendra's expedition against <b>Srivijaya</b> — run, climb,
-    and slip between the near and far paths of the world.</p>
+    <p class="story">You are <b>Ilamaran</b>. Nobody will write your name on a wall. Run, climb, and
+    cross between the near and far paths of the painting at the lamplit gates.
+    The sword stays in its scabbard until Kadaram.</p>
     <div class="keys">
       <span><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> move</span>
       <span><kbd>Space</kbd>/<kbd>W</kbd> jump · wall-jump · double-jump</span>
       <span><kbd>↑</kbd><kbd>↓</kbd> cross planes at the lamplit gates</span>
-      <span><kbd>J</kbd>/<kbd>X</kbd> sword</span>
+      <span><kbd>J</kbd>/<kbd>X</kbd> sword, sheathed until Kadaram</span>
     </div>
-    <button class="btn" id="startBtn">Begin the Voyage</button>
+    <button class="btn" id="startBtn">Begin the voyage</button>
   </div>
 
   <div class="overlay" id="interScreen" hidden>
     <div class="eyebrow" id="interEyebrow">Chapter I</div>
     <h1 style="font-size:clamp(30px,5vw,54px)" id="interTitle">Thanjavur</h1>
+    <div class="dateline" id="interDate" hidden></div>
     <div class="rule"></div>
     <p class="story" id="interStory"></p>
     <button class="btn" id="interBtn">Onward</button>
@@ -104,8 +109,7 @@
     <div class="rule"></div>
     <p class="story">Rajendra Chola's fleet crossed the Bay of Bengal and broke the power of
     Srivijaya — the only great overseas naval expedition in Indian history. Trade with Song
-    China flowed free, and Tamil merchant guilds rose across Southeast Asia.
-    <br><br><b id="endStats"></b></p>
+    China flowed free, and Tamil merchant guilds rose across Southeast Asia.</p>
     <button class="btn" id="againBtn">Sail Again</button>
   </div>
 
@@ -129,6 +133,84 @@ const HORIZON = 400;                      // vanishing focus for depth lanes
 // depth lanes: 0 = background path, 1 = main path, 2 = foreground path
 const LANES = [{s:0.80}, {s:1.0}, {s:1.17}];
 
+// ============================================================ tuning (docs/DESIGN.md draft 2)
+// Designer-tunable numbers. Each cites the DESIGN.md section it comes from.
+const TUNE = {
+  GUARD_WALK:        95,   // §3 Patrol: walk speed, px/s; turns only at patrol ends or when he sees
+  SIGHT_RANGE:      300,   // §3 Sight: forward cone, 0 to 300 px ahead of the guard's face
+  SIGHT_BAND:        80,   // §3 Sight: hero feet within 80 px of guard feet (same lane only)
+  SEEN_TIME:       0.25,   // §3 Sight: continuous sight before "!" and the shout
+  CHASE_SPEED:      260,   // §3 Seen: chase speed, below the hero's 385
+  CHASE_LEASH:      300,   // §3 Seen: never more than 300 px beyond either patrol end
+  CHASE_DROP_DIST:  420,   // §3 Seen: chase ends when the hero is this far away
+  CHASE_OUT_BAND:   1.0,   // §3 Seen: ...or out of band this long
+  CHASE_MAX:        3.0,   // §3 Seen: ...or after this long
+  LOOK_TIME:        1.0,   // §3 Seen: stands with a "?" before walking back
+  REACH:             40,   // §3 Caught: px ahead of the guard's front edge
+  STOP_SPEED:       100,   // §3 Caught: under this speed counts as stopped...
+  STOP_TIME:        0.2,   // §3 Caught: ...once held this long (wall-slide and gate stand count at once)
+  SHOVE_DIST:       200,   // §3 Caught: shoved 200 px back the way he came
+  SHOVE_VX:         260,   // §3 Caught: vx 260 as built
+  SHOVE_VY:        -380,   // §3 Caught: vy -380 as built
+  SCOLD_TIME:       1.5,   // §3 Caught: guard scolds, then resumes his patrol
+  INVULN:           1.2,   // §3 Caught: invulnerable after a catch
+  GATE_LEAP:        0.5,   // §2 "The gate leap", DECISIONS 16: replaces the 0.5 s stand
+  LEAP_ARC:          40,   // §2 "The gate leap": arc height, px
+  POLE_UP:          160,   // §2a scaffold pole: climb up, px/s
+  POLE_DOWN:        220,   // §2a scaffold pole: climb down, px/s
+  ROPE_CLIMB:       130,   // §2a hauling rope: climb, px/s
+  ROPE_SWAY:         12,   // §2a hauling rope: sway at the free end, ±px
+  ROPE_PERIOD:      2.0,   // §2a hauling rope: sway period, s; also the swing's period at any grip (DECISIONS 20)
+  ROPE_MAX_ANGLE:    50,   // DECISIONS 20, builder's number: the swing's limit, degrees from vertical
+  ROPE_PUMP:        2.4,   // DECISIONS 20, builder's number: ← or → with the swing adds this, rad/s²
+  ROPE_DAMP:       0.12,   // DECISIONS 20, builder's number: swing loses this much speed per second
+  ROPE_SETTLE:      1.5,   // builder's number: a let-go rope damps back to its idle sway
+  ROPE_GRAB_KEEP:   0.8,   // DECISIONS 20, builder's number: share of his run speed the grab turns into swing
+  ROPE_RELEASE_GAIN: 1.3,  // DECISIONS 20, builder's number: release speed = swing speed at the hands × this
+  ROPE_RELEASE_VY: -420,   // DECISIONS 20, builder's number: the jump's own push off the rope, px/s (pole keeps -700)
+  ROPE_RELEASE_DOUBLE: false, // builder's choice: a rope release spends the double jump (DECISIONS 20: release aims the jump)
+  AIR_KEEP:         300,   // builder's number: speed above the run cap bleeds off at this rate in flight, px/s²
+  AIR_FRICTION:     500,   // builder's number: in a swing-release flight with no key held, drag is this, not 2200
+  CLIMB_STRIDE:      34,   // animation: px climbed per hand-over-hand reach (DECISIONS 21)
+  HANG_HANDS:        50,   // hands above feet while hanging (hero is 56 tall, §2)
+  GRAB_X:            16,   // §2a: horizontal reach to touch a pole or rope
+  GRAB_COOL:       0.25,   // no re-grab right after letting go
+  ROPE_SLACK:        24,   // builder tuning, not in DESIGN: the rope's tail can be caught this far below its end
+  CLIMB_JUMP_VY:   -700,   // §2a: jump leaves a pole, rope, or line with vy -700...
+  CLIMB_JUMP_VX:    300,   // §2a: ...and vx 300 away
+  PLANK_THICK:       20,   // §2a scaffold plank: 20 thick, one-way
+  PLANK_DROP:      0.25,   // §2a: ↓ plus jump drops through; planks ignored this long
+  BLOCK_W:           80,   // §2a block on rollers: 80 wide...
+  BLOCK_H:           64,   // §2a: ...64 tall
+  PUSH_DELAY:      0.25,   // §2a: hold into it 0.25 s before it moves
+  PUSH_SPEED:       120,   // §2a: push speed, px/s
+  BLOCK_TURN:        80,   // §2a, §3 "Hiding": a guard turns 80 px off a block's face
+  SHEATH_PUSH:      0.3,   // §2 "The sheathed sword": hand on hilt, no movement lock
+  SHEATH_REPEAT:     30,   // §2: the line floats on the first press and after 30 s without one
+  HANDOVER_LINE:    1.4,   // §2: seconds per line of the handover (see NOTES.md: three lines, not 2 s)
+  FADE_TIME:        1.0,   // §3, §5: ink-wash return to the last checkpoint
+  GRADE_NEAR_DIM:   -40,   // ASSETS.md "Color grade for the builder": palFront dimPal (was -22)
+  GRADE_FAR_LIFT:    16,   // ASSETS.md "Color grade for the builder": palBack dimPal (was +10)
+  FALL_DAMAGE:        1,   // §5: a fall costs one heart (was 2)
+  SWORD_FROM_LEVEL:   2,   // §2, DECISIONS 3: attack inert in levels 1 and 2 (indices 0, 1)
+};
+const INK = '#1E1610';
+const CRIMSON = '#B5342A';  // ASSETS.md style sheet: the only red, and it means Chola (DECISIONS 17)     // §3, §4 violence rule: every hit is black ink, never crimson
+// docs/SCRIPT.md section 4, verbatim
+const SHEATH_LINES = [                       // attack in levels 1 and 2, blade pushed home
+  'Back in the sheath. Not among our own.',
+  'Back in the sheath. Not before the far shore.',
+];
+const HANDOVER_LINES = [                     // section 3, "The handover"
+  ['Adittan', 'Your father carried this. Now you do.'],
+  ['Ilamaran', 'Do I draw it here?'],
+  ['Adittan', 'Never among our own. Draw it where the king\'s son sends you.'],
+];
+const LINE_BACK_TO_BANNER = 'Back to the banner.';
+const touchLine = t => t.replace('↑', 'tap ▲').replace('J or X', 'tap ⚔');   // §4, DESIGN.md §8
+const LINE_SHOUT = 'Hoi! You there!';
+const IS_TOUCH = 'ontouchstart' in window;
+
 function fit(){
   const s = Math.min(innerWidth / W, innerHeight / H);
   canvas.style.width  = (W*s|0)+'px';
@@ -147,6 +229,12 @@ function shade(hex, amt){                 // hex -> hex, lightened/darkened
 }
 function mkPal(top, face, side){
   return {top, topD:shade(top,-16), face, faceD:shade(face,-28), side, ink:'rgba(46,32,22,0.55)'};
+}
+// ASSETS.md "Color grade for the builder": shadow tint and the wider near/far value spread
+function applyGrade(L){
+  if(L.inkTint) L.pal.ink = L.inkTint;
+  L.palFront = dimPal(L.pal, TUNE.GRADE_NEAR_DIM);
+  L.palBack  = dimPal(L.pal, TUNE.GRADE_FAR_LIFT);
 }
 function dimPal(p, amt){ return {top:shade(p.top,amt), topD:shade(p.topD,amt), face:shade(p.face,amt), faceD:shade(p.faceD,amt), side:shade(p.side,amt), ink:p.ink}; }
 
@@ -179,8 +267,8 @@ function bindTouch(id, fn, k){
 bindTouch('tL', null, 'L'); bindTouch('tR', null, 'R');
 bindTouch('tJ', ()=>{ jumpQueued=0.13; }, 'J');
 bindTouch('tA', ()=>{ attackQueued=true; });
-bindTouch('tU', ()=>{ shiftQueued=-1; });
-bindTouch('tD', ()=>{ shiftQueued=+1; });
+bindTouch('tU', ()=>{ shiftQueued=-1; }, 'U');   // held for climbing (§2a)
+bindTouch('tD', ()=>{ shiftQueued=+1; }, 'F');
 
 // ============================================================ audio
 let AC = null, masterGain = null;
@@ -222,7 +310,8 @@ const sfx = {
   djump: ()=> tone(420, .16, 'square', .06, 300),
   shift: ()=> { noiseBurst(.18,.16,500); tone(520,.2,'sine',.08,-260); },
   deny : ()=> tone(150, .12, 'square', .06, -30),
-  coin : ()=> { tone(1046, .1, 'sine', .15); setTimeout(()=>tone(1568,.16,'sine',.13), 70); },
+  click: ()=> { noiseBurst(.035,.18,2200); tone(820,.05,'square',.05,-300); },   // wooden click, blade home
+  shout: ()=> { tone(230, .12, 'square', .07, 70); setTimeout(()=>tone(300,.14,'square',.06,-40), 110); },
   hurt : ()=> { noiseBurst(.2,.3); tone(160,.25,'sawtooth',.12,-80); },
   slash: ()=> noiseBurst(.09,.12,1400),
   kill : ()=> { noiseBurst(.14,.2); tone(220,.2,'triangle',.14,-120); },
@@ -289,8 +378,7 @@ const ASSET_FILES = {
   l1_far:'l1_far.png',  l2_far:'l2_far.png',  l3_far:'l3_far.png',
   l1_mid:'l1_mid.png',  l2_mid:'l2_mid.png',  l3_mid:'l3_mid.png',
   tex_stone:'tex_stone.png', tex_wood:'tex_wood.png',
-  hero_idle:'hero_idle.png', hero_run_a:'hero_run_a.png', hero_run_b:'hero_run_b.png',
-  hero_jump:'hero_jump.png', hero_attack:'hero_attack.png',
+  hero_idle:'hero_idle.png',          // the hero's cut-out rig source (DECISIONS 19)
   guard_walk_a:'guard_walk_a.png', guard_walk_b:'guard_walk_b.png',
   gate:'gate.png',
 };
@@ -328,14 +416,32 @@ function trimAlpha(im){
   t.hf = t.height / im.height;      // figure's fraction of the frame, resolution-independent
   return t;
 }
-for(const [k,f] of Object.entries(ASSET_FILES)){
+// the old pose PNGs are a fallback, loaded only if the rig cannot be built
+const POSE_FALLBACK = {hero_run_a:'hero_run_a.png', hero_run_b:'hero_run_b.png',
+                       hero_jump:'hero_jump.png', hero_attack:'hero_attack.png'};
+let poseFallbackLoaded = false;
+function loadAsset(k, f, onRaw, onFail){
   const im = new Image();
   im.onload = ()=>{
+    if(onRaw) onRaw(im);
     if(TRIM_KEYS.has(k)){ try{ IMGS[k] = trimAlpha(im); }catch(e){ IMGS[k] = im; } }
     else IMGS[k] = im;
   };
+  if(onFail) im.onerror = onFail;
   // a build may define ASSET_DATA to ship assets inline (e.g. the claude.ai artifact)
   im.src = (typeof ASSET_DATA !== 'undefined' && ASSET_DATA[f]) ? ASSET_DATA[f] : 'assets/'+f;
+}
+function loadPoseFallback(){
+  if(poseFallbackLoaded) return; poseFallbackLoaded = true;
+  for(const [k,f] of Object.entries(POSE_FALLBACK)) loadAsset(k, f);
+}
+// rig sources by asset key: built from the raw image (trimming would shift the part map)
+const RIG_SOURCES = {hero_idle:'hero'};
+for(const [k,f] of Object.entries(ASSET_FILES)){
+  const rig = RIG_SOURCES[k];
+  loadAsset(k, f,
+    rig ? (im)=>{ try{ buildRig(rig, im); }catch(e){ loadPoseFallback(); } } : null,
+    rig ? ()=>loadPoseFallback() : null);
 }
 const TEXPATS = {};
 function texPat(key){
@@ -362,52 +468,316 @@ function drawBackdrop(im, par){
   }
 }
 
+// Hero part map: ASSETS.md "Cut-out rigs", hero_idle.png 1024x1536. Pivots, parents and draw order
+// are the art director's; the cut outlines were traced offline from that image (each pixel to one
+// part, sash cloth in the hand to the sash with its finger gaps filled in sash color, 3 px bleed, 22 px overlap into the parent at every joint, a shoulder
+// cap kept on the torso) because a page opened from disk cannot read image pixels.
+const HERO_RIG = {
+  file:'hero_idle', anchor:[620,1505], frameH:1536,
+  order:['sash', 'bua', 'bfa', 'bth', 'bsh', 'fth', 'fsh', 'torso', 'pelvis', 'veshti', 'head', 'scab', 'fua', 'ffa'],
+  parts:{
+    sash:{pivot:[520,630], parent:'pelvis',   // Sash tails
+      cut:[[533,605,527,605,472,634,460,653,445,664,426,683,410,710,408,730,432,719,448,702,449,705,412,760,406,749,406,753,391,758,393,774,398,784,388,796,381,786,377,771,377,756,384,750,390,756,390,752,387,752,383,746,383,750,376,755,378,760,377,772,342,799,345,804,368,813,368,816,354,823,295,842,271,846,222,860,185,876,141,905,117,928,63,961,50,989,59,984,60,981,74,976,89,985,96,994,88,1012,89,1029,96,1043,108,1037,117,1029,122,1032,121,1036,124,1036,141,1023,209,938,241,926,273,920,309,906,331,894,333,895,307,925,263,952,219,985,203,1006,194,1024,168,1050,150,1080,121,1102,98,1127,83,1167,90,1161,96,1165,93,1171,95,1171,103,1164,106,1164,120,1148,130,1142,139,1140,152,1131,173,1137,180,1141,186,1150,185,1169,178,1184,180,1203,182,1206,194,1205,197,1209,196,1221,204,1241,207,1242,212,1236,213,1238,218,1234,226,1221,239,1187,241,1168,260,1103,269,1059,284,1042,315,1018,341,989,376,919,413,879,437,843,458,805,460,806,460,814,464,813,507,734,567,645,568,637]], patch:{color:'#671A10', cut:[[343,798,345,801,344,803,343,802,345,804,347,803,350,806,353,805,356,809,358,807,360,810,361,808,362,811,366,810,377,816,381,816,383,814,386,817,390,816,392,818,391,819,396,817,394,816,401,810,399,808,400,806,397,808,391,804,390,801,392,800,390,799,395,798,388,798,386,796,387,794,386,795,384,793,385,792,380,792,381,788,383,790,382,787,380,787,381,782,380,784,380,778,379,780,378,779,379,775,378,777,376,773],[395,755,390,760,394,763,394,765,392,765,392,770,394,772,393,774,395,775,394,777,402,783,401,785,403,787,407,787,408,789,411,789,411,791,413,789,414,779,413,777,412,778,411,776,406,775,411,773,409,770,410,760,406,753]]}},
+    bua:{pivot:[470,345], parent:'torso',   // Back upper arm
+      cut:[[481,283,474,289,453,292,438,299,424,311,412,329,402,356,400,380,388,401,383,404,372,438,373,457,365,488,349,514,347,522,422,522,443,496,455,474,462,469,470,449,479,462,480,443,489,418,498,326]]},
+    bfa:{pivot:[385,540], parent:'bua',   // Back forearm and hand
+      cut:[[348,517,345,535,337,553,332,573,330,668,323,674,320,681,320,704,322,709,328,713,324,751,325,761,323,760,324,765,322,765,322,768,323,766,324,773,333,781,332,783,336,786,339,795,342,795,345,804,353,805,356,809,358,807,362,811,366,810,377,816,383,814,386,817,390,816,391,820,401,824,404,821,404,814,409,812,404,813,399,808,400,806,397,808,392,805,390,799,395,798,388,798,385,792,380,792,381,788,383,790,380,787,379,775,378,777,375,771,377,764,375,755,378,754,378,757,382,752,387,753,389,750,390,760,394,763,392,765,394,777,402,783,403,787,407,787,411,791,415,788,413,777,406,775,411,773,409,770,410,760,403,743,404,732,396,724,397,720,391,714,393,713,378,699,383,694,384,675,377,666,377,660,387,632,408,595,412,578,416,535,426,517]]},
+    bth:{pivot:[530,700], parent:'pelvis',   // Back thigh
+      cut:[[440,680,439,711,448,702,449,705,438,721,434,847,458,805,460,806,461,817,459,821,460,837,450,858,454,884,450,897,450,907,435,919,430,934,428,1001,450,1065,528,1065,538,1050,565,1037,565,680]]},
+    bsh:{pivot:[470,1045], parent:'bth',   // Back shin and foot
+      cut:[[543,1027,482,1027,470,1023,458,1027,442,1027,437,1035,430,1035,434,1046,441,1052,405,1106,392,1139,384,1188,379,1298,372,1303,373,1315,371,1318,372,1327,369,1330,370,1338,367,1343,368,1355,364,1367,355,1381,354,1399,332,1445,312,1470,311,1483,306,1489,306,1503,316,1510,346,1516,387,1516,403,1513,411,1509,417,1501,416,1473,413,1460,419,1420,419,1405,422,1403,426,1391,426,1384,423,1380,422,1359,426,1353,428,1338,426,1333,430,1328,429,1320,434,1309,431,1303,432,1297,457,1240,491,1190,500,1172,506,1147,512,1091,535,1053,541,1049]]},
+    fth:{pivot:[700,700], parent:'pelvis',   // Front thigh
+      cut:[[640,680,680,1085,707,1085,708,1037,726,1050,728,1064,723,1085,805,1085,801,733,785,686,785,680]]},
+    fsh:{pivot:[760,1065], parent:'fth',   // Front shin and foot
+      cut:[[692,1037,692,1123,701,1121,704,1118,708,1081,709,1052,707,1038,726,1050,728,1064,714,1117,711,1161,717,1180,729,1199,740,1225,758,1291,759,1302,754,1308,756,1326,751,1335,748,1348,752,1353,754,1346,755,1354,759,1343,761,1343,760,1360,762,1364,757,1370,754,1382,756,1389,749,1412,750,1426,743,1433,744,1445,750,1450,764,1453,823,1451,868,1463,894,1467,930,1467,959,1460,966,1453,966,1442,954,1430,939,1420,930,1419,923,1414,903,1409,893,1401,871,1392,840,1361,827,1336,823,1315,822,1289,816,1285,814,1263,818,1141,807,1085,807,1073,813,1048,812,1037]]},
+    torso:{pivot:[620,600], parent:'pelvis',   // Torso
+      cut:[[642,600,636,585,629,580,620,578,605,584,600,591,598,600,599,602,641,602],[440,329,437,337,437,353,447,370,459,377,470,379,488,375,483,418,475,437,474,456,487,475,509,499,514,517,712,517,712,498,714,496,719,499,731,517,739,517,729,441,724,421,740,424,748,423,763,415,768,408,769,378,765,367,748,357,732,357,718,365,716,364,720,312,712,311,697,303,689,320,603,320,559,289,504,272,480,283,476,287,485,315,478,312,462,312,447,320]]},
+    pelvis:{pivot:[620,620], parent:null,   // Pelvis
+      cut:[[513,512,517,533,511,536,507,542,511,556,505,565,508,577,505,581,506,587,499,594,500,602,714,602,716,546,711,540,712,512]]},
+    veshti:{pivot:[620,630], parent:'pelvis',   // Veshti
+      cut:[[499,597,500,605,497,613,472,634,461,650,466,650,474,641,529,612,560,642,502,728,461,802,460,837,450,858,454,884,450,897,450,907,435,919,423,953,418,961,412,979,416,1006,429,1029,432,1040,443,1040,448,1032,536,1032,536,1052,565,1037,574,1028,588,1006,602,974,609,975,611,977,608,1008,609,1067,628,1084,635,1087,632,1121,642,1133,653,1140,673,1128,697,1122,698,1042,707,1042,708,1037,714,1042,813,1042,812,1029,820,1013,820,1006,836,987,832,977,820,965,823,951,811,933,811,911,816,893,762,758,714,597]]},
+    head:{pivot:[640,300], parent:'torso',   // Head and neck
+      cut:[[547,12,539,18,532,35,511,41,496,56,499,54,500,60,506,51,517,49,507,70,506,86,511,102,501,113,499,123,501,125,500,120,506,112,515,108,521,102,521,89,529,98,543,103,535,111,524,109,530,115,529,119,533,116,549,113,532,143,532,162,537,171,526,178,511,181,503,193,495,194,488,201,488,204,493,197,501,197,504,205,507,206,506,198,512,192,520,188,527,190,509,210,504,219,507,233,514,242,519,266,515,270,506,271,499,276,553,294,597,325,695,325,702,306,689,300,647,271,648,258,657,240,666,240,682,245,692,245,698,240,698,228,706,219,705,214,710,210,710,201,720,197,723,193,717,172,734,150,733,171,727,180,729,179,747,146,748,134,744,124,746,125,749,109,743,101,729,104,728,99,711,81,691,78,666,66,653,63,620,63,618,65,612,59,617,52,617,35,613,32,614,34,611,34,600,20,589,15,568,14,561,11]]},
+    scab:{pivot:[745,640], parent:'pelvis',   // Scabbard and hilt
+      cut:[[845,820,839,825,842,839,852,837],[727,512,736,528,727,541,719,563,715,560,716,546,711,540,709,604,755,758,802,873,811,901,814,901,817,886,848,952,864,968,875,971,877,963,870,941,862,925,818,789,813,765,793,711,780,665,770,644,772,630,769,621,800,653,797,636,777,603,763,603,769,621,766,618,757,617,751,608,744,581,746,559,749,556,750,561,750,554,739,512]]},
+    fua:{pivot:[740,390], parent:'torso',   // Front upper arm
+      cut:[[714,311,709,385,723,441,735,524,744,559,750,557,751,568,765,608,777,608,773,589,770,543,818,542,820,540,798,509,789,475,791,466,788,452,779,431,774,428,767,414,769,378,761,349,755,337,742,322,729,315]]},
+    ffa:{pivot:[790,565], parent:'fua',   // Front forearm and hand
+      cut:[[765,537,769,603,792,645,821,676,835,698,831,707,832,714,838,724,843,727,837,740,837,757,840,767,838,807,843,813,842,816,847,819,839,825,846,839,854,837,855,844,859,846,875,837,894,821,901,796,908,783,908,777,901,764,885,720,889,711,887,697,884,690,873,682,867,669,845,591,835,562,826,546,815,534,812,537]]},
+  },
+};
+
+// ============================================================ cut-out rigs (DECISIONS 18, 19; ASSETS.md "Cut-out rigs")
+// One painted image is cut into parts once; each frame the parts are drawn rotated about their pivots.
+// The registry is general: the guard, Adittan, and the fighter join it when their rig sheets
+// (ASSETS.md slots 37 to 39) exist, with a part map in the same shape as HERO_RIG. Until then they
+// stay procedural.
+const RIG_DEFS = { hero: HERO_RIG };
+const RIGS = {};                               // built rigs by name
+const RIG_BAKE = 0.2;                          // parts are baked at 20% of the source (about 3x their drawn size)
+function buildRig(name, im){
+  const d = RIG_DEFS[name], parts = {};
+  for(const k of d.order){
+    const p = d.parts[k];
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for(const c of p.cut.concat(p.patch ? p.patch.cut : [])) for(let i=0;i<c.length;i+=2){
+      x0 = Math.min(x0, c[i]); x1 = Math.max(x1, c[i]); y0 = Math.min(y0, c[i+1]); y1 = Math.max(y1, c[i+1]);
+    }
+    x0 -= 2; y0 -= 2; x1 += 2; y1 += 2;
+    const cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.ceil((x1-x0)*RIG_BAKE)); cv.height = Math.max(1, Math.ceil((y1-y0)*RIG_BAKE));
+    const g = cv.getContext('2d');
+    g.imageSmoothingQuality = 'high';
+    g.scale(RIG_BAKE, RIG_BAKE); g.translate(-x0, -y0);
+    g.beginPath();
+    for(const c of p.cut){ g.moveTo(c[0], c[1]); for(let i=2;i<c.length;i+=2) g.lineTo(c[i], c[i+1]); g.closePath(); }
+    if(p.patch) for(const c of p.patch.cut){ g.moveTo(c[0], c[1]); for(let i=2;i<c.length;i+=2) g.lineTo(c[i], c[i+1]); g.closePath(); }
+    g.clip();
+    g.drawImage(im, 0, 0);                     // drawing a file:// image is allowed; reading it back is not
+    if(p.patch){                               // cloth that a hand covered in the painting, filled in
+      g.fillStyle = p.patch.color; g.beginPath();
+      for(const c of p.patch.cut){ g.moveTo(c[0], c[1]); for(let i=2;i<c.length;i+=2) g.lineTo(c[i], c[i+1]); g.closePath(); }
+      g.fill();
+    }
+    parts[k] = {cv, x0, y0, w:x1-x0, h:y1-y0, pivot:p.pivot, parent:p.parent};
+  }
+  RIGS[name] = {def:d, parts};
+}
+// smooth pose changes so states blend instead of snapping
+function rigBlend(st, target, rate){
+  st.ang = st.ang || {};
+  for(const k in target.ang){ const a = st.ang[k] ?? target.ang[k]; st.ang[k] = a + (target.ang[k] - a)*rate; }
+  for(const k in st.ang) if(!(k in target.ang)) st.ang[k] *= (1 - rate);
+  for(const k of ['dx','dy','rot']){ const a = st[k] ?? 0; st[k] = a + ((target[k] ?? 0) - a)*rate; }
+  return st;
+}
+// draw a rig with its feet at (x, y), facing +1 right or -1 left, `h` px tall for the whole frame
+function drawRig(name, x, y, face, pose, h, opts={}){
+  const R = RIGS[name], d = R.def, S = h / d.frameH;
+  ctx.save();
+  ctx.translate(x, y);
+  if(opts.alpha !== undefined) ctx.globalAlpha *= opts.alpha;
+  ctx.save(); ctx.scale(1, 0.3);              // soft contact shadow
+  const sg = ctx.createRadialGradient(0,8,2, 0,8,22);
+  sg.addColorStop(0,'rgba(25,16,10,0.45)'); sg.addColorStop(1,'rgba(25,16,10,0)');
+  ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(0, 8, 22, 0, 7); ctx.fill();
+  ctx.restore();
+  ctx.scale(face*S, S);
+  ctx.translate(-d.anchor[0] + (pose.dx||0), -d.anchor[1] + (pose.dy||0));
+  const rad = Math.PI/180, ang = pose.ang || {};
+  if(pose.rotPivot && pose.rot){             // tilt the whole figure about a point (his grip on a rope)
+    ctx.translate(pose.rotPivot[0], pose.rotPivot[1]); ctx.rotate(pose.rot*rad); ctx.translate(-pose.rotPivot[0], -pose.rotPivot[1]);
+  }
+  for(const k of d.order){
+    const chain = [];
+    for(let q = k; q; q = R.parts[q].parent) chain.unshift(q);
+    ctx.save();
+    for(const q of chain){
+      const P = R.parts[q], a = (ang[q] || 0) + (q === chain[0] && !pose.rotPivot ? (pose.rot || 0) : 0);
+      if(a){ ctx.translate(P.pivot[0], P.pivot[1]); ctx.rotate(a*rad); ctx.translate(-P.pivot[0], -P.pivot[1]); }
+    }
+    const P = R.parts[k];
+    ctx.drawImage(P.cv, P.x0, P.y0, P.w, P.h);
+    if(k === 'ffa' && opts.blade){             // level 3: the drawn blade, straight and double-edged
+      const hand = [870, 840];
+      ctx.save(); ctx.translate(hand[0], hand[1]); ctx.rotate(-0.35);
+      ctx.fillStyle = '#D8D4C8'; ctx.beginPath();
+      ctx.moveTo(-9, 0); ctx.lineTo(-7, 430); ctx.lineTo(0, 470); ctx.lineTo(7, 430); ctx.lineTo(9, 0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#C9A24A'; ctx.fillRect(-28, -10, 56, 14);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+// where a point of a part ends up under a pose (image coordinates, before the root offset and tilt)
+function rigPoint(name, ang, part, pt){
+  const R = RIGS[name]; let [x, y] = pt;
+  for(let q = part; q; q = R.parts[q].parent){
+    const a = (ang[q] || 0)*Math.PI/180, [px, py] = R.parts[q].pivot, c = Math.cos(a), s = Math.sin(a);
+    const dx = x - px, dy = y - py; x = px + dx*c - dy*s; y = py + dx*s + dy*c;
+  }
+  return [x, y];
+}
+const HERO_HANDS = {ffa:[868, 835], bfa:[372, 805]};   // palms on hero_idle.png
+// follow-through and overlap (DECISIONS 21): the sash and the head (with the hair and topknot) ride on
+// springs, so they trail the body and settle after it stops. Called once a frame after rigBlend.
+function heroSecondary(st, target, dt){
+  const p = player, c = p.climb; st.ang = st.ang || {};
+  const sp = st.spring || (st.spring = {sash:[target.ang.sash||0,0], head:[target.ang.head||0,0], fth:[0,0], bth:[0,0]});
+  dt = Math.min(dt, 1/30);
+  // the hero's world velocity, in the facing frame
+  let vx = p.vx, vy = p.vy;
+  if(c && c.kind === 'rope'){ const w = c.r*c.o.angV; vx = w*Math.cos(c.o.ang); vy = -w*Math.sin(c.o.ang); }
+  if(c && c.kind === 'pole') vy = (p.y - (st.lastY ?? p.y))/Math.max(dt, 1e-3);
+  st.lastY = p.y;
+  const fwd = vx*p.face;
+  const rotVel = ((target.rot||0) - (st.lastRot ?? (target.rot||0)))/Math.max(dt, 1e-3); st.lastRot = target.rot || 0;
+  const goal = {
+    sash: (target.ang.sash||0) + clamp(0.045*fwd + 0.03*vy, -25, 40),
+    head: (target.ang.head||0) - clamp(0.12*rotVel + 0.004*vy, -10, 10),
+    fth: c && c.kind === 'rope' ? clamp(-0.06*fwd, -25, 25) : 0,      // legs trail the swing
+    bth: c && c.kind === 'rope' ? clamp(-0.05*fwd, -25, 25) : 0,
+  };
+  const K = {sash:[70, 7], head:[120, 12], fth:[50, 6], bth:[45, 6]};  // stiffness, damping
+  for(const k in sp){
+    const s = sp[k], [kk, dd] = K[k];
+    s[1] += ((goal[k] - s[0])*kk - s[1]*dd)*dt; s[0] += s[1]*dt;
+  }
+  target.ang.fth = (target.ang.fth||0) + sp.fth[0]; target.ang.bth = (target.ang.bth||0) + sp.bth[0];
+  st.sashA = sp.sash[0]; st.headA = sp.head[0];
+}
+// after the blend: the sprung parts, and on a rope the palms pinned to his grip
+function heroPin(st, target){
+  const p = player, c = p.climb;
+  st.ang.sash = st.sashA; st.ang.head = st.headA;
+  // hanging: pin the posed palms to his grip, and tilt about them with the rope
+  if(c && c.kind === 'rope'){
+    const S = 106/HERO_RIG.frameH;
+    const a = rigPoint('hero', st.ang, 'ffa', HERO_HANDS.ffa), b = rigPoint('hero', st.ang, 'bfa', HERO_HANDS.bfa);
+    const hx = (a[0]+b[0])/2, hy = Math.min(a[1], b[1]);
+    st.dx = HERO_RIG.anchor[0] - hx; st.dy = HERO_RIG.anchor[1] - TUNE.HANG_HANDS/S - hy;
+    st.rotPivot = [hx, hy];
+  } else st.rotPivot = null;
+  st.rot = target.rot || 0;
+}
+
+// ---- hero poses, all from the one cut image. Angles in degrees, + is clockwise in the right-facing
+// image: a hanging limb swings back, an upright part leans forward.
+function heroPoseTarget(){
+  const p = player, A = {};
+  const run = (ph, amp)=>{
+    const s = Math.sin(ph), c = Math.cos(ph);
+    A.fth = -30*s*amp; A.bth = 30*s*amp;
+    A.fsh = (10 + 45*Math.max(0, c))*amp; A.bsh = (10 + 45*Math.max(0, -c))*amp;
+    A.fua = 26*s*amp; A.bua = -26*s*amp; A.ffa = -28 - 10*s; A.bfa = -28 + 10*s;
+    A.veshti = 3*s*amp; A.scab = 2*s*amp; A.sash = 18*amp + 5*Math.sin(2*ph);
+    return -Math.abs(c)*16*amp;
+  };
+  let dy = 0, rot = 0, tag = 'idle';
+  if(p.leap){
+    const k = Math.min(1, p.leap.t / TUNE.GATE_LEAP), t = Math.sin(Math.PI*k);
+    A.fth = -55*t; A.fsh = 75*t; A.bth = -25*t; A.bsh = 70*t; A.fua = -70*t; A.bua = -45*t; A.ffa = -30*t; A.bfa = -30*t;
+    A.torso = 8*t; A.sash = 25*t; tag = 'leap';
+  } else if(p.climb){
+    // hand over hand (DECISIONS 21): one reach per CLIMB_STRIDE px, eased in and out; the arms alternate,
+    // and the leg under the low hand tucks to grip, then pushes as that hand reaches
+    const ph = p.climbPhase, e = 0.5 - 0.5*Math.cos(ph), push = Math.abs(Math.sin(ph));
+    const still = p.stillT > 0.1, br = Math.sin(time*2.4);
+    if(p.climb.kind === 'pole'){
+      A.fua = lerp(-128, -176, e); A.ffa = lerp(-52, 6, e);
+      A.bua = lerp(-176, -128, e); A.bfa = lerp(6, -52, e);
+      A.fth = lerp(-62, -18, e);   A.fsh = lerp(88, 26, e);
+      A.bth = lerp(-18, -62, e);   A.bsh = lerp(26, 88, e);
+      A.torso = 5 + 3*Math.sin(ph); A.head = -2*Math.sin(ph);
+      dy = -14*push;                           // the push lifts him; the pull settles him
+      if(still){ A.torso += 0.8*br; dy += 3*br; }
+      tag = still ? 'grip' : 'climb';
+    } else {
+      const o = p.climb.o, swing = Math.abs(o.angV) > 0.25 || Math.abs(o.ang) > 0.12;
+      A.fua = lerp(-150, -178, e); A.ffa = lerp(-34, 4, e);
+      A.bua = lerp(-178, -150, e); A.bfa = lerp(4, -34, e);
+      A.fth = lerp(-42, -14, e);   A.fsh = lerp(62, 20, e);
+      A.bth = lerp(-14, -42, e);   A.bsh = lerp(20, 62, e);
+      A.torso = 2; A.sash = -8;
+      if(swing){
+        // the body hangs along the rope; a pump kicks the legs through, the other way tucks them
+        const fwdPump = p.pumping * p.face;
+        A.fth += fwdPump > 0 ? -30 : fwdPump < 0 ? 18 : 0; A.bth += fwdPump > 0 ? -22 : fwdPump < 0 ? 22 : 0;
+        A.fsh = fwdPump < 0 ? 70 : 24; A.bsh = fwdPump < 0 ? 64 : 30;
+        A.torso += fwdPump > 0 ? -6 : fwdPump < 0 ? 6 : 0;
+        tag = 'swing';
+      } else tag = still ? 'hang' : 'climb';
+      if(still && !swing){ A.torso += 0.8*br; A.fth += 2*br; A.bth -= 2*br; }
+      rot = (o.ang*180/Math.PI)*p.face;          // tilt with the rope, in the mirrored image frame
+    }
+  } else if(p.pushT >= TUNE.PUSH_DELAY && Math.abs(p.vx) > 0){
+    dy = run(p.runPhase, 0.55);
+    A.torso = 24; A.head = -12; A.fua = -82; A.ffa = -12; A.bua = -72; A.bfa = -18; tag = 'push';
+  } else if(p.pushT > 0){
+    A.torso = 20; A.head = -10; A.fua = -80; A.ffa = -12; A.bua = -70; A.bfa = -18; A.fth = -14; A.bth = 18; A.bsh = 12; tag = 'lean';
+  } else if(!p.onGround){
+    if(p.vy < 0){ A.fth = -45; A.fsh = 70; A.bth = 15; A.bsh = 48; A.fua = -55; A.ffa = -40; A.bua = 38; A.bfa = -20; A.torso = 4; A.sash = -8; tag = 'jump'; }
+    else { A.fth = -18; A.fsh = 22; A.bth = 12; A.bsh = 28; A.fua = -105; A.ffa = -25; A.bua = -60; A.bfa = -20; A.torso = -2; A.sash = 28; tag = 'fall'; }
+  } else if(Math.abs(p.vx) > 40){
+    dy = run(p.runPhase, clamp(Math.abs(p.vx)/385, 0.35, 1));
+    A.torso = 7; A.head = -3; tag = 'run';
+  } else {
+    const b = Math.sin(time*2.2);              // idle breath
+    A.torso = 0.9*b; A.head = -0.6*b; A.bua = 1.6*b; A.fua = -1.6*b; A.sash = 2*Math.sin(time*1.3); dy = 3*b;
+  }
+  if(p.hurtT > 0.9){                           // the first 0.3 s of a hit: recoil
+    A.torso = -14; A.head = -12; A.fua = -60; A.bua = 50; A.ffa = -30; A.bfa = -30; tag = 'hurt';
+  }
+  if(p.attackT > 0){                           // level 3 cut: the front arm sweeps
+    const t = 1 - p.attackT/0.28;
+    A.fua = lerp(-150, 15, Math.min(1, t*1.6)); A.ffa = -20; A.torso = (A.torso||0) + 8; tag = 'attack';
+  } else if(p.sheathT > 0){                    // hand on the hilt pushes the blade home
+    const t = Math.sin(Math.PI * p.sheathT / TUNE.SHEATH_PUSH);
+    const e = t*t*(3 - 2*t);                   // ease into the hilt and out again
+    A.fua = 62*e + (A.fua||0)*(1-e); A.ffa = -118*e + (A.ffa||0)*(1-e);
+    A.torso = (A.torso||0) - 3*e; A.head = (A.head||0) + 4*e; A.scab = -4*e;
+  }
+  return {ang:A, dy, rot, tag};
+}
+
 // ============================================================ levels
 // platform: [x, y, w, h, lane, kind]   kind: 'stone'|'wood'|'stall'
 // guard: [x1, x2, groundY, lane] | coin: [x, y, lane]
 function buildLevel1(){
-  const P=[], C=[], G=[];
-  const g = (x,w,y=620)=>P.push([x,y,w,240,1,'stone']);
-  g(-80,1040);
-  P.push([300,500,140,26,1],[520,410,140,26,1],[740,330,150,26,1]);
-  P.push([980,330,200,300,1]);
-  C.push([360,460,1],[590,370,1],[810,290,1],[1060,290,1],[1120,290,1]);
-  // background wall-walk with its own coins + guard
-  P.push([1200,492,720,26,0]);
-  C.push([1300,452,0],[1440,452,0],[1580,452,0],[1720,452,0]);
-  G.push([1260,1840,492,0]);
-  g(1240,520);
-  P.push([1960,540,90,190,1],[2160,450,90,280,1],[2360,340,90,390,1]);   // wall-jump pillars
-  C.push([2000,500,1],[2200,410,1],[2400,300,1]);
-  g(2550,500);
-  // — the canyon: cross by the far walkway or the near ruins, entered at the gates —
-  P.push([2980,514,880,30,0]);                                            // far walkway
-  C.push([3120,474,0],[3320,474,0],[3520,474,0]);
-  G.push([3040,3680,514,0]);
-  P.push([2980,656,130,64,2],[3230,656,130,64,2],[3480,656,130,64,2],[3780,656,130,64,2]); // near broken plinths
-  C.push([3045,610,2],[3295,610,2],[3545,610,2]);
-  g(3760,420);
-  P.push([3880,500,120,24,1],[4080,420,120,24,1]);
-  C.push([3940,460,1],[4140,380,1]);
-  g(4180,1020);
-  P.push([4350,470,220,26,1]);
-  C.push([4410,430,1],[4490,430,1],[4700,570,1],[4770,570,1]);
-  G.push([1330,1700,620,1],[2650,3010,620,1],[4460,4900,620,1]);
+  // docs/levels/LEVEL-1.md draft 3, section 9 (builder notes); beats, guards, checkpoints in sections 3 to 6
+  const P = [
+    [-80,620,5640,240,1], [780,420,240,200,1], [1700,280,170,24,1],   // cornice west edge 1590 -> 1700: rope 1 needs a swing (DECISIONS 20, NOTES.md)
+    [2170,300,180,320,1],
+    [2640,492,1460,26,0], [3440,440,90,290,1], [3620,360,90,370,1], [3800,280,200,450,1],   // wall-walk, pillars
+    [4300,656,740,64,2], [5460,514,900,30,0], [5800,420,300,24,0],
+    [5460,656,140,64,2], [5720,656,140,64,2], [5980,656,140,64,2], [6240,656,320,64,2],     // canyon
+    [6200,620,2600,240,1], [7160,420,120,200,1], [6960,656,1100,64,2], [7520,560,200,24,2], // gateway yard
+  ];
+  const G = [   // M1, F1, M2, F2, M3, N3 (section 5)
+    [2860,3260,620,1], [3660,4060,492,0], [4480,4880,620,1], [5600,6000,514,0],
+    [7360,7760,620,1], [7400,7800,656,2],
+  ];
+  const C = [
+    [840,380,1],[900,380,1],[960,380,1],[1180,360,1],[1260,360,1],[1340,360,1],
+    [1560,180,1],[1640,210,1],[1720,240,1],[1960,220,1],[2020,200,1],[2080,220,1],
+    [2820,452,0],[2940,452,0],[3060,452,0],[3180,452,0],[3485,400,1],[3665,320,1],[3900,240,1],
+    [4500,616,2],[4650,616,2],[4800,616,2],[5530,616,2],[5790,616,2],[6050,616,2],
+    [5880,380,0],[5960,380,0],[6040,380,0],[7400,200,1],[7600,200,1],[7800,200,1],[8000,200,1],
+    [7560,520,2],[7620,520,2],[7680,520,2],
+  ];
+  const hint = (x,y,t)=>[x, y, t, touchLine(t)];        // docs/SCRIPT.md section 4
   return {
-    name:'Thanjavur', chapter:'Chapter I', width:5200, killY:820,
-    story:'1010 CE. Rajaraja Chola consecrates the Brihadisvara temple — its granite vimana '+
-          'rises sixty-six metres over the city. Cross the temple grounds by the near and far '+
-          'paths, and answer the summons of the young prince Rajendra.',
+    name:'Thanjavur', chapter:'Chapter I', width:8800, killY:820,
+    date:'1010 CE · the 25th year of Rajaraja',
+    story:'The stone is new. They say the king gave a copper pot plated in gold for '+
+          'the top of the tower today, and I believe it; it burns from the far side '+
+          'of the paddy. I am to join the muster of Rajendra, the king\'s son and '+
+          'general, past the two east gateways. The gate guards want no village boy '+
+          'inside the enclosure. I will cross it anyway.',
     platforms:P, coins:C, guards:G,
-    checkpoints:[[1300,620],[2700,620],[4260,620]],
-    links:[[1250,130,0,1],[1620,140,0,1],[2965,120,0,1],[3765,90,0,1],[2985,60,1,2],[3785,100,1,2]],
-    hints:[[2780,540,'cross at the lamplit gates — ↑ far · ↓ near']],
-    goal:{x:5080,y:620}, start:[60,620],
-    sky:['#8A7B5C','#B5A47C','#CDBA8C','#D9C69A'], sun:{x:.74,y:.28,r:60,c:'#F4E7C0'},
+    planks:[[1120,400,260,1], [7240,240,300,1], [7540,240,300,1], [7840,240,300,1]],   // K [x,y,w,lane]
+    poles:[[1100,380,620,1], [7230,220,420,1]],                                          // [x,yTop,yBottom,lane]
+    ropes:[[1490,160,260,1], [8220,200,220,1]],                                          // [x,anchorY,length,lane]
+    blocks:[[460,700,1], [4220,4400,1], [6900,7080,1]],                                  // [startX,trackEndX,lane]
+    npc:[300,620],                                                                       // Adittan, the handover
+    checkpoints:[[1050,620],[2400,620],[3860,280],[5340,620],[6840,620],[8260,620]],
+    links:[[2640,120,0,1],[3300,120,0,1],[4320,60,1,2],[4970,60,1,2],[5420,120,0,1],
+           [5450,60,1,2],[6260,120,0,1],[6430,60,1,2],[6970,60,1,2],[7970,60,1,2]],
+    hints:[hint(500,560,'Stone on rollers. Lean into it to push.'),
+           hint(1100,560,'A scaffold pole. Hold ↑ to climb.'),
+           hint(1900,240,'Jump again in the air. The step is high.'),
+           hint(2700,540,'The lamp marks a gate. ↑ the cloister roof.')],
+    goal:{x:8600,y:620}, start:[60,620],
+    // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
+    sky:['#7A5F34','#C2954A','#E3BC6A','#F2D894'], sun:{x:.74,y:.28,r:60,c:'#FFF0C4'},
     far:'gopuram', mid:'palms',
-    pal:mkPal('#C0A171','#997253','#6B4E33'),
-    fogHaze:'rgba(213,199,160,0.34)', grade:'rgba(120,90,40,0.05)',
-    motes:'#E9DCAF', banners:true,
+    pal:mkPal('#D2A85E','#9C6E3C','#5A3A1E'), inkTint:'rgba(42,26,14,0.60)',
+    fogHaze:'rgba(236,206,140,0.16)', grade:'rgba(160,110,30,0.07)',
+    mistCol:'240,220,170', mistA:[0.05,0.03], vig:'rgba(34,20,8,0.50)', rays:[255,228,160,0.20],
+    farCol:'rgba(122,90,48,0.45)', midCol:'rgba(58,36,18,0.70)', accent:'#6E8B3D',
+    motes:'#F6E2A8', banners:false,
   };
 }
 
@@ -450,11 +820,14 @@ function buildLevel2(){
     links:[[2180,60,0,1],[3105,70,0,1],[2170,70,1,2],[3095,60,1,2],[4680,200,0,1]],
     hints:[[2010,540,'cross at the lamplit gates — ↑ far · ↓ near']],
     goal:{x:5280,y:620}, start:[40,620],
-    sky:['#7E6A55','#B08A62','#CFA878','#DDBE8E'], sun:{x:.28,y:.32,r:70,c:'#F7E3B8'},
+    // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
+    sky:['#2F5E6E','#5E8F94','#A9C4B4','#E6D9A8'], sun:{x:.28,y:.32,r:70,c:'#FFF3D0'},
     far:'ships', mid:'docks',
-    pal:mkPal('#BB9468','#8F6A47','#61452C'),
-    fogHaze:'rgba(220,196,152,0.32)', grade:'rgba(140,90,40,0.05)',
-    motes:'#F0DDB0', water:644, banners:true,
+    pal:mkPal('#C8B48A','#7C6E55','#3E3A33'), inkTint:'rgba(18,34,42,0.55)',
+    fogHaze:'rgba(190,214,206,0.14)', grade:'rgba(40,110,120,0.07)',
+    mistCol:'214,230,224', mistA:[0.05,0.03], vig:'rgba(10,26,34,0.48)', rays:[255,240,205,0.15],
+    farCol:'rgba(80,118,118,0.42)', midCol:'rgba(28,52,56,0.68)', accent:'#DDB02F',
+    motes:'#E8F0E6', water:644, banners:false,
   };
 }
 
@@ -498,11 +871,15 @@ function buildLevel3(){
     links:[[1280,130,0,1],[1620,140,0,1],[3025,70,0,1],[3795,60,0,1],[3035,60,1,2],[3815,80,1,2]],
     hints:[[2860,540,'cross at the lamplit gates — ↑ far · ↓ near']],
     goal:{x:5460,y:620}, start:[50,620],
-    sky:['#5F6B57','#8A9474','#ABB088','#C2C098'], sun:{x:.80,y:.22,r:52,c:'#EFF2CC'},
+    // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
+    sky:['#2E3A52','#4F6A6A','#86A08A','#C9D3B0'], sun:{x:.80,y:.22,r:52,c:'#F2F6DA'},
     far:'stupas', mid:'jungle',
-    pal:mkPal('#A3A275','#75754F','#4E5136'),
-    fogHaze:'rgba(196,199,164,0.36)', grade:'rgba(60,90,50,0.05)',
-    motes:'#DDE8B0', banners:true,
+    pal:mkPal('#9DAA7C','#5E6B4A','#2E3A2C'), inkTint:'rgba(16,28,30,0.60)',
+    fogHaze:'rgba(184,204,178,0.20)', grade:'rgba(40,60,110,0.07)',
+    mistCol:'210,224,204', mistA:[0.12,0.07], vig:'rgba(10,20,28,0.52)', rays:[226,240,210,0.10],
+    farCol:'rgba(60,96,80,0.45)', midCol:'rgba(24,44,32,0.70)', accent:'#4B5E9A',
+    gateCrimson:false,                 // DECISIONS 7: level 3 gate has no crimson; its arrow is ink
+    motes:'#DDE8B0', banners:false,
   };
 }
 const LEVELS = [buildLevel1, buildLevel2, buildLevel3];
@@ -520,7 +897,36 @@ const player = {
   face:1, onGround:false, wallDir:0, jumps:0, coyote:0,
   attackT:0, hurtT:0, hp:3, checkpoint:[0,0],
   runPhase:0, shiftFx:0, shiftCool:0,
+  stillT:0, sliding:false, shoveDir:0, shoveLeft:0,             // DESIGN.md §3
+  leap:null, climb:null, grabCool:0, onPlank:false, dropT:0, pushT:0,   // §2, §2a
+  hasSword:true, sheathT:0, scene:null, fadeT:0, fadeRefill:false, fadeDone:false,
+  overV:0, climbPhase:0, pumping:0,
 };
+
+// level fields beyond platforms: planks, poles, ropes, blocks, npc (DESIGN.md §2a, §2)
+function prepTraversal(L){
+  L.planks = L.planks || []; L.poles = L.poles || []; L.ropes = L.ropes || []; L.blocks = L.blocks || [];
+  // planks and blocks live in platforms (kind 'plank' / 'block') so every reader of the level sees them
+  for(const [x,y,w,lane] of L.planks) L.platforms.push([x, y, w, TUNE.PLANK_THICK, lane, 'plank']);
+  L.poles = L.poles.map(([x,top,bot,lane])=>({x, top, bot, lane}));
+  L.ropes = L.ropes.map(([x,ay,len,lane])=>({x, ay, len, lane, ang:0, angV:0}));
+  L.blocks = L.blocks.map(([x0,x1,lane])=>{
+    let gy = null;
+    for(const [bx,by,bw,,ln,kind] of L.platforms)
+      if(ln === lane && kind !== 'plank' && x0+TUNE.BLOCK_W/2 >= bx && x0+TUNE.BLOCK_W/2 <= bx+bw && (gy === null || by < gy)) gy = by;
+    const p = [x0, (gy ?? 620) - TUNE.BLOCK_H, TUNE.BLOCK_W, TUNE.BLOCK_H, lane, 'block'];
+    L.platforms.push(p);
+    return {p, x0:Math.min(x0,x1), x1:Math.max(x0,x1), lane};
+  });
+  if(L.npc && Array.isArray(L.npc)) L.npc = {x:L.npc[0], y:L.npc[1], given:false};
+  L.sheathLineAt = null; L.swordDrawn = false;
+}
+
+// guard: patrols, sees forward, chases, scolds (DESIGN.md §3)
+function makeGuard(g){
+  return {x:g[0]+30, x1:g[0], x2:g[1], y:g[2], lane:g[3]??1, dir:1, dead:false, w:26, h:54,
+          phase:hash(g[0])*6, mode:'patrol', modeT:0, seeT:0, chaseT:0, outBandT:0};
+}
 
 function topAt(ln, cx){
   let best = null;
@@ -529,6 +935,61 @@ function topAt(ln, cx){
     if(cx >= bx && cx <= bx+bw && (best === null || by > best)) best = by;
   }
   return best ?? 620;
+}
+// hints never sit on a coin or a platform edge: nudge the text up (or down) until it is clear
+// ---- text placement: hints and dialogue never sit on coins, platforms, props, or each other
+// Boxes are [left, top, right, bottom] in main-lane space, other lanes projected with the camera
+// centered on cxRef (accurate when that text is mid-screen, which is when it is read).
+function textObstacles(cxRef, opts={}){
+  const proj = (x,y,l)=>{ const s = LANES[l].s; return [(x-cxRef)*s + cxRef, (y-HORIZON)*s + HORIZON]; };
+  const box = (x0,y0,x1,y1,l)=>{ const [a,b] = proj(x0,y0,l), [c,d] = proj(x1,y1,l); return [a,b,c,d]; };
+  const B = [];
+  for(const c of level.coins) B.push(box(c.x-14, c.y-14, c.x+14, c.y+14, c.lane));
+  for(const [bx,by,bw,bh,ln] of level.platforms) B.push(box(bx, by-12, bx+bw+18, by+bh, ln));
+  for(const o of level.poles) B.push(box(o.x-8, o.top-16, o.x+8, o.bot, o.lane));
+  for(const o of level.ropes){ const s = o.len*Math.sin(TUNE.ROPE_MAX_ANGLE*Math.PI/180);   // the whole swing
+    B.push(box(o.x-s-12, o.ay-12, o.x+s+12, o.ay+o.len+8, o.lane)); }
+  for(const c of level.checkpoints) B.push(box(c.x-6, c.y-124, c.x+62, c.y, 1));            // kodi on its staff
+  for(const lk of level.links) for(const l of [lk.a, lk.b]) B.push(box(lk.cx-46, lk.gy[l]-112, lk.cx+46, lk.gy[l], l));
+  if(level.npc && !opts.noNpc) B.push(box(level.npc.x-26, level.npc.y-112, level.npc.x+26, level.npc.y, 1));
+  B.push(box(level.goal.x-8, level.goal.y-205, level.goal.x+100, level.goal.y, 1));
+  return B;
+}
+// try offsets around (cx, base); a box is [cx-hw, base-up, cx+hw, base+down]. First clear spot wins,
+// otherwise the spot with the least overlap.
+function placeText(cx, base, hw, up, down, obstacles, dxs, dys){
+  let best = null, bestCost = Infinity;
+  for(const dx of dxs) for(const dy of dys){
+    const l = cx+dx-hw, r = cx+dx+hw, t = base+dy-up, b = base+dy+down;
+    let cost = 0;
+    for(const [x0,y0,x1,y1] of obstacles){
+      const ox = Math.min(r,x1) - Math.max(l,x0), oy = Math.min(b,y1) - Math.max(t,y0);
+      if(ox > 0 && oy > 0) cost += ox*oy;
+    }
+    if(cost === 0) return {x:cx+dx, base:base+dy, box:[l,t,r,b]};
+    if(cost < bestCost){ bestCost = cost; best = {x:cx+dx, base:base+dy, box:[l,t,r,b]}; }
+  }
+  return best;
+}
+function placeHints(){
+  ctx.font = '19px "Marcellus SC", Marcellus, serif';
+  const placed = [];
+  level.hintsPlaced = level.hints.map(([hx,hy,txt,touchTxt])=>{
+    const text = IS_TOUCH && touchTxt ? touchTxt : txt;
+    const hw = ctx.measureText(text).width/2 + 8;
+    const obs = textObstacles(hx).concat(placed);
+    const p = placeText(hx, hy-46, hw, 20, 30, obs,               // text plus the arrow mark under it
+      [0, 120, -120, 240, -240, 360, -360], [0,-30,-60,30,-90,60,-120,-150,-180]);
+    placed.push(p.box);
+    return {x:p.x, base:p.base, text, box:p.box};
+  });
+}
+// the handover line and the speaker's name above it, kept off hints and props (not off the speakers)
+function placeDialogue(sx, sy, line){
+  ctx.font = '17px "Marcellus SC", serif';
+  const hw = ctx.measureText(line).width/2 + 10;
+  const obs = textObstacles(sx, {noNpc:true}).concat(level.hintsPlaced.map(h=>h.box));
+  return placeText(sx, sy, hw, 40, 8, obs, [0, 80, -80, 160, -160], [0,-26,-52,-78,-104,-130,26]);
 }
 function prepLinks(){
   level.links = (level.links||[]).map(k=>{
@@ -540,16 +1001,22 @@ function prepLinks(){
 
 function loadLevel(i){
   levelIdx = i; level = LEVELS[i]();
-  level.palFront = dimPal(level.pal, -22);
-  level.palBack  = dimPal(level.pal, 10);
+  applyGrade(level);
   prepLinks();
   player.x = level.start[0]; player.y = level.start[1];
   player.vx = player.vy = 0; player.hp = 3; player.jumps = 0; player.lane = 1;
   player.checkpoint = [level.start[0], level.start[1]];
   player.hurtT = 0; player.attackT = 0; player.shiftFx = 0;
   level.coins = level.coins.map(c=>({x:c[0], y:c[1], lane:c[2]??1, taken:false, spin:hash(c[0])*6}));
-  level.guards = level.guards.map(g=>({x:g[0]+30, x1:g[0], x2:g[1], y:g[2], lane:g[3]??1, dir:1, dead:false, w:26, h:54, phase:hash(g[0])*6}));
+  level.guards = level.guards.map(makeGuard);
   level.checkpoints = level.checkpoints.map(c=>({x:c[0], y:c[1], lit:false}));
+  prepTraversal(level);
+  placeHints();
+  player.stillT = 0; player.shoveLeft = 0; player.sliding = false;
+  player.leap = null; player.climb = null; player.scene = null; player.fadeT = 0;
+  player.pushT = 0; player.dropT = 0; player.sheathT = 0;
+  player.hasSword = !(level.npc && !level.npc.given);
+  $('tA').style.opacity = levelIdx < TUNE.SWORD_FROM_LEVEL ? '0.35' : '1';   // §2: ⚔ dimmed, never hidden
   totalCoins += level.coins.length;
   particles = []; floats = [];
   // perched birds on middle-lane platform tops
@@ -569,6 +1036,8 @@ function showInter(i){
   $('interEyebrow').textContent = l.chapter;
   $('interTitle').textContent = l.name;
   $('interStory').textContent = l.story;
+  $('interDate').textContent = l.date || '';
+  $('interDate').hidden = !l.date;
   $('interScreen').hidden = false;
   state = 'inter';
 }
@@ -596,54 +1065,247 @@ function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh){
 }
 function lanePlatforms(l){ return level.platforms.filter(p=>p[4]===l); }
 
+function linkAtPlayer(target){
+  const p = player;
+  return level.links.find(k=> p.x >= k.x-14 && p.x <= k.x+k.w+14 &&
+    ((k.a===p.lane && k.b===target) || (k.b===p.lane && k.a===target)));
+}
 function tryShift(dir){
   const p = player;
   const target = p.lane + dir;
   if(target < 0 || target > 2 || p.shiftCool > 0) return;
   // crossings exist only at the gates
-  const lk = level.links.find(k=> p.x >= k.x-14 && p.x <= k.x+k.w+14 &&
-    ((k.a===p.lane && k.b===target) || (k.b===p.lane && k.a===target)));
+  const lk = linkAtPlayer(target);
   if(!lk){
+    if(p.onPlank) return;                   // ↓ on a plank is the drop-through chord, not a crossing
     sfx.deny(); p.shiftCool = 0.35;
     floats.push({x:p.x, y:p.y-88, t:1.1, text:'no crossing here — seek a lamplit gate'});
     return;
   }
   // needs footing in the target lane near the player
   let best = null;
-  for(const [bx,by,bw,bh,ln] of level.platforms){
-    if(ln !== target) continue;
+  for(const [bx,by,bw,bh,ln,kind] of level.platforms){
+    if(ln !== target || kind === 'plank') continue;
     if(p.x > bx-6 && p.x < bx+bw+6 && by > p.y-150 && by < p.y+250){
       if(best === null || Math.abs(by-p.y) < Math.abs(best-p.y)) best = by;
     }
   }
   if(best === null){ sfx.deny(); p.shiftCool = 0.2; return; }
+  // §2 "The gate leap" (DECISIONS 16): the lane changes at takeoff, then a 0.5 s arc
   spawnInk(p.x, p.y-28, p.lane);
-  p.lane = target; p.shiftFx = 0.22; p.shiftCool = 0.3;
-  if(best <= p.y){ p.y = best; p.vy = 0; p.onGround = true; p.jumps = 0; }
-  spawnInk(p.x, p.y-28, p.lane);
+  p.leap = {t:0, from:p.lane, to:target, y0:p.y, y1:best};
+  p.lane = target; p.shiftFx = 0; p.shiftCool = 0.3;
+  p.vx = 0; p.vy = 0; p.onGround = false; p.climb = null;
   sfx.shift(); shake = 3;
+}
+
+// ---- traversal kit (DESIGN.md §2a)
+// ---- ropes swing with momentum (DECISIONS 20). A rope is a pendulum from its anchor: angle `ang`
+// from vertical (+ swings east), angular speed `angV`. The period is fixed (TUNE.ROPE_PERIOD) at any
+// grip height, so the rhythm a player learns holds all the way up the rope.
+const ROPE_W2 = ()=> Math.pow(2*Math.PI/TUNE.ROPE_PERIOD, 2);
+function ropeX(r, y){                       // x of the rope at height y
+  return r.x + (y - r.ay)*Math.tan(r.ang || 0);
+}
+function ropeEnd(r){ return [r.x + r.len*Math.sin(r.ang||0), r.ay + r.len*Math.cos(r.ang||0)]; }
+// ropes nobody holds settle back to the idle sway (DESIGN.md §2a: ±12 px, period 2 s)
+function updateRopes(dt){
+  for(const o of level.ropes){
+    if(player.climb && player.climb.o === o) continue;
+    const idle = Math.asin(Math.min(1, TUNE.ROPE_SWAY/o.len))*Math.sin(time*2*Math.PI/TUNE.ROPE_PERIOD);
+    o.angV += ((idle - o.ang)*ROPE_W2() - o.angV*TUNE.ROPE_SETTLE)*dt;
+    o.ang += o.angV*dt;
+  }
+}
+// feet range while holding a pole or rope (for a rope, measured along it: grip distance r from the anchor)
+function climbRange(c){
+  return c.kind === 'pole' ? [c.o.top, c.o.bot]
+                           : [c.o.ay + TUNE.HANG_HANDS + 10, c.o.ay + c.o.len + TUNE.HANG_HANDS];
+}
+function findClimbable(){
+  const p = player;
+  for(const o of level.poles){
+    if(o.lane !== p.lane) continue;
+    if(Math.abs(p.x - o.x) < TUNE.GRAB_X && p.y > o.top && p.y - p.h < o.bot) return {kind:'pole', o};
+  }
+  for(const o of level.ropes){
+    if(o.lane !== p.lane) continue;
+    const hy = p.y - TUNE.HANG_HANDS;
+    if(Math.abs(p.x - ropeX(o, Math.min(hy, o.ay + o.len))) < TUNE.GRAB_X && p.y > o.ay &&
+       hy < o.ay + o.len + TUNE.ROPE_SLACK) return {kind:'rope', o};
+  }
+  return null;
+}
+function grabRope(c){                       // the grab turns his run into swing (DECISIONS 20)
+  const p = player, o = c.o;
+  c.r = clamp((p.y - TUNE.HANG_HANDS - o.ay)/Math.cos(o.ang), 10, o.len);
+  o.angV += clamp(p.vx*Math.cos(o.ang)*TUNE.ROPE_GRAB_KEEP/c.r, -3, 3);
+  p.climbPhase = 0;
+}
+function ropeRelease(c, hop){
+  const p = player, o = c.o, v = c.r*o.angV*TUNE.ROPE_RELEASE_GAIN;
+  // along the tangent of the swing, with its speed; the hop is a jump's push off the rope
+  p.vx = v*Math.cos(o.ang); p.vy = -v*Math.sin(o.ang) + (hop ? TUNE.ROPE_RELEASE_VY : 0);
+  p.liftV = Math.min(0, -v*Math.sin(o.ang));   // the swing's own lift; letting go of jump trims only the hop
+  if(Math.abs(p.vx) > 30) p.face = Math.sign(p.vx);
+  p.overV = Math.abs(p.vx);                 // flight keeps speed above the run cap until it lands
+  // the release is the jump: no double jump after it, so the swing is what carries him
+  p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.jumps = TUNE.ROPE_RELEASE_DOUBLE ? 1 : 2;
+}
+function climbStep(dt){
+  const p = player, c = p.climb;
+  const pole = c.kind === 'pole';
+  const up = keys.U && !keys.F, down = keys.F && !keys.U;
+  const lr = (keys.L?-1:0) + (keys.R?1:0);
+  let moved = false;
+  if(pole){
+    const [lo, hi] = climbRange(c);
+    if(up && p.y > lo){ const y0 = p.y; p.y = Math.max(lo, p.y - TUNE.POLE_UP*dt); p.climbPhase += (y0 - p.y)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
+    else if(down && p.y < hi){ const y0 = p.y; p.y = Math.min(hi, p.y + TUNE.POLE_DOWN*dt); p.climbPhase -= (p.y - y0)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
+    if(lr) p.face = lr;
+    p.x = c.o.x;
+  } else {
+    const o = c.o;
+    // climb along the rope
+    if(up && c.r > 10){ const r0 = c.r; c.r = Math.max(10, c.r - TUNE.ROPE_CLIMB*dt); p.climbPhase += (r0 - c.r)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
+    else if(down && c.r < o.len){ const r0 = c.r; c.r = Math.min(o.len, c.r + TUNE.ROPE_CLIMB*dt); p.climbPhase -= (c.r - r0)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
+    // pendulum, plus a pump: ← or → in the direction of the swing adds energy (or starts it from rest)
+    let acc = -ROPE_W2()*Math.sin(o.ang) - TUNE.ROPE_DAMP*o.angV;
+    p.pumping = 0;
+    if(lr){
+      p.face = lr;
+      if(Math.sign(o.angV) === lr || Math.abs(o.angV) < 0.15){ acc += lr*TUNE.ROPE_PUMP; p.pumping = lr; }
+    }
+    o.angV += acc*dt; o.ang += o.angV*dt;
+    const max = TUNE.ROPE_MAX_ANGLE*Math.PI/180;
+    if(Math.abs(o.ang) > max){ o.ang = Math.sign(o.ang)*max; o.angV = 0; }
+    p.x = o.x + c.r*Math.sin(o.ang);
+    p.y = o.ay + c.r*Math.cos(o.ang) + TUNE.HANG_HANDS;
+    if(Math.abs(c.r*o.angV) > TUNE.STOP_SPEED) moved = true;   // swinging is moving; hanging still is not
+  }
+  p.vx = 0; p.vy = 0; p.onGround = false; p.wallDir = 0; p.sliding = false;
+  p.stillT = moved ? 0 : p.stillT + dt;     // §2a: hanging still counts as stopped, climbing is moving
+  if(jumpQueued > 0){
+    jumpQueued = 0; sfx.jump();
+    if(pole){                               // §2a: jump leaves a pole with vy -700, vx 300 away
+      const away = lr || p.face;
+      p.vy = TUNE.CLIMB_JUMP_VY; p.vx = away*TUNE.CLIMB_JUMP_VX; p.face = away;
+      p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.jumps = 1;
+    } else ropeRelease(c, true);
+    return;
+  }
+  if(down && (pole ? p.y >= climbRange(c)[1] : c.r >= c.o.len)){   // climbed off the bottom
+    if(pole){ p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.jumps = 1; }
+    else ropeRelease(c, false);
+  }
+}
+function blockOf(pl){ return level.blocks.find(b=>b.p === pl); }
+
+function startBackToBanner(refill){
+  const p = player;
+  if(p.fadeT > 0) return;
+  p.fadeT = TUNE.FADE_TIME; p.fadeRefill = refill; p.fadeDone = false;
+  p.vx = p.vy = 0; p.leap = null; p.climb = null; p.shoveLeft = 0;
+}
+function backToBanner(){                    // the midpoint of the ink-wash: move him and reset the blocks
+  const p = player;
+  if(p.fadeRefill) p.hp = 3;
+  p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1; p.vx = p.vy = 0;
+  p.stillT = 0; p.onGround = false;
+  for(const b of level.blocks) b.p[0] = b.x0;   // §2a: blocks return to their start on any checkpoint return
+  floats.push({x:p.x, y:p.y-90, t:1.6, text:LINE_BACK_TO_BANNER});
 }
 
 function movePlayer(dt){
   const p = player;
   const ACCEL = 2600, MAXV = 385, FRICTION = 2200;
-  const dir = (keys.L?-1:0) + (keys.R?1:0);
-  if(dir !== 0 && p.attackT <= 0.12){
+  p.hurtT = Math.max(0, p.hurtT - dt);
+  p.shiftCool = Math.max(0, p.shiftCool - dt);
+  p.grabCool = Math.max(0, p.grabCool - dt);
+  p.sheathT = Math.max(0, p.sheathT - dt);
+
+  // ink-wash return to the checkpoint (§3, §5)
+  if(p.fadeT > 0){
+    p.fadeT -= dt;
+    if(!p.fadeDone && p.fadeT <= TUNE.FADE_TIME/2){ p.fadeDone = true; backToBanner(); }
+    p.vx = 0; p.vy = 0; jumpQueued = 0; shiftQueued = 0; attackQueued = false;
+    if(p.fadeT <= 0) p.fadeT = 0;
+    return;
+  }
+  // the handover scene (§2 "The sheathed sword"): input waits, jump or J/X skips
+  if(p.scene){
+    p.scene.t += dt;
+    const total = HANDOVER_LINES.length*TUNE.HANDOVER_LINE;
+    if(p.scene.t >= total || (p.scene.t > 0.25 && (jumpQueued > 0 || attackQueued))) endHandover();
+    jumpQueued = 0; attackQueued = false; shiftQueued = 0;
+    p.vx = 0;
+  }
+  // the gate leap: input ignored, x kept, 40 px arc to the target footing
+  if(p.leap){
+    const L = p.leap;
+    L.t += dt;
+    const k = Math.min(1, L.t / TUNE.GATE_LEAP);
+    p.y = lerp(L.y0, L.y1, k) - TUNE.LEAP_ARC*Math.sin(Math.PI*k);
+    p.vx = 0; p.vy = 0; p.onGround = false; p.sliding = false; p.stillT = 0;
+    jumpQueued = 0; shiftQueued = 0; attackQueued = false;
+    if(k >= 1){
+      p.y = L.y1; p.onGround = true; p.jumps = 0; p.leap = null;
+      spawnInk(p.x, p.y-28, p.lane); spawnDust(p.x, p.y, 5);
+    }
+    return;
+  }
+
+  // attack: a sword that waits in levels 1 and 2 (§2 "The sheathed sword", DECISIONS 3, 10)
+  if(attackQueued && levelIdx < TUNE.SWORD_FROM_LEVEL){
+    if(p.hasSword && p.sheathT <= 0){
+      p.sheathT = TUNE.SHEATH_PUSH; sfx.click();
+      const line = SHEATH_LINES[levelIdx];
+      if(line && (level.sheathLineAt === null || time - level.sheathLineAt >= TUNE.SHEATH_REPEAT)){
+        level.sheathLineAt = time;
+        floats.push({x:p.x, y:p.y-88, t:1.8, text:line});
+      }
+    }
+  } else if(attackQueued && p.attackT <= 0){ p.attackT = 0.28; sfx.slash(); level.swordDrawn = true; }
+  attackQueued = false;
+  p.attackT = Math.max(0, p.attackT - dt);
+
+  // grab a pole or rope: touch it airborne, or hold ↑ beside it
+  if(!p.climb && p.grabCool <= 0 && !p.scene){
+    const c = findClimbable();
+    if(c && (!p.onGround || keys.U) && !(keys.U && shiftQueued < 0 && linkAtPlayer(p.lane-1))){
+      p.climb = c; p.jumps = 0; p.shoveLeft = 0; shiftQueued = 0;
+      if(c.kind === 'rope') grabRope(c);
+      else { const [lo, hi] = climbRange(c); p.y = clamp(p.y, lo, hi); p.climbPhase = 0; }
+    }
+  }
+  if(p.climb){ shiftQueued = 0; climbStep(dt); jumpQueued = Math.max(0, jumpQueued - dt); return; }
+
+  const shoved = p.shoveLeft > 0;
+  const dir = (shoved || p.scene) ? 0 : (keys.L?-1:0) + (keys.R?1:0);
+  if(shoved){
+    p.vx = p.shoveDir * TUNE.SHOVE_VX;      // §3: shoved back the way he came
+  } else if(dir !== 0 && p.attackT <= 0.12){
     p.vx += dir*ACCEL*dt;
     p.face = dir;
   } else {
-    const f = FRICTION*dt;
+    const f = (p.overV > 0 && !p.onGround ? TUNE.AIR_FRICTION : FRICTION)*dt;
     p.vx = Math.abs(p.vx) <= f ? 0 : p.vx - Math.sign(p.vx)*f;
   }
-  p.vx = clamp(p.vx, -MAXV, MAXV);
+  // a swing release may fly faster than he runs; the excess bleeds off, and landing ends it
+  p.overV = p.onGround ? 0 : Math.max(0, (p.overV||0) - TUNE.AIR_KEEP*dt);
+  const cap = Math.max(MAXV, p.overV);
+  p.vx = clamp(p.vx, -cap, cap);
 
   const sliding = !p.onGround && p.wallDir !== 0 && dir === p.wallDir && p.vy > 0;
+  p.sliding = sliding;
   p.vy += 2300*dt;
   if(sliding) p.vy = Math.min(p.vy, 150);
   p.vy = Math.min(p.vy, 1200);
 
   if(jumpQueued > 0){
-    if(p.onGround || p.coyote > 0){
+    if(p.onPlank && keys.F){                // §2a: ↓ plus jump drops through a plank
+      p.dropT = TUNE.PLANK_DROP; p.onGround = false; p.onPlank = false; jumpQueued = 0; p.vy = 60;
+    } else if(p.onGround || p.coyote > 0){
       p.vy = -830; p.jumps = 1; jumpQueued = 0; p.coyote = 0; sfx.jump();
       spawnDust(p.x, p.y, 8);
     } else if(p.wallDir !== 0){
@@ -655,33 +1317,61 @@ function movePlayer(dt){
     }
   }
   jumpQueued = Math.max(0, jumpQueued - dt);
-  if(!keys.J && p.vy < -300) p.vy = -300;
+  if(!keys.J && p.vy < -300 + (p.liftV||0)) p.vy = -300 + (p.liftV||0);
+  if(p.onGround) p.liftV = 0;
+  p.dropT = Math.max(0, p.dropT - dt);
 
-  if(shiftQueued !== 0){ tryShift(shiftQueued); shiftQueued = 0; }
-  p.shiftCool = Math.max(0, p.shiftCool - dt);
+  if(shiftQueued !== 0){ if(!shoved) tryShift(shiftQueued); shiftQueued = 0; }
   p.shiftFx = Math.max(0, p.shiftFx - dt);
-
-  if(attackQueued && p.attackT <= 0){ p.attackT = 0.28; sfx.slash(); }
-  attackQueued = false;
-  p.attackT = Math.max(0, p.attackT - dt);
-  p.hurtT = Math.max(0, p.hurtT - dt);
+  if(p.leap) return;
 
   const plats = lanePlatforms(p.lane);
   p.wallDir = 0;
+  const x0 = p.x;
   p.x += p.vx*dt;
-  for(const [bx,by,bw,bh] of plats){
+  let pushHit = null;
+  for(const pl of plats){
+    const [bx,by,bw,bh,,kind] = pl;
+    if(kind === 'plank') continue;          // planks are one-way: no sides, no underside
     if(rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, bx,by,bw,bh)){
+      if(kind === 'block' && p.onGround && dir !== 0 && Math.sign(p.vx) === dir) pushHit = pl;
       if(p.vx > 0){ p.x = bx - p.w/2; if(!p.onGround) p.wallDir = 1; }
       else if(p.vx < 0){ p.x = bx+bw + p.w/2; if(!p.onGround) p.wallDir = -1; }
       p.vx = 0;
     }
   }
+  // §2a block on rollers: lean into it 0.25 s, then it rolls along its track at 120 px/s
+  if(pushHit){
+    p.pushT += dt;
+    if(p.pushT >= TUNE.PUSH_DELAY){
+      const b = blockOf(pushHit);
+      const nx = clamp(pushHit[0] + dir*TUNE.PUSH_SPEED*dt, b.x0, b.x1);
+      if(nx !== pushHit[0]){
+        pushHit[0] = nx;
+        p.x = dir > 0 ? nx - p.w/2 : nx + pushHit[2] + p.w/2;
+        p.vx = dir*TUNE.PUSH_SPEED;         // pushing is moving (§3 "What forces a stop")
+        if(Math.random() < dt*10) spawnDust(nx + (dir>0?0:pushHit[2]), pushHit[1]+pushHit[3], 1);
+      }
+    }
+  } else p.pushT = 0;
   p.x = clamp(p.x, p.w/2, level.width - p.w/2);
+  if(shoved){ p.shoveLeft = (p.x === x0) ? 0 : p.shoveLeft - Math.abs(p.x - x0); }
+  p.stillT = Math.abs(p.vx) < TUNE.STOP_SPEED ? p.stillT + dt : 0;
 
   const wasGround = p.onGround;
-  p.onGround = false;
+  const feet0 = p.y;
+  p.onGround = false; p.onPlank = false;
   p.y += p.vy*dt;
-  for(const [bx,by,bw,bh] of plats){
+  for(const pl of plats){
+    const [bx,by,bw,bh,,kind] = pl;
+    if(kind === 'plank'){
+      if(p.vy >= 0 && p.dropT <= 0 && feet0 <= by + 0.5 && p.y >= by &&
+         p.x + p.w/2 > bx && p.x - p.w/2 < bx + bw){
+        p.y = by; p.vy = 0; p.onGround = true; p.onPlank = true; p.jumps = 0;
+        if(!wasGround) spawnDust(p.x, p.y, 5);
+      }
+      continue;
+    }
     if(rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, bx,by,bw,bh)){
       if(p.vy > 0){
         p.y = by; p.vy = 0; p.onGround = true; p.jumps = 0;
@@ -695,24 +1385,138 @@ function movePlayer(dt){
     p.runPhase += dt*Math.abs(p.vx)*0.045;
     if(Math.random() < dt*8) spawnDust(p.x - p.face*8, p.y, 1);
   }
-  if(p.y - p.h > level.killY){ hurt(2, true); }
+  if(p.y - p.h > level.killY){ hurt(TUNE.FALL_DAMAGE, true); }
 }
 
-function hurt(dmg, respawn){
+function endHandover(){
   const p = player;
-  if(p.hurtT > 0 && !respawn) return;
+  p.scene = null; p.hasSword = true;
+  if(level.npc) level.npc.given = true;
+  p.sheathT = TUNE.SHEATH_PUSH;              // the glyph pulses as the sword arrives
+  spawnInk(p.x - p.face*8, p.y - 30, p.lane);
+}
+
+// falls: one heart, then the ink-wash back to the banner (§5)
+function hurt(dmg){
+  const p = player;
   p.hp -= dmg; p.hurtT = 1.2; shake = 12; sfx.hurt();
-  spawnBurst(p.x, p.y - 28, '#B5342A', 14, p.lane);
-  if(p.hp <= 0){
-    deaths++;
-    p.hp = 3;
-    p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1;
-    p.vx = p.vy = 0;
-    floats.push({x:p.x, y:p.y-90, t:1.6, text:'Fallen — the banner rises again'});
-  } else if(respawn){
-    p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1; p.vx = p.vy = 0;
-  } else {
-    p.vy = -380; p.vx = -p.face*260;
+  spawnBurst(p.x, p.y - 28, INK, 14, p.lane);
+  p.shoveLeft = 0; p.stillT = 0;
+  const out = p.hp <= 0;
+  if(out){ deaths++; }
+  startBackToBanner(out);
+}
+
+// ---- guards: patrol, forward sight, chase, catch on a stop (DESIGN.md §3, DECISIONS 8)
+function guardSees(g){
+  const p = player;
+  if(g.lane !== p.lane || Math.abs(p.y - g.y) > TUNE.SIGHT_BAND) return false;   // lanes never see each other
+  const ahead = (p.x - g.x)*g.dir - g.w/2;                 // px in front of his face
+  if(ahead < -g.w/2 || ahead > TUNE.SIGHT_RANGE) return false;   // behind him is safe
+  // §3: only a block or bale occludes; the hero (56 tall) hides behind a 64 px block
+  const a = Math.min(g.x, p.x), c = Math.max(g.x, p.x);
+  for(const b of level.blocks){
+    const [bx,by,bw] = b.p;
+    if(b.lane === g.lane && bx+bw > a && bx < c && p.y - p.h >= by - 0.5) return false;
+  }
+  return true;
+}
+// §2a, §3: a guard turns (or, chasing, stops) 80 px off a block's face
+function blockAhead(g){
+  for(const b of level.blocks){
+    if(b.lane !== g.lane) continue;
+    const [bx,by,bw,bh] = b.p;
+    if(by > g.y || by + bh < g.y - 1) continue;
+    const d = g.dir > 0 ? bx - (g.x + g.w/2) : (g.x - g.w/2) - (bx + bw);
+    if(d >= -bw && d < TUNE.BLOCK_TURN) return true;
+  }
+  return false;
+}
+function inReach(g){
+  const p = player;
+  if(g.lane !== p.lane || Math.abs(p.y - g.y) > TUNE.SIGHT_BAND) return false;
+  const gap = (p.x - g.x)*g.dir - g.w/2 - p.w/2;           // his front edge to the hero's near edge
+  return gap <= TUNE.REACH && gap >= -(g.w + p.w);   // overlapping his body counts as in reach
+}
+function heroStopped(){
+  const p = player;
+  return p.stillT >= TUNE.STOP_TIME || p.sliding || !!p.leap;   // hanging still builds stillT (§2a)
+}
+function catchHero(g){
+  const p = player;
+  g.mode = 'scold'; g.modeT = TUNE.SCOLD_TIME; g.seeT = 0;
+  g.dir = Math.sign(p.x - g.x) || g.dir;
+  p.hp -= 1; p.hurtT = TUNE.INVULN; shake = 8; sfx.hurt();
+  spawnBurst(p.x, p.y - 28, INK, 14, p.lane);              // black ink, never crimson
+  p.stillT = 0;
+  if(p.leap){ p.leap = null; }             // caught mid-leap: he drops in the target lane
+  if(p.climb){ p.climb = null; p.grabCool = TUNE.GRAB_COOL; }
+  if(p.hp <= 0){                                           // third heart: ink-wash to the last checkpoint
+    deaths++; startBackToBanner(true);
+    return;
+  }
+  p.shoveDir = g.dir; p.shoveLeft = TUNE.SHOVE_DIST;      // away from him: back the way he came
+  p.vy = TUNE.SHOVE_VY; p.onGround = false;
+}
+function updateGuards(dt){
+  const p = player;
+  for(const g of level.guards){
+    if(g.dead) continue;
+    g.modeT -= dt;
+    let speed = 0;
+    if(g.mode === 'patrol'){
+      if(blockAhead(g)) g.dir = -g.dir;
+      speed = TUNE.GUARD_WALK;
+      g.x += g.dir*speed*dt;
+      if(g.x < g.x1){ g.x = g.x1; g.dir = 1; }
+      if(g.x > g.x2){ g.x = g.x2; g.dir = -1; }
+    } else if(g.mode === 'return'){
+      if(g.x >= g.x1 && g.x <= g.x2) g.mode = 'patrol';
+      else { g.dir = g.x < g.x1 ? 1 : -1;
+             if(blockAhead(g)) g.mode = 'patrol';
+             else { speed = TUNE.GUARD_WALK; g.x += g.dir*speed*dt; } }
+    } else if(g.mode === 'look'){
+      if(g.modeT <= 0) g.mode = 'return';
+    } else if(g.mode === 'scold'){
+      if(g.modeT <= 0) g.mode = 'return';
+    } else if(g.mode === 'chase'){
+      const dx = p.x - g.x;
+      g.chaseT += dt;
+      g.outBandT = Math.abs(p.y - g.y) > TUNE.SIGHT_BAND ? g.outBandT + dt : 0;
+      if(p.lane !== g.lane || Math.abs(dx) > TUNE.CHASE_DROP_DIST ||
+         g.outBandT > TUNE.CHASE_OUT_BAND || g.chaseT > TUNE.CHASE_MAX){
+        g.mode = 'look'; g.modeT = TUNE.LOOK_TIME; g.seeT = 0;
+      } else {
+        if(Math.abs(dx) > 4) g.dir = Math.sign(dx);
+        speed = Math.abs(dx) > 4 && !blockAhead(g) ? TUNE.CHASE_SPEED : 0;
+        g.x = clamp(g.x + g.dir*speed*dt, g.x1 - TUNE.CHASE_LEASH, g.x2 + TUNE.CHASE_LEASH);
+      }
+    }
+    if(speed > 0) g.phase += dt*6*speed/TUNE.GUARD_WALK;
+
+    // sight: needs SEEN_TIME of continuous view
+    if(g.mode === 'patrol' || g.mode === 'return' || g.mode === 'look'){
+      if(guardSees(g)){
+        g.seeT += dt;
+        if(g.seeT >= TUNE.SEEN_TIME){
+          g.mode = 'chase'; g.chaseT = 0; g.outBandT = 0;
+          floats.push({x:g.x, y:g.y-100, t:1.2, text:LINE_SHOUT}); sfx.shout();
+        }
+      } else g.seeT = 0;
+    }
+
+    // the sword (level 3 only; levels 1 and 2 keep it sheathed)
+    if(levelIdx >= TUNE.SWORD_FROM_LEVEL && g.lane === p.lane && p.attackT > 0.1){
+      const hx = p.x + p.face*30;
+      if(rectsOverlap(hx-26, p.y-p.h, 52, p.h, g.x-g.w/2, g.y-g.h, g.w, g.h)){
+        g.dead = true; sfx.kill(); shake = 6;
+        spawnBurst(g.x, g.y-30, INK, 16, g.lane);
+        floats.push({x:g.x, y:g.y-70, t:0.9, text:'Guard felled'});
+        continue;
+      }
+    }
+    // caught only when stopped inside his reach; a moving hero is never caught (DECISIONS 8)
+    if(g.mode !== 'scold' && p.hurtT <= 0 && inReach(g) && heroStopped()) catchHero(g);
   }
 }
 
@@ -723,10 +1527,15 @@ function updateWorld(dt){
     if(c.taken) continue;
     c.spin += dt*4;
     if(c.lane === p.lane && rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, c.x-12, c.y-12, 24, 24)){
-      c.taken = true; coinsTaken++; sfx.coin();
-      spawnBurst(c.x, c.y, '#D9A84E', 10, c.lane);
-      floats.push({x:c.x, y:c.y-14, t:0.8, text:'+1 kasu'});
+      c.taken = true; coinsTaken++;          // §6: an ink bloom and nothing else; never counted
+      spawnInk(c.x, c.y, c.lane);
     }
+  }
+
+  const npc = level.npc;
+  if(npc && !npc.given && !p.scene && p.lane === 1 && Math.abs(p.x - npc.x) < 34 && Math.abs(p.y - npc.y) < 60){
+    p.scene = {t:0};                         // §2: walking into him plays the handover
+    p.vx = 0; p.face = Math.sign(npc.x - p.x) || 1;
   }
 
   for(const c of level.checkpoints){
@@ -736,27 +1545,7 @@ function updateWorld(dt){
     }
   }
 
-  for(const g of level.guards){
-    if(g.dead) continue;
-    g.phase += dt*6;
-    g.x += g.dir*95*dt;
-    if(g.x < g.x1){ g.x = g.x1; g.dir = 1; }
-    if(g.x > g.x2){ g.x = g.x2; g.dir = -1; }
-    if(g.lane === p.lane && Math.abs(p.x-g.x) < 220 && Math.abs(p.y-g.y) < 80) g.dir = Math.sign(p.x-g.x)||g.dir;
-
-    if(g.lane === p.lane && p.attackT > 0.1){
-      const hx = p.x + p.face*30;
-      if(rectsOverlap(hx-26, p.y-p.h, 52, p.h, g.x-g.w/2, g.y-g.h, g.w, g.h)){
-        g.dead = true; sfx.kill(); shake = 6;
-        spawnBurst(g.x, g.y-30, '#8C2F22', 16, g.lane);
-        floats.push({x:g.x, y:g.y-70, t:0.9, text:'Guard felled'});
-        continue;
-      }
-    }
-    if(g.lane === p.lane && p.hurtT<=0 && rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, g.x-g.w/2, g.y-g.h, g.w, g.h)){
-      hurt(1, false);
-    }
-  }
+  updateGuards(dt);
 
   // birds startle when the hero comes close on the main path
   for(const b of birds){
@@ -776,9 +1565,6 @@ function updateWorld(dt){
     if(levelIdx < LEVELS.length-1){
       queueLevel(levelIdx+1);
     } else {
-      const mins = ((performance.now()-runStart)/60000);
-      $('endStats').textContent =
-        `${coinsTaken} / ${totalCoins} kasu gathered · ${deaths} fall${deaths===1?'':'s'} · ${mins.toFixed(1)} min voyage`;
       $('endScreen').hidden = false;
       state = 'end';
     }
@@ -797,6 +1583,7 @@ function updateWorld(dt){
   const ty = clamp(p.y - H*0.62, -60, 40);
   cam.y = lerp(cam.y, ty, 1-Math.pow(0.02, dt));
   shake = Math.max(0, shake - dt*40);
+  updateRopes(dt);
 }
 
 // ============================================================ particles
@@ -921,7 +1708,7 @@ function drawPalm(x, y, sc, col){
 function drawFarLayer(){
   const px = cam.x*0.10;
   ctx.save(); ctx.translate(-px, 0);
-  const col = 'rgba(72,60,44,0.38)';
+  const col = level.farCol || 'rgba(72,60,44,0.38)';
   if(level.far==='gopuram'){
     for(let i=0;i<10;i++){
       const x = i*760 + hash(i)*300;
@@ -929,18 +1716,18 @@ function drawFarLayer(){
       drawGopuram(x, 560, 130+hash(i*7)*70, h, col);
     }
   } else if(level.far==='ships'){
-    ctx.fillStyle = 'rgba(84,70,52,0.30)';
+    ctx.fillStyle = level.farCol || 'rgba(84,70,52,0.30)';
     ctx.fillRect(px, 498, W, 224);
     for(let i=0;i<12;i++){
       const x = i*620 + hash(i)*280;
-      drawShipSil(x, 505 - hash(i*5)*10, 0.8+hash(i*3)*0.7, 'rgba(66,52,38,0.42)');
+      drawShipSil(x, 505 - hash(i*5)*10, 0.8+hash(i*3)*0.7, col);
     }
   } else {
     for(let i=0;i<9;i++){
       const x = i*820 + hash(i)*300;
-      ctx.fillStyle = 'rgba(56,66,48,0.35)';
+      ctx.fillStyle = col;
       ctx.beginPath(); ctx.arc(x, 660, 260+hash(i*2)*160, Math.PI, 0); ctx.fill();
-      if(hash(i*9)>0.4) drawStupa(x+120, 560-hash(i*4)*60, 90+hash(i*6)*50, 120, 'rgba(48,56,40,0.42)');
+      if(hash(i*9)>0.4) drawStupa(x+120, 560-hash(i*4)*60, 90+hash(i*6)*50, 120, col);
     }
   }
   ctx.restore();
@@ -951,10 +1738,10 @@ function drawMidLayer(){
   if(level.mid==='palms'){
     for(let i=0;i<26;i++){
       const x = i*430 + hash(i*11)*260;
-      drawPalm(x, 640, 0.9+hash(i*13)*0.5, 'rgba(58,44,32,0.55)');
+      drawPalm(x, 640, 0.9+hash(i*13)*0.5, level.midCol || 'rgba(58,44,32,0.55)');
     }
   } else if(level.mid==='docks'){
-    ctx.fillStyle = 'rgba(60,44,34,0.6)';
+    ctx.fillStyle = level.midCol || 'rgba(60,44,34,0.6)';
     for(let i=0;i<40;i++){
       const x = i*300 + hash(i*17)*140;
       ctx.fillRect(x, 560+hash(i)*30, 14, 160);
@@ -963,7 +1750,7 @@ function drawMidLayer(){
   } else {
     for(let i=0;i<30;i++){
       const x = i*380 + hash(i*23)*220;
-      const c = 'rgba(42,54,40,0.6)';
+      const c = level.midCol || 'rgba(42,54,40,0.6)';
       drawPalm(x, 650, 1.1+hash(i*29)*0.6, c);
       ctx.fillStyle = c;
       ctx.beginPath(); ctx.arc(x+150, 660, 90+hash(i*5)*60, Math.PI, 0); ctx.fill();
@@ -991,7 +1778,7 @@ function drawWallLayer(){
     }
     if(level.banners && hash(i*47)>0.55){          // long crimson banner
       const bx = x+128, sway = Math.sin(time*1.4+i)*5;
-      ctx.fillStyle = 'rgba(150,44,34,0.75)';
+      ctx.fillStyle = 'rgba(181,52,42,0.75)';
       ctx.beginPath();
       ctx.moveTo(bx, 452); ctx.lineTo(bx+26, 452);
       ctx.lineTo(bx+26+sway, 600); ctx.lineTo(bx+13+sway, 622); ctx.lineTo(bx+sway, 600);
@@ -1008,7 +1795,8 @@ function drawRays(){
   for(let i=0;i<5;i++){
     const a = 0.6 + i*0.22 + Math.sin(time*0.13+i)*0.03;
     const g = ctx.createLinearGradient(sx, sy, sx+Math.cos(a)*900, sy+Math.sin(a)*900);
-    g.addColorStop(0,'rgba(255,240,200,0.14)'); g.addColorStop(1,'rgba(255,240,200,0)');
+    const [rr,rg,rb,ra] = level.rays || [255,240,200,0.14];
+    g.addColorStop(0,`rgba(${rr},${rg},${rb},${ra})`); g.addColorStop(1,`rgba(${rr},${rg},${rb},0)`);
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.moveTo(sx, sy);
@@ -1031,11 +1819,12 @@ function inkLine(x1,y1,x2,y2,seed){
   }
   ctx.stroke();
 }
-const AWNINGS = ['#4C7A5C','#6E4664','#3E6E7A','#8A4A3A'];
+const AWNINGS = ['#E6D9A8','#3F5A80','#DDB02F','#7FA3A0'];   // ASSETS.md: undyed, indigo, turmeric, sea-grey
 
 function drawPlatform(bx,by,bw,bh,lane,kind,pal){
   const D = 18, DY = 10;
-  const wood = kind==='wood' || kind==='stall';
+  if(kind === 'block'){ drawBlock(bx,by,bw,bh,pal); return; }
+  const wood = kind==='wood' || kind==='stall' || kind==='plank';
   const wTop = wood? '#A97F52' : pal.top,  wTopD = wood? '#8A6540' : pal.topD;
   const wFace = wood? '#8A6743' : pal.face, wFaceD = wood? '#6B4E31' : pal.faceD;
   const wSide = wood? '#5E4429' : pal.side;
@@ -1090,12 +1879,12 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
       }
     }
     // railing with red-banded posts (background of the walkway)
-    if(bh <= 90){
+    if(bh <= 90 && kind !== 'plank'){
       ctx.strokeStyle = 'rgba(70,50,32,0.9)'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(bx+4, by-34); ctx.lineTo(bx+bw-4, by-34); ctx.stroke();
       for(let x=bx+10; x<bx+bw; x+=88){
         ctx.fillStyle = '#6B4E31'; ctx.fillRect(x-3, by-40, 7, 40);
-        ctx.fillStyle = '#A8402F'; ctx.fillRect(x-3, by-40, 7, 7);
+        ctx.fillStyle = level.gateCrimson === false ? level.accent : CRIMSON; ctx.fillRect(x-3, by-40, 7, 7);
         ctx.fillStyle = '#D8C8A4'; ctx.fillRect(x-3, by-31, 7, 4);
       }
     }
@@ -1113,8 +1902,9 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
     }
     // occasional red paint remnant on tall faces, like weathered lacquer
     if(bh > 100 && hash(bx*1.7)>0.55){
-      ctx.fillStyle = 'rgba(150,48,36,0.16)';
+      ctx.fillStyle = level.accent || '#6B4E33'; ctx.globalAlpha = 0.16;   // weathered paint in the level accent, not red
       ctx.fillRect(bx+8+hash(bx)*20, by+14, 26, Math.min(90, bh-30));
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -1157,9 +1947,56 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
       }
       // goods under the awning
       ctx.fillStyle = '#C98A3C'; ctx.beginPath(); ctx.arc(x+30, by-8, 10, Math.PI, 0); ctx.fill();
-      ctx.fillStyle = '#9A4A34'; ctx.beginPath(); ctx.arc(x+56, by-8, 8, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = '#7C6E55'; ctx.beginPath(); ctx.arc(x+56, by-8, 8, Math.PI, 0); ctx.fill();
     }
   }
+}
+
+// §2a block on rollers: a plain dressed stone on two wooden rollers (procedural until the art exists)
+function drawBlock(bx,by,bw,bh,pal){
+  ctx.fillStyle = pal.side; ctx.fillRect(bx+bw, by-6, 10, bh-4);
+  ctx.fillStyle = pal.top;  ctx.fillRect(bx+4, by-6, bw, 6);
+  const fg = ctx.createLinearGradient(bx, by, bx, by+bh);
+  fg.addColorStop(0, shade(pal.face, 10)); fg.addColorStop(1, pal.faceD);
+  ctx.fillStyle = fg; ctx.fillRect(bx, by, bw, bh-10);
+  ctx.strokeStyle = pal.ink; ctx.lineWidth = 2;
+  inkLine(bx, by, bx+bw, by, bx*0.3); inkLine(bx, by, bx, by+bh-10, bx*0.9); inkLine(bx+bw, by, bx+bw, by+bh-10, bx*1.1);
+  ctx.fillStyle = '#6B4E31';
+  for(const rx of [bx+16, bx+bw-16]){
+    ctx.beginPath(); ctx.arc(rx, by+bh-5, 6, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(30,20,12,0.5)'; ctx.beginPath(); ctx.arc(rx, by+bh-5, 2, 0, 7); ctx.fill();
+    ctx.fillStyle = '#6B4E31';
+  }
+}
+function drawPole(o){                        // §2a scaffold pole, lashed bamboo
+  ctx.strokeStyle = '#5E4429'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(o.x, o.top - 14); ctx.lineTo(o.x, o.bot); ctx.stroke();
+  ctx.strokeStyle = 'rgba(233,210,160,0.35)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(o.x+1.5, o.top - 12); ctx.lineTo(o.x+1.5, o.bot); ctx.stroke();
+  ctx.strokeStyle = 'rgba(40,28,18,0.7)'; ctx.lineWidth = 2;
+  for(let y = o.top; y < o.bot; y += 46){ ctx.beginPath(); ctx.moveTo(o.x-5, y); ctx.lineTo(o.x+5, y+4); ctx.stroke(); }
+}
+function drawRope(o){                        // §2a hauling rope from a beam, swaying
+  ctx.fillStyle = '#5E4429'; ctx.fillRect(o.x-30, o.ay-10, 60, 10);
+  ctx.strokeStyle = '#8A6A44'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  // a little sag toward the trailing side, so a fast swing reads as a rope and not a rod
+  const [ex, ey] = ropeEnd(o), bend = clamp(-o.angV*6, -10, 10);
+  ctx.beginPath(); ctx.moveTo(o.x, o.ay);
+  ctx.quadraticCurveTo((o.x+ex)/2 + bend*Math.cos(o.ang), (o.ay+ey)/2 - bend*Math.sin(o.ang), ex, ey);
+  ctx.stroke();
+  ctx.fillStyle = '#5E4429'; ctx.beginPath(); ctx.arc(ex, ey, 5, 0, 7); ctx.fill();
+}
+function drawSwordGlyph(x, y){               // §2 sign 2: an ink sword after the hearts, a sign, never a count
+  if(!player.hasSword) return;
+  const drawn = levelIdx >= TUNE.SWORD_FROM_LEVEL && level.swordDrawn;
+  const pulse = player.sheathT > 0 ? 1 + 0.35*Math.sin((player.sheathT/TUNE.SHEATH_PUSH)*Math.PI) : 1;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-0.75); ctx.scale(pulse, pulse);
+  ctx.fillStyle = '#C99A3F'; ctx.fillRect(-2, -14, 4, 8);           // grip
+  ctx.beginPath(); ctx.arc(0, -15, 3, 0, 7); ctx.fill();              // disc pommel
+  ctx.fillRect(-6, -6, 12, 3);                                        // guard
+  ctx.fillStyle = drawn ? '#D8D4C8' : INK;                            // blade, or the wooden scabbard
+  ctx.fillRect(drawn ? -1.6 : -3, -3, drawn ? 3.2 : 6, 24);
+  ctx.restore();
 }
 
 // ============================================================ entities
@@ -1218,7 +2055,7 @@ function drawGate(cx, gy){
     gg.addColorStop(0,'rgba(240,205,130,0.22)'); gg.addColorStop(1,'rgba(240,205,130,0)');
     ctx.fillStyle = gg; ctx.fillRect(cx-54, gy-114, 108, 108);
     const pul0 = 0.4+0.3*Math.sin(time*3+cx);
-    ctx.fillStyle = 'rgba(180,60,42,'+pul0+')';
+    ctx.fillStyle = level.gateCrimson === false ? 'rgba(30,22,16,'+pul0+')' : 'rgba(181,52,42,'+pul0+')';
     ctx.beginPath(); ctx.moveTo(cx, gy-172); ctx.lineTo(cx-7, gy-164); ctx.lineTo(cx+7, gy-164); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(cx, gy-154); ctx.lineTo(cx-7, gy-162); ctx.lineTo(cx+7, gy-162); ctx.closePath(); ctx.fill();
     return;
@@ -1241,11 +2078,13 @@ function drawGate(cx, gy){
   ctx.quadraticCurveTo(cx, gy-90, cx+42, gy-78);
   ctx.lineTo(cx+44, gy-71); ctx.quadraticCurveTo(cx, gy-83, cx-44, gy-71);
   ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#A8402F';                        // hanging pennant
+  if(level.gateCrimson !== false){                  // hanging pennant (none in level 3, DECISIONS 7)
+  ctx.fillStyle = CRIMSON;
   ctx.beginPath();
   ctx.moveTo(cx-8, gy-77); ctx.lineTo(cx+8, gy-77);
   ctx.lineTo(cx+6+sway, gy-46); ctx.lineTo(cx+sway, gy-38); ctx.lineTo(cx-6+sway, gy-46);
   ctx.closePath(); ctx.fill();
+  }
   const g = ctx.createRadialGradient(cx, gy-54, 0, cx, gy-54, 50);
   g.addColorStop(0,'rgba(240,205,130,0.22)'); g.addColorStop(1,'rgba(240,205,130,0)');
   ctx.fillStyle = g; ctx.fillRect(cx-50, gy-104, 100, 100);
@@ -1257,13 +2096,13 @@ function drawGate(cx, gy){
   }
   // pulsing chevrons above the lintel
   const pul = 0.4+0.3*Math.sin(time*3+cx);
-  ctx.fillStyle = 'rgba(180,60,42,'+pul+')';
+  ctx.fillStyle = level.gateCrimson === false ? 'rgba(30,22,16,'+pul+')' : 'rgba(181,52,42,'+pul+')';
   ctx.beginPath(); ctx.moveTo(cx, gy-108); ctx.lineTo(cx-7, gy-100); ctx.lineTo(cx+7, gy-100); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(cx, gy-90); ctx.lineTo(cx-7, gy-98); ctx.lineTo(cx+7, gy-98); ctx.closePath(); ctx.fill();
 }
 
 function drawBird(b){
-  ctx.fillStyle = '#B5342A';
+  ctx.fillStyle = '#3A2A1C';                       // umber, never red (crimson rule)
   ctx.save(); ctx.translate(b.x, b.y-6);
   if(b.flying){
     const flap = Math.sin(time*22+b.seed)*8;
@@ -1273,7 +2112,7 @@ function drawBird(b){
   } else {
     ctx.beginPath(); ctx.ellipse(0,-2,6,4.5,0,0,7); ctx.fill();
     ctx.beginPath(); ctx.arc(5,-6,3,0,7); ctx.fill();
-    ctx.fillStyle = '#7A2018';
+    ctx.fillStyle = '#20160E';
     ctx.beginPath(); ctx.moveTo(-4,-2); ctx.lineTo(-12,1); ctx.lineTo(-4,2); ctx.fill();
   }
   ctx.restore();
@@ -1281,7 +2120,12 @@ function drawBird(b){
 
 // figures ---------------------------------------------------------
 function drawFigure(x, y, face, phase, opts){
-  const {skin, cloth, sashC, isGuard, attackT=0, vy=0, onGround=true, hurt=false, vx=0} = opts;
+  const {skin, cloth, sashC, isGuard, attackT=0, vy=0, onGround=true, hurt=false, vx=0, procedural=false, unarmed=false, elder=false} = opts;
+  if(opts.rig && RIGS[opts.rig] && !procedural){
+    drawRig(opts.rig, x, y, face, opts.pose || {}, 106,
+            {alpha: hurt && (time*20|0)%2 ? 0.45 : 1, blade: attackT > 0});
+    return;
+  }
   // painted sprite path: pose picked from the asset slots, procedural rig as fallback
   const poseKey = isGuard
     ? (Math.sin(phase) > 0 ? 'guard_walk_a' : 'guard_walk_b')
@@ -1289,7 +2133,7 @@ function drawFigure(x, y, face, phase, opts){
     : !onGround ? 'hero_jump'
     : Math.abs(vx) > 40 ? (Math.sin(phase) > 0 ? 'hero_run_a' : 'hero_run_b')
     : 'hero_idle';
-  const sprite = IMGS[poseKey];
+  const sprite = procedural ? null : IMGS[poseKey];
   if(sprite){
     ctx.save();
     ctx.translate(x, y);
@@ -1438,12 +2282,14 @@ function drawFigure(x, y, face, phase, opts){
       ctx.fillStyle='#C99A3F';
       const aa = swing*0.8+0.35;
       ctx.beginPath(); ctx.arc(2+Math.sin(aa)*6, -53+Math.cos(aa)*6, 2.2, 0, 7); ctx.fill();
-      // curved sword in a wooden scabbard at the left hip
+      // sword in a wooden scabbard at the left hip
+      if(!unarmed){
       ctx.save(); ctx.translate(-7,-38); ctx.rotate(2.05);
       ctx.fillStyle = '#6B4E33'; ctx.fillRect(-1.8, 0, 3.6, 24);
       ctx.fillStyle = '#C99A3F'; ctx.fillRect(-2.6, -1, 5.2, 3);
       ctx.fillRect(-2.2, 19, 4.4, 2.2);
       ctx.restore();
+      }
     }
   }
   if(isGuard){                                     // spear
@@ -1459,13 +2305,13 @@ function drawFigure(x, y, face, phase, opts){
   ctx.fillStyle = skin;
   ctx.beginPath(); ctx.arc(5.5,-62, 5.2, -1.5, 1.3); ctx.fill();
   if(isGuard){
-    ctx.fillStyle = '#8C2F22';
+    ctx.fillStyle = levelIdx >= TUNE.SWORD_FROM_LEVEL ? '#C9A24A' : CRIMSON;   // head cloth: ochre in Kadaram
     ctx.beginPath(); ctx.arc(4,-64, 7.6, Math.PI*0.95, Math.PI*2.05); ctx.fill();
     ctx.fillRect(-3,-66, 15, 3);
     ctx.fillStyle = '#C99A3F'; ctx.fillRect(2,-73, 4, 6);
   } else {
-    // warrior's topknot (kudumi), gold headband, hoop earring
-    ctx.fillStyle = '#241A12';
+    // warrior's topknot (kudumi), gold headband, hoop earring; grey for the older man
+    ctx.fillStyle = elder ? '#8C8476' : '#241A12';
     ctx.beginPath(); ctx.arc(2,-67.5, 5.8, Math.PI*0.9, Math.PI*2.1); ctx.fill();
     ctx.beginPath(); ctx.arc(-1,-72.5, 3.6, 0, 7); ctx.fill();
     ctx.fillStyle = '#C99A3F';
@@ -1493,8 +2339,9 @@ function drawMist(yc, alpha){               // slow horizontal mist banks (scree
     const x = ((i*470 + drift) % (W+560)) - 280;
     const y = yc + Math.sin(time*0.4+i*2)*14 + hash(i*91)*36 - 18;
     const g = ctx.createRadialGradient(x, y, 20, x, y, 280);
-    g.addColorStop(0,'rgba(236,226,198,'+alpha+')');
-    g.addColorStop(1,'rgba(236,226,198,0)');
+    const mc = level.mistCol || '236,226,198';
+    g.addColorStop(0,'rgba('+mc+','+alpha+')');
+    g.addColorStop(1,'rgba('+mc+',0)');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.ellipse(x, y, 300, 58, 0, 0, 7); ctx.fill();
   }
@@ -1520,17 +2367,20 @@ function drawLaneContents(l){
   laneBegin(l);
   for(const b of level.platforms) if(b[4]===l) drawPlatform(b[0],b[1],b[2],b[3],l,b[5]||'stone',pal);
   for(const lk of level.links) if(lk.a===l || lk.b===l) drawGate(lk.cx, lk.gy[l]);
+  for(const o of level.poles) if(o.lane===l) drawPole(o);
+  for(const o of level.ropes) if(o.lane===l) drawRope(o);
   if(l===1){
     for(const c of level.checkpoints) drawFlag(c.x, c.y, c.lit);
     drawGoal(level.goal.x, level.goal.y);
     for(const b of birds) drawBird(b);
     // plane-shift hint markers
     ctx.font = '19px "Marcellus SC", Marcellus, serif'; ctx.textAlign='center';
-    for(const [hx,hy,txt] of level.hints){
+    for(const h of level.hintsPlaced){
       ctx.fillStyle = 'rgba(70,52,32,'+(0.55+0.3*Math.sin(time*2.4))+')';
-      ctx.fillText(txt, hx, hy-46);
-      ctx.fillStyle = 'rgba(150,44,34,0.8)';
-      ctx.beginPath(); ctx.moveTo(hx, hy-30); ctx.lineTo(hx-7, hy-18); ctx.lineTo(hx+7, hy-18); ctx.closePath(); ctx.fill();
+      ctx.fillText(h.text, h.x, h.base);
+      ctx.fillStyle = level.gateCrimson === false ? 'rgba(30,22,16,0.8)' : 'rgba(181,52,42,0.8)';
+      const ay = h.base + 16;
+      ctx.beginPath(); ctx.moveTo(h.x, ay); ctx.lineTo(h.x-7, ay+12); ctx.lineTo(h.x+7, ay+12); ctx.closePath(); ctx.fill();
     }
     ctx.textAlign='left';
   }
@@ -1538,10 +2388,31 @@ function drawLaneContents(l){
   for(const g of level.guards){
     if(g.dead || g.lane!==l) continue;
     drawFigure(g.x, g.y, g.dir, g.phase, {
-      skin:'#6E4530', cloth:'#8C2F22', sashC:'#3A2A1C', isGuard:true, vx:95, onGround:true,
+      skin:'#6E4530', cloth: levelIdx >= TUNE.SWORD_FROM_LEVEL ? '#4B5E9A' : CRIMSON,   // Srivijayan carries no red
+      sashC:'#3A2A1C', isGuard:true, vx:95, onGround:true,
     });
+    const mark = g.mode === 'chase' ? '!' : (g.mode === 'look' || g.seeT > 0) ? '?' : '';
+    if(mark){                                    // §3: ink "?" then "!"
+      ctx.fillStyle = INK; ctx.font = '30px "Marcellus SC", Marcellus, serif'; ctx.textAlign = 'center';
+      ctx.fillText(mark, g.x, g.y - 92); ctx.textAlign = 'left';
+    }
   }
-  if(player.lane === l && state==='play'){
+  if(l === 1 && level.npc){                  // Adittan, an older man of the company (procedural)
+    const n = level.npc;
+    drawFigure(n.x, n.y, -1, 0, {skin:'#7A5236', cloth:'#CFC2A2', sashC:'#5E4429', vx:0, onGround:true,
+                                 procedural:true, unarmed:n.given, elder:true});
+  }
+  if(player.lane === l && state==='play' && player.leap){
+    // §2 the gate leap: scale and position tween from the source lane to the target
+    const L = player.leap, k = Math.min(1, L.t/TUNE.GATE_LEAP);
+    const scr = (ln)=>{ const s = LANES[ln].s; return [(player.x - cam.x - W/2)*s + W/2, (player.y - cam.y - HORIZON)*s + HORIZON, s]; };
+    const A = scr(L.from), B = scr(L.to);
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.translate(lerp(A[0],B[0],k), lerp(A[1],B[1],k)); const sc = lerp(A[2],B[2],k); ctx.scale(sc, sc);
+    drawFigure(0, 0, player.face, player.runPhase, {skin:'#8A5A3B', cloth:'#EDE2C4', sashC:'#B5342A',
+      vx:0, vy:-200, onGround:false, unarmed:!player.hasSword, rig:'hero', pose:player.rigS});
+    ctx.restore();
+  } else if(player.lane === l && state==='play'){
     // ghost flash during a plane shift
     if(player.shiftFx > 0){
       ctx.globalAlpha = 0.5;
@@ -1553,9 +2424,15 @@ function drawLaneContents(l){
     }
     drawFigure(player.x, player.y, player.face, player.runPhase, {
       skin:'#8A5A3B', cloth:'#EDE2C4', sashC:'#B5342A',
-      attackT:player.attackT, vx:player.vx, vy:player.vy,
-      onGround:player.onGround, hurt:player.hurtT>0,
+      attackT:player.attackT, vx:player.climb ? 0 : player.vx, vy:player.vy,
+      onGround:player.onGround || !!player.climb, hurt:player.hurtT>0, unarmed:!player.hasSword,
+      rig:'hero', pose:player.rigS,
     });
+    if(player.sheathT > 0){                  // hand on the hilt: an ink tick at the hip
+      ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+      const hx = player.x - player.face*8, hy = player.y - 38, r = 10 + 8*(1 - player.sheathT/TUNE.SHEATH_PUSH);
+      ctx.beginPath(); ctx.arc(hx, hy, r, 0, 7); ctx.globalAlpha = player.sheathT/TUNE.SHEATH_PUSH; ctx.stroke(); ctx.globalAlpha = 1;
+    }
   }
   for(const q of particles){
     if((q.lane??1) !== l) continue;
@@ -1595,22 +2472,18 @@ function drawHUD(){
     ctx.bezierCurveTo(x+4, y-14, x+12, y-6, x, y+6);
     ctx.fill();
   }
-  ctx.fillStyle = '#C99A3F';
-  ctx.beginPath(); ctx.arc(38, 72, 9, 0, 7); ctx.fill();
-  ctx.fillStyle = '#7A5326';
-  ctx.beginPath(); ctx.arc(38, 72, 5.5, 0, 7); ctx.fill();
-  ctx.fillStyle = '#E9DFC6';
-  ctx.font = '18px Marcellus, serif'; ctx.textAlign = 'left'; ctx.textBaseline='middle';
-  ctx.fillText(level.coins.filter(c=>c.taken).length + ' / ' + level.coins.length, 56, 73);
+  drawSwordGlyph(140, 30);
+  // no coin counter (DESIGN.md §6, Pillar 3)
+  ctx.textAlign = 'left'; ctx.textBaseline='middle';
   // depth-plane indicator
   const names = ['far path','main path','near path'];
   for(let i=0;i<3;i++){
     ctx.fillStyle = i===player.lane ? '#B5342A' : 'rgba(110,95,80,0.4)';
-    ctx.fillRect(28+i*16, 100, 12, 5);
+    ctx.fillRect(28+i*16, 62, 12, 5);
   }
   ctx.fillStyle = 'rgba(233,223,198,0.75)';
   ctx.font = '13px Marcellus, serif';
-  ctx.fillText(names[player.lane], 82, 103);
+  ctx.fillText(names[player.lane], 82, 65);
   ctx.textAlign = 'right';
   ctx.fillStyle = 'rgba(233,223,198,0.85)';
   ctx.font = '16px "Marcellus SC", Marcellus, serif';
@@ -1636,15 +2509,22 @@ function render(){
   ctx.filter = 'none';
   if(!farIm) drawWallLayer();      // the painted backdrop carries its own architecture
 
+  if(state === 'play' && RIGS.hero){
+    const tgt = heroPoseTarget(), st = player.rigS || (player.rigS = {ang:{}});
+    heroSecondary(st, tgt, frameDt);
+    rigBlend(st, tgt, 0.35);
+    heroPin(st, tgt);
+  }
+
   // ---- background lane, then atmospheric haze over it
   drawLaneContents(0);
   ctx.fillStyle = level.fogHaze;
   ctx.fillRect(0,0,W,H);
-  drawMist(468, 0.10);
+  drawMist(468, level.mistA ? level.mistA[0] : 0.10);
 
   // ---- main lane
   drawLaneContents(1);
-  drawMist(642, 0.07);
+  drawMist(642, level.mistA ? level.mistA[1] : 0.07);
 
   // water sits between main and near lanes
   laneBegin(1); drawWater(); laneEnd();
@@ -1655,9 +2535,21 @@ function render(){
   // floating labels (screen-anchored to main lane)
   laneBegin(1);
   ctx.font = '17px "Marcellus SC", serif'; ctx.textAlign='center';
+  // floats stay inside the viewport (playtest: the sheath line clipped off the left edge)
+  const inView = (x, text)=>{ const hw = ctx.measureText(text).width/2 + 16; return clamp(x, cam.x + hw, cam.x + W - hw); };
   for(const f of floats){
     ctx.fillStyle = 'rgba(90,64,36,'+clamp(f.t,0,1)+')';
-    ctx.fillText(f.text, f.x, f.y - (1.6-f.t)*26);
+    ctx.fillText(f.text, inView(f.x, f.text), f.y - (1.6-f.t)*26);
+  }
+  if(player.scene && level.npc){             // the handover, one line at a time over the speaker
+    const i = Math.min(HANDOVER_LINES.length-1, player.scene.t/TUNE.HANDOVER_LINE|0);
+    const [who, line] = HANDOVER_LINES[i];
+    const spk = who === 'Ilamaran' ? player : level.npc;
+    const pl = placeDialogue(spk.x, spk.y - 112, line), dx = inView(pl.x, line);
+    ctx.fillStyle = 'rgba(60,42,26,0.95)'; ctx.fillText(line, dx, pl.base);
+    ctx.font = '13px "Marcellus SC", serif'; ctx.fillStyle = 'rgba(90,64,36,0.85)';
+    ctx.fillText(who, dx, pl.base - 22);
+    ctx.font = '17px "Marcellus SC", serif';
   }
   ctx.textAlign='left';
   laneEnd();
@@ -1675,7 +2567,7 @@ function render(){
   // color grade + vignette + paper grain
   ctx.fillStyle = level.grade; ctx.fillRect(0,0,W,H);
   const v = ctx.createRadialGradient(W/2, H*0.45, H*0.42, W/2, H*0.55, H*0.85);
-  v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'rgba(30,20,10,0.45)');
+  v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1, level.vig || 'rgba(30,20,10,0.45)');
   ctx.fillStyle = v; ctx.fillRect(0,0,W,H);
   if(!grainPat) grainPat = ctx.createPattern(GRAIN,'repeat');
   ctx.fillStyle = grainPat; ctx.fillRect(0,0,W,H);
@@ -1693,8 +2585,12 @@ function render(){
 
   drawHUD();
 
+  if(player.fadeT > 0){                       // §3, §5: 1 s ink-wash to the last checkpoint
+    const a = 1 - Math.abs(player.fadeT - TUNE.FADE_TIME/2)/(TUNE.FADE_TIME/2);
+    ctx.fillStyle = 'rgba(24,17,12,'+clamp(a,0,1)+')'; ctx.fillRect(0,0,W,H);
+  }
   if(player.hurtT > 1.05){
-    ctx.fillStyle = 'rgba(140,30,20,'+((player.hurtT-1.05)*2.2)+')';
+    ctx.fillStyle = 'rgba(30,22,16,'+((player.hurtT-1.05)*2.2)+')';   // ink, not crimson (§3)
     ctx.fillRect(0,0,W,H);
   }
 }
@@ -1702,12 +2598,11 @@ function render(){
 function renderTitleBG(){
   if(!level){
     level = LEVELS[0]();
-    level.palFront = dimPal(level.pal, -22);
-    level.palBack  = dimPal(level.pal, 10);
+    applyGrade(level);
     level.coins = level.coins.map(c=>({x:c[0],y:c[1],lane:c[2]??1,taken:false,spin:hash(c[0])*6}));
-    level.guards = level.guards.map(g=>({x:g[0]+30,x1:g[0],x2:g[1],y:g[2],lane:g[3]??1,dir:1,dead:false,w:26,h:54,phase:hash(g[0])*6}));
+    level.guards = level.guards.map(makeGuard);
     level.checkpoints = level.checkpoints.map(c=>({x:c[0],y:c[1],lit:false}));
-    prepLinks();
+    prepLinks(); prepTraversal(level); placeHints();
     birds = [];
     player.x = -999; player.y = -999;
   }
@@ -1716,10 +2611,10 @@ function renderTitleBG(){
 }
 
 // ============================================================ main loop
-let last = performance.now();
+let last = performance.now(), frameDt = 1/60;
 function frame(now){
   let dt = Math.min(0.033, (now-last)/1000);
-  last = now; time += dt;
+  last = now; time += dt; frameDt = dt;
   if(state === 'play'){
     movePlayer(dt);
     if(state === 'play') updateWorld(dt);
