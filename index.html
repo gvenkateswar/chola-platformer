@@ -823,44 +823,49 @@ function buildLevel1(){
 }
 
 function buildLevel2(){
-  const P=[], C=[], G=[];
-  const g = (x,w,y=620)=>P.push([x,y,w,240,1,'stone']);
-  g(-80,900);
-  P.push([300,490,140,24,1],[510,400,140,24,1]);
-  C.push([360,450,1],[570,360,1]);
-  P.push([880,560,90,170,1,'wood'],[1090,500,90,230,1,'wood'],[1300,560,90,170,1,'wood'],[1510,470,90,260,1,'wood']);
-  C.push([920,520,1],[1130,460,1],[1340,520,1],[1550,430,1]);
-  g(1700,540);
-  // — the flooded basin: cross by warehouse ledge (far) or the market wharf (near) —
-  P.push([2180,524,1000,26,0]);                                           // warehouse ledge
-  C.push([2380,484,0],[2540,484,0],[2700,484,0]);
-  G.push([2320,2920,524,0]);
-  P.push([2160,648,1000,72,2,'stall']);                                   // market wharf
-  C.push([2360,606,2],[2560,606,2],[2760,606,2],[2940,606,2]);
-  G.push([2300,2960,648,2]);
-  g(3100,520);
-  P.push([3220,480,130,24,1],[3430,392,130,24,1]);
-  C.push([3280,440,1],[3490,352,1]);
-  P.push([3720,540,430,80,1,'wood']);                                     // ship 1 deck
-  P.push([3860,398,130,20,1,'wood'],[3860,268,130,20,1,'wood']);
-  C.push([3925,358,1],[3925,228,1],[4060,500,1]);
-  G.push([3750,4100,540,1]);
-  P.push([4330,560,90,170,1,'wood']);
-  g(4560,840);
-  P.push([4660,470,240,24,0]);
-  C.push([4720,430,0],[4820,430,0]);
-  C.push([4700,570,1],[4780,570,1],[4860,570,1]);
-  G.push([1760,2140,620,1],[4700,5120,620,1]);
+  // docs/levels/LEVEL-2.md draft 3, section 9 (builder notes); beats, guards, checkpoints in sections 3 to 6.
+  // Hints without a SCRIPT.md line (bounce, hold jump, push, gangplank, climb, gate) wait for the
+  // narrative designer (NOTES.md).
+  const hint = (x,y,t)=>[x, y, t, touchLine(t)];
   return {
-    name:'Nagapattinam', chapter:'Chapter II', width:5400, killY:700,
-    story:'The great port of the Cholas. Grain, pearls, and war-elephants load onto ships '+
-          'bound east. The merchant guilds — the Five Hundred Lords of Ayyavole — trade under '+
-          'awnings along the wharf. Slip between quay and warehouse and find your ship.',
-    platforms:P, coins:C, guards:G,
-    checkpoints:[[1760,620],[3160,620],[4620,620]],
-    links:[[2180,60,0,1],[3105,70,0,1],[2170,70,1,2],[3095,60,1,2],[4680,200,0,1]],
-    hints:[[2010,540,'cross at the lamplit gates — ↑ far · ↓ near']],
-    goal:{x:5280,y:620}, start:[40,620],
+    name:'Nagapattinam', chapter:'Chapter II', width:11600, killY:760,
+    date:'1025 CE · the sailing season',
+    story:'Fifteen years a sevagan and I have never seen so many hulls. Stitched '+
+          'planks, coir cord, no iron anywhere. Pearls, cloth and rice go aboard. The '+
+          'tall brick tower over the warehouses is a monastery the kings of Srivijaya '+
+          'paid for, with our old king\'s leave. Now we sail against Srivijaya. The '+
+          'dock guards hold soldiers back until the cargo is in. My ship is at the '+
+          'far end.',
+    platforms:[
+      [-80,620,6520,240,1,'stone'],[720,360,320,260,1,'stone'],[1400,320,300,300,1,'stone'],[2100,420,360,200,1,'stone'],
+      [2960,440,640,180,1,'wood'],[3600,-400,600,1020,1,'stone'],[3700,200,420,26,0,'wood'],[4120,320,300,26,0,'wood'],
+      [4420,480,400,26,0,'wood'],[5340,524,830,24,1,'stone'],[5180,656,700,64,2,'stall'],[6360,524,800,26,0,'wood'],
+      [7280,524,320,26,0,'wood'],[6720,430,300,24,0,'wood'],[6360,640,760,72,2,'stall'],[7360,640,400,72,2,'stall'],
+      [6700,548,220,24,2,'stall'],[7360,620,1200,240,1,'stone'],[8180,524,280,24,1,'stall'],[7980,536,840,26,0,'wood'],
+      [8380,442,240,24,0,'wood'],[8560,430,640,330,1,'wood'],[9880,430,1720,330,1,'wood'],[10180,520,1020,140,2,'wood'],
+    ],
+    planks:[[3220,140,320,1],[10580,40,400,1]], poles:[[3200,140,440,1,'mast'],[10570,40,130,1,'line'],[11000,40,430,1,'mast']],
+    ropes:[[3560,100,100,1,0,3760],[9450,70,300,1]],                     // [x,anchorY,len,lane,(toLane,landX)]: R1 is marked
+    awnings:[[480,540,160,1],[1160,560,160,1],[10380,270,160,1]], bales:[[1800,1],[10160,1]], slopes:[[2560,620,2960,440,1,'gangplank']],
+    guards:[
+      [5300,5700,620,1],[6560,7060,524,0],[6560,6960,640,2],[8130,8530,620,1],[8260,8660,536,0],[10540,10940,430,1],
+    ],
+    links:[
+      [4640,120,0,1],[5210,60,1,2],[5810,60,1,2],[6320,120,0,1],[6360,60,1,2],[7460,120,0,1],
+      [7540,60,1,2],[7980,120,0,1],[8700,120,0,1],[10220,60,1,2],[11070,60,1,2],
+    ],
+    checkpoints:[[1100,620],[2300,420],[3400,440],[4780,620],[6200,620],[7590,620],[8900,430],[10040,430]],
+    cpLines:{3:'A foreign king\'s house of monks. Nobody minds it.'},   // SCRIPT §4, at LEVEL-2 §8's mid hook (4780)
+    hints:[hint(3500,100,'Lamplit again. ↑ the warehouse ledge.')],
+    coins:[
+      [560,480,1],[640,420,1],[760,320,1],[860,320,1],[960,320,1],[1240,500,1],[1320,420,1],[1460,280,1],
+      [1560,280,1],[1660,280,1],[2180,380,1],[2280,380,1],[2380,380,1],[2700,520,1],[2800,490,1],[2900,460,1],
+      [3300,100,1],[3400,100,1],[3500,100,1],[3800,160,0],[3900,160,0],[4000,160,0],[5400,484,1],[5600,484,1],
+      [5800,484,1],[6000,484,1],[5300,616,2],[5500,616,2],[5700,616,2],[6760,390,0],[6860,390,0],[6960,390,0],
+      [6740,508,2],[6810,508,2],[6880,508,2],[8220,484,1],[8320,484,1],[8420,484,1],[9200,330,1],[9300,300,1],
+      [9400,330,1],[10620,0,1],[10760,0,1],[10900,0,1],[10300,480,2],[10600,480,2],[10900,480,2],
+    ],
+    goal:{x:11400,y:430}, start:[40,620], castOffAtGoal:true,   // ship 2 casts off after the goal
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#2F5E6E','#5E8F94','#A9C4B4','#E6D9A8'], sun:{x:.28,y:.32,r:70,c:'#FFF3D0'},
     far:'ships', mid:'docks',
@@ -868,50 +873,49 @@ function buildLevel2(){
     fogHaze:'rgba(190,214,206,0.14)', grade:'rgba(40,110,120,0.07)',
     mistCol:'214,230,224', mistA:[0.05,0.03], vig:'rgba(10,26,34,0.48)', rays:[255,240,205,0.15],
     farCol:'rgba(80,118,118,0.42)', midCol:'rgba(28,52,56,0.68)', accent:'#DDB02F',
-    motes:'#E8F0E6', water:644, banners:false,
+    motes:'#E8F0E6', water:660, banners:false,
   };
 }
 
 function buildLevel3(){
-  const P=[], C=[], G=[];
-  const g = (x,w,y=620)=>P.push([x,y,w,240,1,'stone']);
-  g(-80,900);
-  P.push([340,500,130,24,1],[560,410,130,24,1],[780,330,130,24,1]);
-  C.push([400,460,1],[620,370,1],[840,290,1]);
-  P.push([1000,330,180,400,1]);
-  C.push([1060,290,1],[1130,290,1]);
-  P.push([1150,470,640,26,0]);                                             // temple gallery (far)
-  C.push([1250,430,0],[1400,430,0],[1550,430,0]);
-  g(1260,520);
-  P.push([1960,520,80,210,1],[2140,430,80,300,1],[2320,340,80,390,1],[2500,430,80,300,1]);
-  C.push([1995,480,1],[2175,390,1],[2355,300,1],[2535,390,1]);
-  g(2680,420);
-  // — the ravine: rope bridge on the far path, river stones on the near —
-  P.push([3020,510,840,28,0,'wood']);                                      // rope bridge
-  C.push([3140,470,0],[3340,470,0],[3540,470,0]);
-  G.push([3080,3700,510,0]);
-  P.push([3030,660,120,60,2],[3290,660,120,60,2],[3550,660,120,60,2],[3810,660,120,60,2]); // river stones
-  C.push([3090,616,2],[3350,616,2],[3610,616,2]);
-  g(3800,400);
-  P.push([3920,500,110,22,1],[4120,410,110,22,1]);
-  C.push([3970,460,1],[4170,370,1]);
-  P.push([4320,540,560,190,1]);                                            // stupa terraces
-  P.push([4400,440,400,26,1],[4480,340,240,26,1],[4550,250,110,24,1]);
-  C.push([4440,400,1],[4600,300,1],[4600,210,1],[4360,500,1],[4820,500,1]);
-  G.push([4340,4840,540,1],[4420,4760,440,1]);
-  g(4980,620);
-  G.push([1340,1720,620,1],[2760,3080,620,1],[5060,5440,620,1]);
-  C.push([5140,570,1],[5220,570,1]);
+  // docs/levels/LEVEL-3.md third draft (final), section 9; no killY: shallow water never kills.
+  // Hints without a SCRIPT.md line (vine, slide, marked vine) wait for the narrative designer.
+  const hint = (x,y,t)=>[x, y, t, touchLine(t)];
   return {
-    name:'Kadaram · Srivijaya', chapter:'Chapter III', width:5600, killY:820,
-    story:'1025 CE. The fleet falls upon Kadaram and the river-cities of Srivijaya. Through '+
-          'monsoon jungle and past terraced sanctuaries, fight to the citadel of the maharaja '+
-          'and plant the tiger banner of Rajendra, Ganges-conqueror, lord of the eastern sea.',
-    platforms:P, coins:C, guards:G,
-    checkpoints:[[1320,620],[2740,620],[4980,620]],
-    links:[[1280,130,0,1],[1620,140,0,1],[3025,70,0,1],[3795,60,0,1],[3035,60,1,2],[3815,80,1,2]],
-    hints:[[2860,540,'cross at the lamplit gates — ↑ far · ↓ near']],
-    goal:{x:5460,y:620}, start:[50,620],
+    name:'Kadaram · Srivijaya', chapter:'Chapter III', width:13400, killY:1000,   // below every wading bed (NOTES.md)
+    date:'1025 CE · the Kadaram shore',
+    story:'Rain. The river is flat and brown and the houses stand in it on legs. One '+
+          'mountain behind, in cloud. They say the king of Kadaram keeps elephants '+
+          'and a gate of jewels. The gate is ahead of us. The elephants I will not '+
+          'see. The men in front of that gate know this ground. I have carried this '+
+          'sword fifteen years without drawing it on a man.',
+    platforms:[
+      [-80,620,680,240,1,'sand'],[1500,480,400,280,1,'mud'],[2840,480,360,280,1,'mud'],[3200,-400,900,1160,1,'roots'],
+      [3260,480,240,26,0,'wood'],[4140,480,300,26,0,'wood'],[4100,620,3900,240,1,'stone'],[5000,536,960,26,0,'wood'],
+      [6840,524,830,24,1,'stone'],[6440,480,240,26,0,'wood'],[6680,480,560,26,0,'wood'],[7600,480,420,26,0,'wood'],
+      [8400,420,200,26,1,'wood'],[8920,420,720,26,1,'wood'],[9660,320,500,440,1,'mud'],[11080,620,2320,240,1,'stone'],
+    ],
+    planks:[[1340,620,80,1],[1420,550,70,1],[2660,620,80,1],[2760,550,60,1],[11000,620,80,1]], poles:[[4140,480,680,0,'ladder']],
+    vines:[
+      [720,200,240,1],[1020,180,240,1],[1320,200,240,1],[3120,220,210,1,0,3320],[6980,160,220,0],
+      [7330,160,220,0],[8150,200,240,1],[9390,140,220,1],[9740,140,220,1],
+    ],
+    slopes:[[1900,480,2246,680,1,'mud'],[10160,320,10680,620,1,'mud']], wades:[[600,680,900,1],[2246,680,414,1],[3260,680,1200,0],[8000,680,400,1],[10680,680,400,1]], sways:[[3580,480,200,0,0],[3860,480,200,0,1],[7320,480,200,0,0],[8680,420,160,1,0]],
+    guards:[
+      [5340,5740,620,1,'fighter'],[6800,7200,620,1,'fighter'],[6760,7160,480,0,'fighter'],
+      [9220,9620,420,1,'fighter'],[11750,11750,620,1,'fighter','stand'],[12750,12750,620,1,'shield','stand'],
+    ],
+    links:[[4260,120,0,1],[5000,120,0,1],[5800,120,0,1],[6500,120,0,1],[7640,120,0,1]],
+    checkpoints:[[1700,480],[3190,480],[4690,620],[6190,620],[7350,524],[8520,420],[9800,320],[11250,620],[12250,620]],
+    cpLines:{6:'A wall of timber. Men in front. No way round.'},   // SCRIPT §4, at LEVEL-3 §8's mid hook (9800)
+    hints:[hint(4800,560,'Here the sword comes out. J or X.'), hint(5060,540,'A lamp in the rain. ↑ the stilt walk.')],
+    coins:[
+      [820,380,1],[1020,330,1],[1220,380,1],[1600,440,1],[1700,440,1],[1800,440,1],[2000,500,1],[2100,560,1],
+      [2200,620,1],[3600,440,0],[3760,440,0],[3940,440,0],[5100,496,0],[5300,496,0],[5500,496,0],[5700,496,0],
+      [6900,484,1],[7100,484,1],[7300,484,1],[7500,484,1],[7000,360,0],[7150,340,0],[7300,360,0],[8250,380,1],
+      [8350,380,1],[9490,240,1],[9640,220,1],[9900,280,1],[10000,280,1],[10300,400,1],[10450,480,1],[10600,560,1],
+    ],
+    goal:{x:13200,y:620}, start:[50,620],
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#2E3A52','#4F6A6A','#86A08A','#C9D3B0'], sun:{x:.80,y:.22,r:52,c:'#F2F6DA'},
     far:'stupas', mid:'jungle',
@@ -920,7 +924,7 @@ function buildLevel3(){
     mistCol:'210,224,204', mistA:[0.12,0.07], vig:'rgba(10,20,28,0.52)', rays:[226,240,210,0.10],
     farCol:'rgba(60,96,80,0.45)', midCol:'rgba(24,44,32,0.70)', accent:'#4B5E9A',
     gateCrimson:false,                 // DECISIONS 7: level 3 gate has no crimson; its arrow is ink
-    motes:'#DDE8B0', banners:false,
+    motes:'#DDE8B0', water:660, banners:false,
   };
 }
 const LEVELS = [buildLevel1, buildLevel2, buildLevel3];
@@ -1410,7 +1414,7 @@ function movePlayer(dt){
   if(!p.climb && p.grabCool <= 0 && !p.scene){
     const c = findClimbable();
     if(c && (!p.onGround || keys.U) && !(keys.U && shiftQueued < 0 && linkAtPlayer(p.lane-1))){
-      p.climb = c; p.jumps = 0; p.shoveLeft = 0; shiftQueued = 0;
+      p.climb = c; p.jumps = 0; p.shoveLeft = 0; shiftQueued = 0; p.lastWallJump = 0;
       if(c.kind === 'rope') grabRope(c);
       else { const [lo, hi] = climbRange(c); p.y = clamp(p.y, lo, hi); p.climbPhase = 0; }
     }
@@ -1460,7 +1464,9 @@ function movePlayer(dt){
       p.vy = -830; p.jumps = 1; jumpQueued = 0; p.coyote = 0; sfx.jump();
       if(p.onSlope && p.onSlope.kind === 'mud') p.overV = Math.abs(p.vx);   // §2a: a jump keeps the slide's speed
       spawnDust(p.x, p.y, 8);
-    } else if(p.wallDir !== 0){
+    } else if(p.wallDir !== 0 && p.wallDir !== p.lastWallJump){
+      // one wall jump per wall side until he lands: alternating walls climb, a single wall does not
+      p.lastWallJump = p.wallDir;
       p.vy = -760; p.vx = -p.wallDir*430; p.face = -p.wallDir; p.jumps = 1; jumpQueued = 0; sfx.jump();
       spawnDust(p.x + p.wallDir*14, p.y-30, 6);
     } else if(p.jumps < 2){
@@ -1564,6 +1570,7 @@ function movePlayer(dt){
     if(Math.random() < dt*20) spawnDust(p.x - p.face*6, p.y, 1);
   }
   p.coyote = p.onGround ? 0.1 : Math.max(0, p.coyote - dt);
+  if(p.onGround) p.lastWallJump = 0;
 
   if(p.onGround && Math.abs(p.vx) > 40){
     p.runPhase += dt*Math.abs(p.vx)*0.045;
@@ -2129,7 +2136,8 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
   ctx.moveTo(bx, by); ctx.lineTo(bx+D, by-DY);
   ctx.lineTo(bx+bw+D, by-DY); ctx.lineTo(bx+bw, by); ctx.closePath(); ctx.fill();
   // front face: painted texture when the asset exists, procedural wash otherwise
-  const pat = texPat(wood ? 'tex_wood' : 'tex_stone');
+  const natural = kind==='sand' || kind==='mud' || kind==='roots';   // earth and thicket: no dressed stone
+  const pat = natural ? null : texPat(wood ? 'tex_wood' : 'tex_stone');
   if(pat){
     ctx.fillStyle = pat;
     ctx.fillRect(bx, by, bw, bh);
@@ -2176,7 +2184,15 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
       }
     }
   } else {
-    if(!pat){
+    if(natural){                            // root arches and mud streaks instead of block courses
+      ctx.strokeStyle = kind === 'roots' ? 'rgba(14,20,10,0.55)' : 'rgba(30,22,14,0.35)'; ctx.lineWidth = kind === 'roots' ? 5 : 2;
+      for(let x = bx + 20; x < bx + bw - 10; x += kind === 'roots' ? 46 : 70){
+        ctx.beginPath();
+        if(kind === 'roots'){ ctx.moveTo(x, by + bh); ctx.quadraticCurveTo(x + 23, by + 40 + hash(x)*80, x + 46, by + bh); }
+        else { ctx.moveTo(x, by + 18 + hash(x)*30); ctx.lineTo(x + 40, by + 22 + hash(x+1)*30); }
+        ctx.stroke();
+      }
+    } else if(!pat){
       // stone block courses
       ctx.strokeStyle = 'rgba(40,28,18,0.20)'; ctx.lineWidth = 1;
       for(let y=by+26; y<by+bh; y+=26){
