@@ -100,3 +100,21 @@ note in docs/NOTES.md addressed to Gaurav.
     Nagapattinam's architecture and cargo only, and must read as brown-red,
     never as crimson. Architecture in every backdrop must be right for the
     period; the historian reviews each before it goes into the game.
+
+## 2026-10-26, after the game-feel deep dive (docs/research/game-feel-deep-dive.md)
+
+24. **Parry.** Ilamaran gets a parry, the core of sword fighting, in the
+    manner of Prince of Persia (1989) and The Lost Crown. A good parry
+    stuns and opens a counter; a mistimed one still guards. Telegraphs
+    read gold for "parry this" and black or indigo ink for "avoid this";
+    never crimson. The shield-bearer is broken by parries or by getting
+    behind him.
+25. **Rope rhythm follows length.** Longer ropes swing slower, as real
+    ropes do (period tied to length). Supersedes the fixed ROPE_PERIOD
+    in DESIGN.md 2a.
+26. **Kasu have a use.** VISION.md pillar 3's no-counter rule is relaxed
+    for kasu: they can be spent at ports on things a sailor of 1025 would
+    need (owner examples: a pilot, a temple offering); clusters lead to
+    hidden detours that leave a mark on a voyage map; a few rare named
+    kasu unlock short history cards. Still no score, no grades, no
+    end-of-level tally of misses.
