@@ -55,3 +55,11 @@ note in docs/NOTES.md addressed to Gaurav.
     blocks to reach or open a path, and swinging on vines. Push blocks fit
     Thanjavur (stone being hauled for the temple) and Nagapattinam (cargo
     bales and crates). Vine swinging fits Kadaram.
+15. **Ropes and vines may cross depth if marked like a gate** (VISION.md
+    section 8 question 1, option b). A crossing rope or vine carries the
+    same lamp and ink mark as a gate, so every depth crossing is visible.
+    Unmarked ropes and vines stay within one depth.
+16. **Gate crossing is a visible leap.** Changing depth at a gate is shown
+    as a short leap toward or away from the camera, about half a second,
+    replacing the instant switch. The existing 0.5 s gate stand becomes
+    this leap; the catch rule still applies during it.
