@@ -5,11 +5,10 @@ Owner: historian. Readers: designers, writers, artists. Second draft,
 (`docs/reviews/research-review-2026-10-25.md`), against `index.html`,
 `ASSETS.md`, the final `docs/VISION.md`, and `docs/DECISIONS.md`.
 
-**Note to the creative director and art director.** DECISIONS.md 6 has
-the hero redrawn with a "straight double-edged sword" on my first draft's
-advice. The audit corrected me: a forward-curved South Indian blade is
-also period (section 5). Either is right; only a back-curved talwar is
-wrong. I do not object to "Ilamaran" (section 4).
+**Note to the creative and art directors.** DECISIONS.md 6 has the hero
+redrawn with a "straight double-edged sword" on my first draft's advice.
+A forward-curved South Indian blade is also period (section 5); only a
+back-curved talwar is wrong.
 
 ## 1. How to read this
 
@@ -94,10 +93,9 @@ built. [plausible] Soldiers of named regiments made gifts and stood guard
 at the gates; see section 4. [documented] SII II, introduction and no. 57
 n. 2.
 
-**Who is Rajendra in 1010.** A grown man, already a commander, two years
-from co-regency; "young prince Rajendra" is wrong. Co-regency 1012:
-[documented] Sastri 1955, pp. 194–195. His birth year is unrecorded;
-"c. 971" is speculation. [plausible] Fix: "Rajendra, the king's son and
+**Who is Rajendra in 1010.** A grown commander two years from co-regency
+(1012). [documented] Sastri 1955, pp. 194–195. His birth year ("c. 971")
+is speculation. [plausible] Fix "young prince" to "the king's son and
 general."
 
 **Sounds and objects.** Oil lamps everywhere: the inscriptions record
@@ -153,8 +151,7 @@ Aihole in Karnataka; the guild was pan-South-Indian, not Tamil by origin.
 attested; Manigramam, Nanadesi and the local nagaram merchants are safer
 names. [plausible] from the 9th-century Takuapa inscription and
 Champakalakshmi. Foreigners in port: Sinhalese, Malays, Burmese monks, Arab
-and Persian merchants (the Anjuvannam guild is attested on the west coast),
-Chinese crews. [plausible] Subbarayalu in Kulke 2009, ch. 9; the ceramics.
+and Persian merchants, Chinese crews. [plausible]
 
 **Cargo.** The 1015 and 1033 embassies carried pearls, tusks and
 frankincense to China. [documented] *Song Shi* 489. Cotton textiles went
@@ -178,21 +175,18 @@ matting or cotton. [plausible] Sakhuja and Sakhuja (Kulke 2009, ch. 4)
 argue the fleet was requisitioned merchant shipping; Subbarayalu (ch. 5)
 finds no evidence of a standing Chola navy. [documented] as reported in
 the volume; chapters not read. The ship names "kalamukha," "manthai" and
-"sandhani" that circulate online rest on no Chola text. [plausible] Keep
-them off the sources screen.
+"sandhani" that circulate online rest on no Chola text. [plausible]
 
 **A dock scene an artist can draw.** Low flat coast, late afternoon. Broad
 beamy hulls drawn up on sand or anchored in the river mouth, planks
 visibly stitched, one or two masts with matting sail furled, no iron
-fittings, no stern castles. Catamarans and dugouts moving cargo. Thatched
-sheds and lime-plastered brick warehouses; bales of cloth, baskets of
-rice, jars, areca, stacked ceramic bowls, pepper sacks. Bare-chested Tamil
-porters in short dhotis and head cloths; a merchant in white dhoti and
-shoulder cloth with gold earrings; a shaven monk in ochre; a Malay trader
-in a wrapped waist cloth; a bearded Arab in a long robe; a Chinese sailor
-in jacket and trousers. A brick Buddhist tower behind; palmyra and coconut
-palms. All [plausible] except the sewn hulls and the vihara, [documented]
-above.
+fittings. Catamarans moving cargo. Thatched sheds and plastered brick
+warehouses; bales of cloth, rice baskets, jars, ceramic bowls. Tamil
+porters in short dhotis and head cloths; a merchant in white dhoti with
+gold earrings; a monk in ochre; a Malay trader in a waist cloth; an Arab
+in a long robe; a Chinese sailor in jacket and trousers. A brick Buddhist
+tower behind; palms. All [plausible] except the hulls and vihara,
+[documented] above.
 
 ### 3.3 Srivijaya and Kadaram, 1025
 
@@ -200,14 +194,12 @@ above.
 ships in the midst of the rolling sea," captured Sangrama Vijayottungavarman
 "the king of Kadaram" with his elephants and treasure, seized the "jeweled
 wicket-gate" (vidyadhara-torana) at the war gate of Srivijaya, and took
-twelve more places: Pannai, Malaiyur, Mayirudingam, Ilangasoka, Mapappalam,
-Mevilimbangam, Valaippanduru, Talaittakkolam, Madamalingam, Ilamuridesam,
-Manakkavaram and Kadaram itself. [documented] Thanjavur inscription of
+twelve more places, among them Pannai, Malaiyur, Ilangasoka,
+Talaittakkolam and Manakkavaram. [documented] Thanjavur inscription of
 Rajendra; Tiruvalangadu plates, 14th regnal year (Kulke 2009, pp. 1–19;
-Sastri 1955, pp. 211–220). Identifications: Srivijaya is Palembang;
-Kadaram is Kedah; Pannai is Panai in north Sumatra; Malaiyur is Jambi;
-Ilangasoka is Langkasuka; Talaittakkolam is Takuapa or Trang; Manakkavaram
-is the Nicobars. [documented] Coedes 1968; Sastri 1955; several disputed.
+Sastri 1955, pp. 211–220). Srivijaya is Palembang; Kadaram is Kedah;
+Pannai is Panai in Sumatra; Malaiyur is Jambi; Ilangasoka is Langkasuka;
+Manakkavaram is the Nicobars. [documented] Coedes 1968; several disputed.
 A raid, not a conquest: no Chola administration followed. [documented]
 Kulke 2009; Spencer 1983. The motive is unsettled: Sastri proposed
 Srivijayan interference with Chola trade or Rajendra's wish to extend his
@@ -270,6 +262,46 @@ attested before the 13th century; prefer a straight short sword or spear.
 [documented] Old Malay inscriptions of the 680s (Kedukan Bukit, Talang
 Tuwo). Sounds: river water, bronze gongs, cicadas, rain. [plausible]
 
+### 3.4 Traversal plausibility
+
+**Thanjavur, 1010.**
+- Scaffolding on the vimana: its finial was gilded in 1010, so the top was
+  done. [documented] SII II no. 1, para. 18. Timber and bamboo scaffolding
+  on the cloister, gateways and lesser shrines is [plausible]; keep it off
+  the vimana.
+- Hauling ropes, sledges, rollers: [plausible]; no Chola text describes
+  the method.
+- The earth ramp from "Sarapallam": [invented] as history; local tradition
+  with no inscription, excavation or contemporary text behind it. Least
+  wrong: a short dirt ramp in a work yard.
+- Climbable poles: the flagstaff is [plausible] but climbing it would be
+  sacrilege; use a scaffold pole.
+- Push blocks: dressed granite in a work yard is [plausible]; one person
+  shoving it is [invented]. Least wrong: a small block on rollers, never a
+  carved or consecrated stone.
+
+**Nagapattinam, c. 1015–1025.**
+- Cloth awnings over stalls: [plausible]. Keep them undyed (VISION.md).
+- Coir rigging and stitched hulls: [documented] Staples and Blue 2019, as
+  in 3.2.
+- A yard with a matting sail, a climbable mast: [plausible] from Indian
+  Ocean rigs; no Chola ship survives. Climb by lashings, not European
+  rope ladders. [plausible]
+- Gangplanks: [plausible] at a quay; for hulls on sand, a plank or ladder.
+- Cargo nets: [invented]. Least wrong: rope slings, baskets on poles, and
+  bales lashed with coir.
+- Push cargo: cotton bales and storage jars on the quay are [plausible]
+  (3.2); wooden crates are [invented]. Push a bale or lashed bundle.
+
+**Kadaram, 1025.**
+- Mangrove prop roots on the Merbok estuary: [documented] Bujang Valley
+  survey (section 3.3).
+- Rattan and climbing vines: [plausible]; rattan is a staple Malay forest
+  product, but I have no source dated to 1025.
+- Stilt houses and walkways over water: [documented] for Srivijaya (Zhao
+  Rugua, 1225); [plausible] for Kedah.
+- A muddy riverbank: [plausible]; it replaces the ravine.
+
 ## 4. People and roles
 
 **Rajaraja I** (r. 985–1014), born Arulmolivarman, titles Mummudi Cholan,
@@ -298,15 +330,12 @@ troops; the "suicide corps" reading is not secure. [documented] Sastri
 
 **The hero.** "Warrior of the Chola navy" presumes a navy; the evidence is
 for ships and soldiers put on them. [documented] Subbarayalu in Kulke
-2009, ch. 5. Better: "a soldier of the fleet." The name Ilamaran ("Ilam,"
-young, plus "Maran," a Pandya royal name) reads well but is unattested for
-a Chola soldier. [plausible] Attested names run "X son of Y of village Z":
-Kandan, Adittan, Solan, Udaiyan, Sattan. Ilamaran is a free invention
-VISION.md permits; I do not object. His kit dress (bare chest, dhoti
-tucked kachcham style, cross-belt, topknot, earrings, armlets, bangles)
-matches Chola bronze and relief conventions; the cross-belt is the
-channavira of sculpture. [plausible] from sculpture of gods and donors,
-not sailors. Footwear: sculpture shows bare feet; sandals are unattested
+2009, ch. 5. Better: "a soldier of the fleet." "Ilamaran" ("young" plus
+the Pandya royal name Maran) is unattested for a Chola soldier but a fair
+invention; I do not object. [plausible] His kit dress (bare chest, tucked
+dhoti, cross-belt, topknot, earrings, armlets, bangles) matches Chola
+bronze conventions. [plausible] from sculpture of gods and donors, not
+sailors. Footwear: sculpture shows bare feet; sandals are unattested
 for a common soldier. [plausible] For the redraw: bare feet in all five
 poses. "Crimson silk sash": silk was imported and costly; cotton.
 [plausible] Keep the color, drop "silk."
@@ -369,16 +398,12 @@ is the sosun pattah. [documented] Elgood, *Hindu Arms and Ritual* (2015),
 p. 83, as quoted by the fact-checker. Sangam swords were "broad in the
 blade and about a yard long." [plausible] Kanakasabai 1956 ed., p. 131.
 Only the back-curved talwar is out of period; it displaces the South
-Indian forms after the 16th century. [documented] Elgood 2015. My first
-draft's "straight only" was wrong, and DECISIONS.md 6 rests on it. The
-kit's "slightly curved south-Indian sword" is defensible if the curve is
+Indian forms after the 16th century. [documented] Elgood 2015. The kit's
+"slightly curved south-Indian sword" is defensible if the curve is
 forward; the redraw prompt should say "a straight broad double-edged
-sword, or a forward-curved blade that widens toward the tip; bronze or
-brass grip, disc or cushion pommel, wooden scabbard; never a talwar."
-Spear and shield was the ordinary infantry pairing; sword and shield for
-close work; bows for massed fire; elephants and some cavalry for shock.
-[plausible] from the regiment names. Silambam as a system is not attested
-for 1010. [plausible]
+sword, or a forward-curved blade widening toward the tip; brass grip,
+disc or cushion pommel, wooden scabbard; never a talwar." Spear and shield
+was the ordinary infantry pairing. [plausible] from the regiment names.
 
 ## 6. Daily texture
 
@@ -390,24 +415,19 @@ the Lanka occupation are about 4.3 g and 20 mm, of pale low-fineness gold.
 on one side, a seated figure holding a conch on the other, Devanagari
 legend "Sri Raja Raja" beside the seated figure. [documented] Codrington
 104; Mitchiner, *Southern India* pt. 2, no. 318, via a Spink sale record.
-The older Chola type shows the tiger with twin fish and a bow. [plausible]
-Gold was high value; a dozen gold kasu per level is a game convention, and
-copper kasu existed. [plausible] Pickup sprite: thick round coin, irregular
-edge, pale gold, a standing figure, no legible lettering.
+Gold was high value and copper kasu existed; a dozen gold kasu per level
+is a game convention. [plausible] Pickup sprite: thick round coin, pale
+gold, a standing figure, no legible lettering.
 
-**Food.** Rice in every form; temple offering lists specify rice, ghee,
-curd, vegetables, plantains, areca and betel, sugar, pepper. [documented]
-SII II offering inscriptions (via Balasubrahmanyam 1975). Fish on the
-coast; palmyra toddy. [plausible]
+**Food and sound.** Temple offering lists specify rice, ghee, curd,
+vegetables, plantains, areca and betel, sugar, pepper. [documented] SII II
+offering inscriptions (via Balasubrahmanyam 1975). Drums and Tevaram
+singers [documented] SII II nos. 65, 66; conch, flute, yal, work songs on
+the shore [plausible].
 
-**Music and sound.** Several named drums, conch, cymbals, flute, the yal
-or vina, Tevaram hymns in the temple; work songs on the shore.
-[documented] SII II nos. 65, 66 for drums and singers; the rest [plausible].
-
-**Religion in daily life.** The court was Shaiva; the king's own port had
-a Buddhist monastery he endowed; Vaishnava and Jain shrines stood in the
-same towns. [documented] Leiden plates; SII II. Processions with the
-bronze image, lamps at dusk, offerings of flowers and sandal. [plausible]
+**Religion in daily life.** A Shaiva court whose king endowed a Buddhist
+monastery in his own port. [documented] Leiden plates; SII II.
+Processions, lamps at dusk, flowers and sandal. [plausible]
 
 **Language and writing.** Tamil in Tamil script for the eulogy and grant;
 Sanskrit in Grantha for the opening verses. [documented] the Thanjavur and
@@ -425,18 +445,13 @@ pola perunilacchelviyum," the first words of Rajaraja's eulogy.
 - **Mughal and Vijayanagara arms.** No talwar, chain mail, plumed steel
   helmets or lamellar. Bare torsos, cloth, hide shields, straight or
   forward-curved swords, spears.
-- **Dhows and junks.** Lateen sails and iron-fastened hulls are wrong;
-  sewn planks and square or canted sails are right.
-- **Borobudur in Sumatra.** Different island, different kingdom.
-- **"Navy" as an institution.** Say ships and fleet.
+- **Dhows, junks, Borobudur, "navy."** See 3.2 and 3.3.
 - **Modern nationalism.** "Tamil conquest of Southeast Asia" is a
   twentieth-century framing. The raid was a raid; the guilds were
   pan-South-Indian; the Cholas left no colonies. Write the boast as a boast.
-- **Hindu versus Buddhist.** Rajaraja endowed a Buddhist monastery for a
-  Buddhist foreign king; the raid had no religious motive.
-- **Faceless Srivijayans.** A king with a Sanskrit name, Old Malay
-  inscriptions, a Chinese embassy three years after the raid, fighters the
-  Chinese called skilled. Give them faces, gongs, and a gateway worth seizing.
+- **Hindu versus Buddhist.** The raid had no religious motive (3.2, 3.3).
+- **Faceless Srivijayans.** See 3.3. Give them faces, gongs, and a gateway
+  worth seizing.
 - **Ponniyin Selvan and Kanakasabai as history.** The novel is fiction;
   Kanakasabai (1904) is a colonial-era reading of Sangam poetry as a golden
   age. Neither is a witness.
@@ -473,9 +488,8 @@ Champakalakshmi (1996); Codrington; Mitchiner.
 
 **Accessible.** Scroll.in on the Chudamani vihara; Museum Volunteers JMM
 on Bujang Valley; coins.lakdiva.org; a Spink sale record. English
-Wikipedia located sources and, in the first draft, was the unacknowledged
-origin of several Thanjavur figures; those are re-sourced or retagged, and
-the one surviving Wikipedia figure (59.82 m) is named as such.
+Wikipedia located sources; in the first draft it was also the unnamed
+origin of several Thanjavur figures, now re-sourced or retagged.
 
 ## 9. Questions I could not answer
 
@@ -490,9 +504,7 @@ the one surviving Wikipedia figure (59.82 m) is named as such.
 8. The regnal year and SII II number of the Thanjavur inscription that
    first carries the Kadaram passage.
 9. Palembang's waterfront in 1025 beyond "wood, brick, rafts."
-10. Whether the thirteen places were one 1025 campaign (assumed here,
-    after Kulke) or several; VISION.md has ruled, and the sources screen
-    notes the dispute.
+10. Any source for the Sarapallam ramp tradition older than modern guides.
 
 ## Revision notes
 
@@ -513,3 +525,7 @@ the one surviving Wikipedia figure (59.82 m) is named as such.
   level 3 terrain and enemy, the end screen's guild line. Not taken: I
   made "bare feet" a decision rather than an open question, since VISION.md
   puts dress under this document.
+- 2026-10-25, added 3.4 "Traversal plausibility" for DECISIONS.md items 11
+  and 12: each proposed climbing and traversal piece tagged; the
+  Sarapallam ramp marked as folklore, cargo nets and crates as invented,
+  push blocks and push cargo (DECISIONS.md 14) added.
