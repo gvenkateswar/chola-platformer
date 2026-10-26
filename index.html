@@ -172,6 +172,42 @@ const TUNE = {
   AIR_KEEP:         300,   // builder's number: speed above the run cap bleeds off at this rate in flight, px/s²
   AIR_FRICTION:     500,   // builder's number: in a swing-release flight with no key held, drag is this, not 2200
   CLIMB_STRIDE:      34,   // animation: px climbed per hand-over-hand reach (DECISIONS 21)
+  // ---- levels 2 and 3 kit (DESIGN.md §2a table unless marked builder's number)
+  MAST_CLIMB:       130,   // §2a rigging line, mast: climb by the lashings, px/s (both ways)
+  AWN_BOUNCE:     -1000,   // §2a cloth awning: landing bounces to 217 px...
+  AWN_BOUNCE_HELD:-1100,   // §2a: ...263 px with jump held; no standing on it
+  AWN_THICK:         14,   // builder's number: awning hit band, px
+  BALE_W:            96,   // §2a cargo bale: 96 wide...
+  BALE_H:            72,   // §2a: ...72 tall
+  BALE_PUSH:        140,   // §2a: push speed, px/s, no track; falls into gaps
+  SLOPE_UP_GANG:    330,   // §2a gangplank: up at 330 px/s (down at the run speed, 385)
+  MUD_SLIDE:        520,   // §2a mud slide: 520 px/s down...
+  MUD_SLIDE_BACK:   380,   // §2a: ...380 holding back; no stopping, no climbing back; a jump keeps speed
+  STEP_UP:           16,   // builder's number: a ledge this low is stepped onto, not a wall (slope ends)
+  WADE_SPEED:       160,   // §2a shallow water: wade speed, px/s
+  WADE_JUMP_VY:    -595,   // §2a: jump capped at 77 px in water (no double jump until dry footing)
+  SWAY_AMP:          20,   // §2a stilt walkway: sections sway ±20 px...
+  SWAY_PERIOD:      2.4,   // §2a: ...period 2.4 s, neighbors opposite
+  MARKED_SWING:     1.0,   // §2a depth-crossing rope or vine: a 1.0 s swing...
+  MARKED_ARC:        60,   // §2a: ...on a 60 px arc, landing at the rope's landX
+  VINE_AMP:          45,   // §2a vine: swings itself ±45 degrees, period 2.0 s (ROPE_PERIOD), pumpable
+  VINE_DRIVE:       1.2,   // builder's number: how hard a vine keeps itself swinging, rad/s²
+  VINE_RELEASE_VY: -420,   // §2a (ruled 2026-10-26): a vine release adds the same push as a rope
+  CAST_OFF_TIME:    3.0,   // builder's number: level 2's ending, the quay slides away this long
+  CAST_OFF_SPEED:   140,   // builder's number: px/s the shore drifts west in the cast-off
+  // ---- Srivijayan fighters (DESIGN.md §4)
+  FIGHT_ADVANCE:    180,   // §4: seen, he advances at 180 px/s...
+  FIGHT_STOP:        90,   // §4: ...and stops 90 px from the hero
+  FIGHT_RAISE:      0.5,   // §4: telegraph, weapon raised with an ink flare at the tip
+  FIGHT_THRUST:    0.15,   // §4: thrust, one heart
+  FIGHT_REACH:       70,   // §4: thrust hitbox reaches 70 px ahead of his front edge
+  FIGHT_RECOVER:    0.7,   // §4: recovery, when a cut lands (the shield-bearer's only open window)
+  FIGHT_HP:           2,   // §4: two cuts defeat him
+  FIGHT_CUT_REACH:   56,   // §4: the hero's cut lands within 56 px ahead
+  FIGHT_KNOCK:      120,   // builder's number: a thrust staggers the hero back this far (§4 "a stagger")
+  FIGHT_KNEEL:      1.5,   // §4: a defeated fighter kneels, raises an open hand, washes out in 1.5 s
+  FIGHT_DROP:       420,   // §3, §4: engagement ends at this distance (and leaving the lane or band)
+  FIRST_STROKE:     0.2,   // §2 sign 4: the first cut sweeps a 0.2 s ink stroke along the blade
   HANG_HANDS:        50,   // hands above feet while hanging (hero is 56 tall, §2)
   GRAB_X:            16,   // §2a: horizontal reach to touch a pole or rope
   GRAB_COOL:       0.25,   // no re-grab right after letting go
@@ -209,6 +245,9 @@ const HANDOVER_LINES = [                     // section 3, "The handover"
 const LINE_BACK_TO_BANNER = 'Back to the banner.';
 const touchLine = t => t.replace('↑', 'tap ▲').replace('J or X', 'tap ⚔');   // §4, DESIGN.md §8
 const LINE_SHOUT = 'Hoi! You there!';
+const LINE_FIRST_CUT = 'My father\'s blade, out for the first time.';
+const LINE_CHECKPOINT = 'The banner is planted. Breathe.';
+const LINE_NO_GATE = 'No gate here. Find the lamp.';
 const IS_TOUCH = 'ontouchstart' in window;
 
 function fit(){
@@ -310,6 +349,8 @@ const sfx = {
   djump: ()=> tone(420, .16, 'square', .06, 300),
   shift: ()=> { noiseBurst(.18,.16,500); tone(520,.2,'sine',.08,-260); },
   deny : ()=> tone(150, .12, 'square', .06, -30),
+  bounce: ()=> tone(220, .14, 'triangle', .1, 240),
+  block: ()=> { noiseBurst(.06,.2,700); tone(180,.08,'square',.06,-40); },
   click: ()=> { noiseBurst(.035,.18,2200); tone(820,.05,'square',.05,-300); },   // wooden click, blade home
   shout: ()=> { tone(230, .12, 'square', .07, 70); setTimeout(()=>tone(300,.14,'square',.06,-40), 110); },
   hurt : ()=> { noiseBurst(.2,.3); tone(160,.25,'sawtooth',.12,-80); },
@@ -657,7 +698,7 @@ function heroPoseTarget(){
   };
   let dy = 0, rot = 0, tag = 'idle';
   if(p.leap){
-    const k = Math.min(1, p.leap.t / TUNE.GATE_LEAP), t = Math.sin(Math.PI*k);
+    const k = Math.min(1, p.leap.t / p.leap.dur), t = Math.sin(Math.PI*k);
     A.fth = -55*t; A.fsh = 75*t; A.bth = -25*t; A.bsh = 70*t; A.fua = -70*t; A.bua = -45*t; A.ffa = -30*t; A.bfa = -30*t;
     A.torso = 8*t; A.sash = 25*t; tag = 'leap';
   } else if(p.climb){
@@ -903,29 +944,59 @@ const player = {
   overV:0, climbPhase:0, pumping:0,
 };
 
-// level fields beyond platforms: planks, poles, ropes, blocks, npc (DESIGN.md §2a, §2)
+// level fields beyond platforms (DESIGN.md §2a, §2): planks, poles (pole, mast, line, ladder), ropes and
+// vines (marked when they carry toLane and landX), blocks and bales, awnings, slopes, wading beds,
+// swaying walkway sections, npc
 function prepTraversal(L){
   L.planks = L.planks || []; L.poles = L.poles || []; L.ropes = L.ropes || []; L.blocks = L.blocks || [];
-  // planks and blocks live in platforms (kind 'plank' / 'block') so every reader of the level sees them
+  L.vines = L.vines || []; L.bales = L.bales || []; L.awnings = L.awnings || []; L.slopes = L.slopes || [];
+  L.wades = L.wades || []; L.sways = L.sways || [];
+  // planks, awnings, blocks, bales, wading beds, and sway sections live in platforms (by kind), so every
+  // reader of the level (the camera, birds, the smoke bot) sees them
   for(const [x,y,w,lane] of L.planks) L.platforms.push([x, y, w, TUNE.PLANK_THICK, lane, 'plank']);
-  L.poles = L.poles.map(([x,top,bot,lane])=>({x, top, bot, lane}));
-  L.ropes = L.ropes.map(([x,ay,len,lane])=>({x, ay, len, lane, ang:0, angV:0}));
-  L.blocks = L.blocks.map(([x0,x1,lane])=>{
+  for(const [x,y,w,lane] of L.awnings) L.platforms.push([x, y, w, TUNE.AWN_THICK, lane, 'awning']);
+  for(const [x,y,w,lane] of L.wades) L.platforms.push([x, y, w, 120, lane, 'wade']);
+  L.swayList = L.sways.map(([x,y,w,lane,ph])=>{
+    const p = [x, y, w, 26, lane, 'sway']; L.platforms.push(p);
+    return {p, x0:x, ph:ph||0, dx:0};
+  });
+  L.poles = L.poles.map(([x,top,bot,lane,kind])=>({x, top, bot, lane, kind:kind||'pole'}));
+  const mkRope = (vine)=>([x,ay,len,lane,toLane,landX], i)=>({x, ay, len, lane, ang:0, angV:0, vine,
+    toLane: toLane === undefined ? null : toLane, landX: landX ?? x, ph:hash(x*0.37+i)*Math.PI*2});
+  L.ropes = L.ropes.map(mkRope(false)).concat(L.vines.map(mkRope(true)));
+  for(const o of L.ropes) if(o.vine){             // vines start mid-swing, each at its own phase
+    const A = TUNE.VINE_AMP*Math.PI/180, w = 2*Math.PI/TUNE.ROPE_PERIOD;
+    o.ang = A*Math.sin(o.ph); o.angV = A*w*Math.cos(o.ph);
+  }
+  const groundUnder = (x, lane, below)=>{
     let gy = null;
     for(const [bx,by,bw,,ln,kind] of L.platforms)
-      if(ln === lane && kind !== 'plank' && x0+TUNE.BLOCK_W/2 >= bx && x0+TUNE.BLOCK_W/2 <= bx+bw && (gy === null || by < gy)) gy = by;
-    const p = [x0, (gy ?? 620) - TUNE.BLOCK_H, TUNE.BLOCK_W, TUNE.BLOCK_H, lane, 'block'];
+      if(ln === lane && kind !== 'plank' && kind !== 'awning' && x >= bx && x <= bx+bw && by >= (below ?? -1e9) && (gy === null || by < gy)) gy = by;
+    return gy ?? 620;
+  };
+  L.blocks = L.blocks.map(([x0,x1,lane])=>{
+    const p = [x0, groundUnder(x0+TUNE.BLOCK_W/2, lane) - TUNE.BLOCK_H, TUNE.BLOCK_W, TUNE.BLOCK_H, lane, 'block'];
     L.platforms.push(p);
-    return {p, x0:Math.min(x0,x1), x1:Math.max(x0,x1), lane};
+    return {p, x0:Math.min(x0,x1), x1:Math.max(x0,x1), lane, sx:x0, sy:p[1]};
   });
+  // §2a bales: pushed like the block with no track, and they fall into gaps
+  for(const [x,lane] of L.bales){
+    const p = [x, groundUnder(x+TUNE.BALE_W/2, lane) - TUNE.BALE_H, TUNE.BALE_W, TUNE.BALE_H, lane, 'bale'];
+    L.platforms.push(p);
+    L.blocks.push({p, x0:-1e9, x1:1e9, lane, bale:true, sx:p[0], sy:p[1], vy:0});
+  }
+  L.slopes = L.slopes.map(([x1,y1,x2,y2,lane,kind])=>({x1, y1, x2, y2, lane, kind:kind||'gangplank'}));
   if(L.npc && Array.isArray(L.npc)) L.npc = {x:L.npc[0], y:L.npc[1], given:false};
-  L.sheathLineAt = null; L.swordDrawn = false;
+  L.sheathLineAt = null; L.swordDrawn = false; L.firstCut = false; L.drift = 0; L.castOff = null;
 }
 
 // guard: patrols, sees forward, chases, scolds (DESIGN.md §3)
+// guard: [x1, x2, y, lane, type, 'stand'], type 'guard' (Chola, §3), 'fighter' or 'shield' (Srivijayan, §4)
 function makeGuard(g){
-  return {x:g[0]+30, x1:g[0], x2:g[1], y:g[2], lane:g[3]??1, dir:1, dead:false, w:26, h:54,
-          phase:hash(g[0])*6, mode:'patrol', modeT:0, seeT:0, chaseT:0, outBandT:0};
+  const type = g[4] || 'guard', stand = g[5] === 'stand' || g[0] === g[1] && type !== 'guard';
+  return {x: stand ? g[0] : g[0]+30, x1:g[0], x2:g[1], y:g[2], lane:g[3]??1, dir: stand ? -1 : 1, dead:false, w:26, h:54,
+          phase:hash(g[0])*6, mode: stand ? 'stand' : 'patrol', modeT:0, seeT:0, chaseT:0, outBandT:0,
+          type, stand, hp:TUNE.FIGHT_HP, atk:null, atkT:0, hitT:0, kneelT:0, cutBy:-1, puffT:0};
 }
 
 function topAt(ln, cx){
@@ -1058,6 +1129,10 @@ $('againBtn').onclick = ()=>{
   showInter(0);
 };
 function queueLevel(i){ levelIdx = i; showInter(i); }
+function finishLevel(){
+  if(levelIdx < LEVELS.length-1) queueLevel(levelIdx+1);
+  else { $('endScreen').hidden = false; state = 'end'; }
+}
 
 // ============================================================ physics
 function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh){
@@ -1079,7 +1154,7 @@ function tryShift(dir){
   if(!lk){
     if(p.onPlank) return;                   // ↓ on a plank is the drop-through chord, not a crossing
     sfx.deny(); p.shiftCool = 0.35;
-    floats.push({x:p.x, y:p.y-88, t:1.1, text:'no crossing here — seek a lamplit gate'});
+    floats.push({x:p.x, y:p.y-88, t:1.1, text:LINE_NO_GATE});
     return;
   }
   // needs footing in the target lane near the player
@@ -1093,7 +1168,7 @@ function tryShift(dir){
   if(best === null){ sfx.deny(); p.shiftCool = 0.2; return; }
   // §2 "The gate leap" (DECISIONS 16): the lane changes at takeoff, then a 0.5 s arc
   spawnInk(p.x, p.y-28, p.lane);
-  p.leap = {t:0, from:p.lane, to:target, y0:p.y, y1:best};
+  p.leap = {t:0, dur:TUNE.GATE_LEAP, arc:TUNE.LEAP_ARC, from:p.lane, to:target, x0:p.x, x1:p.x, y0:p.y, y1:best, moving:false};
   p.lane = target; p.shiftFx = 0; p.shiftCool = 0.3;
   p.vx = 0; p.vy = 0; p.onGround = false; p.climb = null;
   sfx.shift(); shake = 3;
@@ -1109,9 +1184,19 @@ function ropeX(r, y){                       // x of the rope at height y
 }
 function ropeEnd(r){ return [r.x + r.len*Math.sin(r.ang||0), r.ay + r.len*Math.cos(r.ang||0)]; }
 // ropes nobody holds settle back to the idle sway (DESIGN.md §2a: ±12 px, period 2 s)
+// §2a vines swing themselves at ±45 degrees: a pendulum with a gentle drive that tops it up
+function vineDrive(o){
+  const w = 2*Math.PI/TUNE.ROPE_PERIOD, A = TUNE.VINE_AMP*Math.PI/180;
+  const amp = Math.sqrt(o.ang*o.ang + (o.angV/w)*(o.angV/w));
+  return amp < A ? Math.sign(o.angV || 1)*TUNE.VINE_DRIVE : 0;
+}
 function updateRopes(dt){
   for(const o of level.ropes){
     if(player.climb && player.climb.o === o) continue;
+    if(o.vine){
+      o.angV += (-ROPE_W2()*Math.sin(o.ang) + vineDrive(o))*dt; o.ang += o.angV*dt;
+      continue;
+    }
     const idle = Math.asin(Math.min(1, TUNE.ROPE_SWAY/o.len))*Math.sin(time*2*Math.PI/TUNE.ROPE_PERIOD);
     o.angV += ((idle - o.ang)*ROPE_W2() - o.angV*TUNE.ROPE_SETTLE)*dt;
     o.ang += o.angV*dt;
@@ -1145,7 +1230,7 @@ function grabRope(c){                       // the grab turns his run into swing
 function ropeRelease(c, hop){
   const p = player, o = c.o, v = c.r*o.angV*TUNE.ROPE_RELEASE_GAIN;
   // along the tangent of the swing, with its speed; the hop is a jump's push off the rope
-  p.vx = v*Math.cos(o.ang); p.vy = -v*Math.sin(o.ang) + (hop ? TUNE.ROPE_RELEASE_VY : 0);
+  p.vx = v*Math.cos(o.ang); p.vy = -v*Math.sin(o.ang) + (hop ? (o.vine ? TUNE.VINE_RELEASE_VY : TUNE.ROPE_RELEASE_VY) : 0);
   p.liftV = Math.min(0, -v*Math.sin(o.ang));   // the swing's own lift; letting go of jump trims only the hop
   if(Math.abs(p.vx) > 30) p.face = Math.sign(p.vx);
   p.overV = Math.abs(p.vx);                 // flight keeps speed above the run cap until it lands
@@ -1160,8 +1245,8 @@ function climbStep(dt){
   let moved = false;
   if(pole){
     const [lo, hi] = climbRange(c);
-    if(up && p.y > lo){ const y0 = p.y; p.y = Math.max(lo, p.y - TUNE.POLE_UP*dt); p.climbPhase += (y0 - p.y)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
-    else if(down && p.y < hi){ const y0 = p.y; p.y = Math.min(hi, p.y + TUNE.POLE_DOWN*dt); p.climbPhase -= (p.y - y0)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
+    if(up && p.y > lo){ const y0 = p.y; p.y = Math.max(lo, p.y - (c.o.kind === 'mast' || c.o.kind === 'line' ? TUNE.MAST_CLIMB : TUNE.POLE_UP)*dt); p.climbPhase += (y0 - p.y)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
+    else if(down && p.y < hi){ const y0 = p.y; p.y = Math.min(hi, p.y + (c.o.kind === 'mast' || c.o.kind === 'line' ? TUNE.MAST_CLIMB : TUNE.POLE_DOWN)*dt); p.climbPhase -= (p.y - y0)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
     if(lr) p.face = lr;
     p.x = c.o.x;
   } else {
@@ -1170,7 +1255,7 @@ function climbStep(dt){
     if(up && c.r > 10){ const r0 = c.r; c.r = Math.max(10, c.r - TUNE.ROPE_CLIMB*dt); p.climbPhase += (r0 - c.r)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
     else if(down && c.r < o.len){ const r0 = c.r; c.r = Math.min(o.len, c.r + TUNE.ROPE_CLIMB*dt); p.climbPhase -= (c.r - r0)/TUNE.CLIMB_STRIDE*Math.PI; moved = true; }
     // pendulum, plus a pump: ← or → in the direction of the swing adds energy (or starts it from rest)
-    let acc = -ROPE_W2()*Math.sin(o.ang) - TUNE.ROPE_DAMP*o.angV;
+    let acc = -ROPE_W2()*Math.sin(o.ang) - (o.vine ? 0 : TUNE.ROPE_DAMP*o.angV) + (o.vine ? vineDrive(o) : 0);
     p.pumping = 0;
     if(lr){
       p.face = lr;
@@ -1200,6 +1285,49 @@ function climbStep(dt){
   }
 }
 function blockOf(pl){ return level.blocks.find(b=>b.p === pl); }
+// §2a depth-crossing rope or vine (DECISIONS 15): a 1.0 s swing on a 60 px arc to its landX in the
+// target lane; the lane changes at release, and the swing is moving, so no one can catch it
+function startMarkedSwing(o){
+  const p = player, to = o.toLane;
+  let best = null;
+  for(const [bx,by,bw,,ln,kind] of level.platforms){
+    if(ln !== to || kind === 'awning' || o.landX < bx || o.landX > bx+bw) continue;
+    if(best === null || Math.abs(by - p.y) < Math.abs(best - p.y)) best = by;
+  }
+  if(best === null) return;
+  spawnInk(p.x, p.y-28, p.lane);
+  p.leap = {t:0, dur:TUNE.MARKED_SWING, arc:TUNE.MARKED_ARC, from:p.lane, to, x0:p.x, x1:o.landX, y0:p.y, y1:best, moving:true};
+  p.lane = to; p.climb = null; p.grabCool = TUNE.GRAB_COOL; p.vx = p.vy = 0; p.face = Math.sign(o.landX - p.x) || p.face;
+  sfx.shift();
+}
+// a bale slides until its leading face meets a wall in its lane
+function baleStop(b, nx){
+  const [x,y,w,h,lane] = b.p;
+  for(const q of level.platforms){
+    if(q === b.p || q[4] !== lane || q[5] === 'plank' || q[5] === 'awning') continue;
+    const [qx,qy,qw,qh] = q;
+    if(qy < y + h - 2 && qy + qh > y + 2){          // overlaps the bale's height: a wall for it
+      if(nx > x && x + w <= qx + 0.5 && nx + w > qx) nx = qx - w;
+      if(nx < x && x >= qx + qw - 0.5 && nx < qx + qw) nx = qx + qw;
+    }
+  }
+  return nx;
+}
+// §4 the road allows no other way: a sentinel is a wall until he kneels; a patrolling fighter blocks
+// only within his band (a vine or a high walk passes him). Chola guards never block (§3).
+function fighterBlock(x0){
+  const p = player;
+  for(const g of level.guards){
+    if(g.type === 'guard' || g.dead || g.mode === 'kneel' || g.lane !== p.lane) continue;
+    if(!g.stand && Math.abs(p.y - g.y) > TUNE.SIGHT_BAND) continue;
+    const side = Math.sign(x0 - g.x) || -g.dir, lim = g.x + side*(g.w/2 + p.w/2);
+    if(side < 0 ? p.x > lim : p.x < lim){ p.x = lim; p.vx = 0; }
+  }
+}
+function spawnRipple(x, y){
+  for(let i=0;i<8;i++) particles.push({x:x+(Math.random()*30-15), y:y-18, vx:Math.random()*80-40, vy:-40-Math.random()*60,
+    t:.35+Math.random()*.2, r:2+Math.random()*2, c:'rgba(220,232,220,', grav:400, lane:player.lane});
+}
 
 function startBackToBanner(refill){
   const p = player;
@@ -1212,7 +1340,7 @@ function backToBanner(){                    // the midpoint of the ink-wash: mov
   if(p.fadeRefill) p.hp = 3;
   p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1; p.vx = p.vy = 0;
   p.stillT = 0; p.onGround = false;
-  for(const b of level.blocks) b.p[0] = b.x0;   // §2a: blocks return to their start on any checkpoint return
+  for(const b of level.blocks){ b.p[0] = b.sx; b.p[1] = b.sy; b.vy = 0; }   // §2a: blocks and bales return to their start
   floats.push({x:p.x, y:p.y-90, t:1.6, text:LINE_BACK_TO_BANNER});
 }
 
@@ -1224,6 +1352,7 @@ function movePlayer(dt){
   p.grabCool = Math.max(0, p.grabCool - dt);
   p.sheathT = Math.max(0, p.sheathT - dt);
 
+  if(level.castOff){ p.vx = 0; jumpQueued = 0; shiftQueued = 0; attackQueued = false; return; }
   // ink-wash return to the checkpoint (§3, §5)
   if(p.fadeT > 0){
     p.fadeT -= dt;
@@ -1244,8 +1373,9 @@ function movePlayer(dt){
   if(p.leap){
     const L = p.leap;
     L.t += dt;
-    const k = Math.min(1, L.t / TUNE.GATE_LEAP);
-    p.y = lerp(L.y0, L.y1, k) - TUNE.LEAP_ARC*Math.sin(Math.PI*k);
+    const k = Math.min(1, L.t / L.dur);
+    p.x = lerp(L.x0, L.x1, k);
+    p.y = lerp(L.y0, L.y1, k) - L.arc*Math.sin(Math.PI*k);
     p.vx = 0; p.vy = 0; p.onGround = false; p.sliding = false; p.stillT = 0;
     jumpQueued = 0; shiftQueued = 0; attackQueued = false;
     if(k >= 1){
@@ -1265,7 +1395,14 @@ function movePlayer(dt){
         floats.push({x:p.x, y:p.y-88, t:1.8, text:line});
       }
     }
-  } else if(attackQueued && p.attackT <= 0){ p.attackT = 0.28; sfx.slash(); level.swordDrawn = true; }
+  } else if(attackQueued && p.attackT <= 0){
+    p.attackT = 0.28; sfx.slash(); level.swordDrawn = true; p.swingId = (p.swingId||0) + 1;
+    if(!level.firstCut){                    // §2 sign 4: the first cut sweeps an ink stroke along the blade
+      level.firstCut = true; p.strokeT = TUNE.FIRST_STROKE;
+      floats.push({x:p.x, y:p.y-96, t:2.0, text:LINE_FIRST_CUT});
+    }
+  }
+  p.strokeT = Math.max(0, (p.strokeT||0) - dt);
   attackQueued = false;
   p.attackT = Math.max(0, p.attackT - dt);
 
@@ -1278,6 +1415,8 @@ function movePlayer(dt){
       else { const [lo, hi] = climbRange(c); p.y = clamp(p.y, lo, hi); p.climbPhase = 0; }
     }
   }
+  if(p.climb && p.climb.kind === 'rope' && p.climb.o.toLane !== null && shiftQueued !== 0 &&
+     Math.sign(p.climb.o.toLane - p.lane) === shiftQueued){ startMarkedSwing(p.climb.o); shiftQueued = 0; return; }
   if(p.climb){ shiftQueued = 0; climbStep(dt); jumpQueued = Math.max(0, jumpQueued - dt); return; }
 
   const shoved = p.shoveLeft > 0;
@@ -1293,7 +1432,16 @@ function movePlayer(dt){
   }
   // a swing release may fly faster than he runs; the excess bleeds off, and landing ends it
   p.overV = p.onGround ? 0 : Math.max(0, (p.overV||0) - TUNE.AIR_KEEP*dt);
-  const cap = Math.max(MAXV, p.overV);
+  let cap = Math.max(MAXV, p.overV);
+  if(p.onGround && p.inWater) cap = TUNE.WADE_SPEED;              // §2a: wading
+  const sl = p.onGround ? p.onSlope : null;
+  if(sl){
+    const down = Math.sign(sl.y2 > sl.y1 ? 1 : -1) * Math.sign(sl.x2 - sl.x1);   // +1: downhill is east
+    if(sl.kind === 'mud'){                    // §2a mud: he slides; no stopping, no climbing back
+      const back = dir === -down;
+      p.vx = down*(back ? TUNE.MUD_SLIDE_BACK : TUNE.MUD_SLIDE); cap = TUNE.MUD_SLIDE;
+    } else if(Math.sign(p.vx) === -down) cap = Math.min(cap, TUNE.SLOPE_UP_GANG);   // gangplank, uphill
+  }
   p.vx = clamp(p.vx, -cap, cap);
 
   const sliding = !p.onGround && p.wallDir !== 0 && dir === p.wallDir && p.vy > 0;
@@ -1305,8 +1453,12 @@ function movePlayer(dt){
   if(jumpQueued > 0){
     if(p.onPlank && keys.F){                // §2a: ↓ plus jump drops through a plank
       p.dropT = TUNE.PLANK_DROP; p.onGround = false; p.onPlank = false; jumpQueued = 0; p.vy = 60;
+    } else if(p.onGround && p.inWater){       // §2a: a wading jump is capped at 77 px, no double jump
+      p.vy = TUNE.WADE_JUMP_VY; p.jumps = 2; jumpQueued = 0; sfx.jump(); p.liftV = TUNE.WADE_JUMP_VY + 300;
+      spawnRipple(p.x, p.y);
     } else if(p.onGround || p.coyote > 0){
       p.vy = -830; p.jumps = 1; jumpQueued = 0; p.coyote = 0; sfx.jump();
+      if(p.onSlope && p.onSlope.kind === 'mud') p.overV = Math.abs(p.vx);   // §2a: a jump keeps the slide's speed
       spawnDust(p.x, p.y, 8);
     } else if(p.wallDir !== 0){
       p.vy = -760; p.vx = -p.wallDir*430; p.face = -p.wallDir; p.jumps = 1; jumpQueued = 0; sfx.jump();
@@ -1332,24 +1484,29 @@ function movePlayer(dt){
   let pushHit = null;
   for(const pl of plats){
     const [bx,by,bw,bh,,kind] = pl;
-    if(kind === 'plank') continue;          // planks are one-way: no sides, no underside
+    if(kind === 'plank' || kind === 'awning') continue;   // one-way: no sides, no underside
     if(rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, bx,by,bw,bh)){
-      if(kind === 'block' && p.onGround && dir !== 0 && Math.sign(p.vx) === dir) pushHit = pl;
-      if(p.vx > 0){ p.x = bx - p.w/2; if(!p.onGround) p.wallDir = 1; }
-      else if(p.vx < 0){ p.x = bx+bw + p.w/2; if(!p.onGround) p.wallDir = -1; }
+      // a ledge no higher than STEP_UP above his feet is stepped onto (slope ends, deck edges)
+      if((p.onGround || p.onSlope) && by >= p.y - TUNE.STEP_UP && kind !== 'block' && kind !== 'bale'){ p.y = by; continue; }
+      if((kind === 'block' || kind === 'bale') && p.onGround && dir !== 0 && Math.sign(p.vx) === dir) pushHit = pl;
+      // push out on the side he came from (by center), so stepping off a slope never teleports him
+      if(x0 < bx + bw/2){ p.x = bx - p.w/2; if(!p.onGround && p.vx > 0) p.wallDir = 1; }
+      else { p.x = bx+bw + p.w/2; if(!p.onGround && p.vx < 0) p.wallDir = -1; }
       p.vx = 0;
     }
   }
+  fighterBlock(x0);
   // §2a block on rollers: lean into it 0.25 s, then it rolls along its track at 120 px/s
   if(pushHit){
     p.pushT += dt;
     if(p.pushT >= TUNE.PUSH_DELAY){
-      const b = blockOf(pushHit);
-      const nx = clamp(pushHit[0] + dir*TUNE.PUSH_SPEED*dt, b.x0, b.x1);
+      const b = blockOf(pushHit), sp = b.bale ? TUNE.BALE_PUSH : TUNE.PUSH_SPEED;
+      let nx = clamp(pushHit[0] + dir*sp*dt, b.x0, b.x1);
+      if(b.bale) nx = baleStop(b, nx);      // a bale has no track: it stops at a wall
       if(nx !== pushHit[0]){
         pushHit[0] = nx;
         p.x = dir > 0 ? nx - p.w/2 : nx + pushHit[2] + p.w/2;
-        p.vx = dir*TUNE.PUSH_SPEED;         // pushing is moving (§3 "What forces a stop")
+        p.vx = dir*sp;                      // pushing is moving (§3 "What forces a stop")
         if(Math.random() < dt*10) spawnDust(nx + (dir>0?0:pushHit[2]), pushHit[1]+pushHit[3], 1);
       }
     }
@@ -1358,12 +1515,20 @@ function movePlayer(dt){
   if(shoved){ p.shoveLeft = (p.x === x0) ? 0 : p.shoveLeft - Math.abs(p.x - x0); }
   p.stillT = Math.abs(p.vx) < TUNE.STOP_SPEED ? p.stillT + dt : 0;
 
-  const wasGround = p.onGround;
+  const wasGround = p.onGround, wasSlope = p.onSlope;
   const feet0 = p.y;
-  p.onGround = false; p.onPlank = false;
+  p.onGround = false; p.onPlank = false; p.onSlope = null; p.groundPl = null; p.inWater = false;
   p.y += p.vy*dt;
   for(const pl of plats){
     const [bx,by,bw,bh,,kind] = pl;
+    if(kind === 'awning'){                  // §2a: landing on an awning bounces; no standing
+      if(p.vy > 0 && feet0 <= by + 0.5 && p.y >= by && p.x + p.w/2 > bx && p.x - p.w/2 < bx + bw){
+        p.y = by; p.vy = keys.J ? TUNE.AWN_BOUNCE_HELD : TUNE.AWN_BOUNCE;
+        p.liftV = TUNE.AWN_BOUNCE + 300;    // letting go of jump trims only the held extra
+        p.jumps = 2; p.coyote = 0; pl.bounceT = 0.35; sfx.bounce();
+      }
+      continue;
+    }
     if(kind === 'plank'){
       if(p.vy >= 0 && p.dropT <= 0 && feet0 <= by + 0.5 && p.y >= by &&
          p.x + p.w/2 > bx && p.x - p.w/2 < bx + bw){
@@ -1373,11 +1538,30 @@ function movePlayer(dt){
       continue;
     }
     if(rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, bx,by,bw,bh)){
-      if(p.vy > 0){
-        p.y = by; p.vy = 0; p.onGround = true; p.jumps = 0;
-        if(!wasGround) spawnDust(p.x, p.y, 5);
+      if(p.vy > 0 || feet0 <= by + 0.5){
+        p.y = by; p.vy = 0; p.onGround = true; p.jumps = 0; p.groundPl = pl;
+        if(kind === 'wade'){ p.inWater = true; if(!wasGround) spawnRipple(p.x, p.y); }
+        else if(!wasGround) spawnDust(p.x, p.y, 5);
       } else if(p.vy < 0){ p.y = by+bh+p.h; p.vy = 0; }
     }
+  }
+  // §2a slopes: feet follow the line between its ends (gangplank, mud bank)
+  if(p.vy >= 0){
+    for(const sl of level.slopes){
+      if(sl.lane !== p.lane) continue;
+      const xa = Math.min(sl.x1, sl.x2), xb = Math.max(sl.x1, sl.x2);
+      if(p.x < xa || p.x > xb) continue;
+      const ly = sl.y1 + (sl.y2 - sl.y1)*(p.x - sl.x1)/(sl.x2 - sl.x1);
+      // land on it from above, or stay on it (sticky) when he was on it last frame
+      if((feet0 <= ly + 14 && p.y >= ly - 2) || (wasSlope === sl && p.y < ly + 40 && p.y > ly - 40)){
+        if(!p.onGround || ly < p.y){ p.y = ly; p.vy = 0; p.onGround = true; p.jumps = 0; p.onSlope = sl; p.groundPl = null; }
+        if(!wasGround && !wasSlope) spawnDust(p.x, p.y, 5);
+      }
+    }
+  }
+  if(p.onSlope && p.onSlope.kind === 'mud'){
+    for(const g of level.guards) if(g.mode === 'chase' || g.mode === 'engage'){ g.mode = 'look'; g.modeT = TUNE.LOOK_TIME; g.seeT = 0; }   // §2a: any chase ends
+    if(Math.random() < dt*20) spawnDust(p.x - p.face*6, p.y, 1);
   }
   p.coyote = p.onGround ? 0.1 : Math.max(0, p.coyote - dt);
 
@@ -1440,7 +1624,8 @@ function inReach(g){
 }
 function heroStopped(){
   const p = player;
-  return p.stillT >= TUNE.STOP_TIME || p.sliding || !!p.leap;   // hanging still builds stillT (§2a)
+  // hanging still builds stillT (§2a); a gate leap is a stand, a marked-rope swing is moving
+  return p.stillT >= TUNE.STOP_TIME || p.sliding || (!!p.leap && !p.leap.moving);
 }
 function catchHero(g){
   const p = player;
@@ -1458,10 +1643,90 @@ function catchHero(g){
   p.shoveDir = g.dir; p.shoveLeft = TUNE.SHOVE_DIST;      // away from him: back the way he came
   p.vy = TUNE.SHOVE_VY; p.onGround = false;
 }
+// ---- Srivijayan fighters (DESIGN.md §4): they patrol and see like a guard, or stand as sentinels facing
+// west; seen, they advance, raise for half a second, thrust, and recover. Two cuts and he kneels.
+function fighterHitsHero(g){
+  const p = player;
+  if(p.hurtT > 0 || p.fadeT > 0 || (p.leap && p.leap.moving) || p.lane !== g.lane) return;
+  const front = g.x + g.dir*g.w/2, x0 = Math.min(front, front + g.dir*TUNE.FIGHT_REACH), x1 = Math.max(front, front + g.dir*TUNE.FIGHT_REACH);
+  if(!rectsOverlap(p.x-p.w/2, p.y-p.h, p.w, p.h, x0, g.y-g.h, x1-x0, g.h)) return;
+  p.hp -= 1; p.hurtT = TUNE.INVULN; shake = 9; sfx.hurt();
+  spawnBurst(p.x, p.y - 30, INK, 14, p.lane);               // black ink, never red (§4 violence rule)
+  if(p.climb){ p.climb = null; p.grabCool = TUNE.GRAB_COOL; }
+  if(p.hp <= 0){ deaths++; startBackToBanner(true); return; }
+  p.shoveDir = g.dir; p.shoveLeft = TUNE.FIGHT_KNOCK; p.vy = TUNE.SHOVE_VY; p.onGround = false;   // a stagger
+}
+function updateFighter(g, dt){
+  const p = player;
+  g.hitT = Math.max(0, g.hitT - dt); g.puffT = Math.max(0, g.puffT - dt);
+  if(g.mode === 'kneel'){                    // drops to one knee, raises an open hand, washes out
+    g.kneelT -= dt; if(g.kneelT <= 0) g.dead = true;
+    return;
+  }
+  const dx = p.x - g.x, home = g.stand ? [g.x1, g.x1] : [g.x1, g.x2];
+  let speed = 0;
+  if(g.mode === 'engage'){
+    g.outBandT = Math.abs(p.y - g.y) > TUNE.SIGHT_BAND ? g.outBandT + dt : 0;
+    if(p.lane !== g.lane || Math.abs(dx) > TUNE.FIGHT_DROP || g.outBandT > TUNE.CHASE_OUT_BAND || p.fadeT > 0){
+      g.mode = 'look'; g.modeT = TUNE.LOOK_TIME; g.seeT = 0; g.atk = null;
+    } else {
+      if(!g.atk || g.atk === 'approach'){
+        g.atk = 'approach';
+        if(Math.abs(dx) > 4) g.dir = Math.sign(dx);
+        if(Math.abs(dx) > TUNE.FIGHT_STOP){
+          speed = TUNE.FIGHT_ADVANCE;
+          g.x = clamp(g.x + g.dir*speed*dt, home[0] - TUNE.CHASE_LEASH, home[1] + TUNE.CHASE_LEASH);
+        } else { g.atk = 'raise'; g.atkT = TUNE.FIGHT_RAISE; }
+      } else {
+        g.atkT -= dt;
+        if(g.atk === 'raise' && g.atkT <= 0){ g.atk = 'thrust'; g.atkT = TUNE.FIGHT_THRUST; sfx.slash(); }
+        else if(g.atk === 'thrust'){ fighterHitsHero(g); if(g.atkT <= 0){ g.atk = 'recover'; g.atkT = TUNE.FIGHT_RECOVER; } }
+        else if(g.atk === 'recover' && g.atkT <= 0){
+          if(Math.abs(dx) > 4) g.dir = Math.sign(dx);
+          if(Math.abs(dx) > TUNE.FIGHT_STOP + 10) g.atk = 'approach'; else { g.atk = 'raise'; g.atkT = TUNE.FIGHT_RAISE; }
+        }
+      }
+    }
+  } else if(g.mode === 'look'){
+    if(g.modeT <= 0) g.mode = g.stand ? 'return' : 'return';
+  } else if(g.mode === 'return'){
+    const tx = g.stand ? g.x1 : clamp(g.x, g.x1, g.x2);
+    if(Math.abs(g.x - tx) < 3){ g.x = tx; g.mode = g.stand ? 'stand' : 'patrol'; if(g.stand) g.dir = -1; }
+    else { g.dir = Math.sign(tx - g.x); speed = TUNE.GUARD_WALK; g.x += g.dir*speed*dt; }
+  } else if(g.mode === 'patrol'){
+    speed = TUNE.GUARD_WALK; g.x += g.dir*speed*dt;
+    if(g.x < g.x1){ g.x = g.x1; g.dir = 1; }
+    if(g.x > g.x2){ g.x = g.x2; g.dir = -1; }
+  }                                          // 'stand': no patrol, facing west (§4 sentinel)
+  if(speed > 0) g.phase += dt*6*speed/TUNE.GUARD_WALK;
+  if(g.mode === 'patrol' || g.mode === 'return' || g.mode === 'look' || g.mode === 'stand'){
+    if(guardSees(g)){ g.seeT += dt; if(g.seeT >= TUNE.SEEN_TIME){ g.mode = 'engage'; g.atk = 'approach'; g.outBandT = 0; } }
+    else g.seeT = 0;
+  }
+  // the hero's cut: within 56 px ahead, once per swing
+  if(p.attackT > 0.1 && g.lane === p.lane && g.cutBy !== p.swingId && Math.abs(p.y - g.y) < TUNE.SIGHT_BAND){
+    const ahead = (g.x - p.x)*p.face;
+    if(ahead > -g.w/2 && ahead - g.w/2 <= TUNE.FIGHT_CUT_REACH){
+      g.cutBy = p.swingId;
+      const fromFront = Math.sign(p.x - g.x) === g.dir;
+      if(g.type === 'shield' && fromFront && g.atk !== 'recover'){   // §4: an ink puff on the shield
+        g.puffT = 0.3; sfx.block(); spawnInk(g.x + g.dir*16, g.y - 34, g.lane);
+      } else {
+        g.hp -= 1; g.hitT = 0.25; shake = 6; sfx.kill();
+        spawnBurst(g.x, g.y - 30, INK, 14, g.lane);
+        g.x += Math.sign(g.x - p.x)*24;
+        if(g.mode !== 'engage'){ g.mode = 'engage'; g.outBandT = 0; }
+        g.atk = 'recover'; g.atkT = TUNE.FIGHT_RECOVER;
+        if(g.hp <= 0){ g.mode = 'kneel'; g.kneelT = TUNE.FIGHT_KNEEL; g.atk = null; }
+      }
+    }
+  }
+}
 function updateGuards(dt){
   const p = player;
   for(const g of level.guards){
     if(g.dead) continue;
+    if(g.type !== 'guard'){ g.modeT -= dt; updateFighter(g, dt); continue; }
     g.modeT -= dt;
     let speed = 0;
     if(g.mode === 'patrol'){
@@ -1505,16 +1770,6 @@ function updateGuards(dt){
       } else g.seeT = 0;
     }
 
-    // the sword (level 3 only; levels 1 and 2 keep it sheathed)
-    if(levelIdx >= TUNE.SWORD_FROM_LEVEL && g.lane === p.lane && p.attackT > 0.1){
-      const hx = p.x + p.face*30;
-      if(rectsOverlap(hx-26, p.y-p.h, 52, p.h, g.x-g.w/2, g.y-g.h, g.w, g.h)){
-        g.dead = true; sfx.kill(); shake = 6;
-        spawnBurst(g.x, g.y-30, INK, 16, g.lane);
-        floats.push({x:g.x, y:g.y-70, t:0.9, text:'Guard felled'});
-        continue;
-      }
-    }
     // caught only when stopped inside his reach; a moving hero is never caught (DECISIONS 8)
     if(g.mode !== 'scold' && p.hurtT <= 0 && inReach(g) && heroStopped()) catchHero(g);
   }
@@ -1538,11 +1793,37 @@ function updateWorld(dt){
     p.vx = 0; p.face = Math.sign(npc.x - p.x) || 1;
   }
 
-  for(const c of level.checkpoints){
-    if(!c.lit && p.lane===1 && Math.abs(p.x-c.x) < 30 && Math.abs(p.y-c.y) < 60){
+  // a checkpoint lights when he passes it in any lane (ruled 2026-10-26); the return is to its banner
+  level.checkpoints.forEach((c, i)=>{
+    if(!c.lit && p.x >= c.x - 30 && p.fadeT <= 0 && !p.leap){
       c.lit = true; p.checkpoint = [c.x, c.y]; sfx.check();
-      floats.push({x:c.x, y:c.y-120, t:1.4, text:'Banner planted'});
+      floats.push({x:c.x, y:c.y-120, t:1.6, text:(level.cpLines && level.cpLines[i]) || LINE_CHECKPOINT});
     }
+  });
+
+  // §2a swaying walkway: sections move ±20 px, neighbors opposite; they carry the hero and fighters
+  for(const sw of level.swayList){
+    const nx = sw.x0 + TUNE.SWAY_AMP*Math.sin(time*2*Math.PI/TUNE.SWAY_PERIOD + sw.ph*Math.PI);
+    sw.dx = nx - sw.p[0]; sw.p[0] = nx;
+    if(p.onGround && p.groundPl === sw.p) p.x += sw.dx;
+    for(const g of level.guards)
+      if(!g.dead && g.lane === sw.p[4] && Math.abs(g.y - sw.p[1]) < 2 && g.x >= sw.p[0] - sw.dx && g.x <= sw.p[0] - sw.dx + sw.p[2]){ g.x += sw.dx; }
+  }
+  // §2a bales fall into gaps (a dropped bale becomes a step)
+  for(const b of level.blocks){
+    if(!b.bale) continue;
+    const [bx,by,bw,bh,ln] = b.p;
+    let support = null;
+    for(const q of level.platforms){
+      if(q === b.p || q[4] !== ln || q[5] === 'awning') continue;
+      if(bx + bw*0.5 >= q[0] && bx + bw*0.5 <= q[0] + q[2] && q[1] >= by + bh - 1 && (support === null || q[1] < support)) support = q[1];
+    }
+    if(support !== null && support <= by + bh + 0.5){ b.vy = 0; continue; }
+    b.vy = Math.min(1200, (b.vy||0) + 2300*dt);
+    let ny = by + b.vy*dt;
+    if(support !== null && ny + bh >= support){ ny = support - bh; b.vy = 0; spawnDust(bx + bw/2, support, 6); }
+    if(ny > level.killY + 400){ b.p[0] = b.sx; ny = b.sy; b.vy = 0; }   // lost in the harbor: back to its start
+    b.p[1] = ny;
   }
 
   updateGuards(dt);
@@ -1559,15 +1840,17 @@ function updateWorld(dt){
     }
   }
 
+  // level 2's ending: the ship casts off and the quay slides away before the card
+  if(level.castOff){
+    level.castOff.t += dt; level.drift += TUNE.CAST_OFF_SPEED*dt;
+    if(level.castOff.t >= TUNE.CAST_OFF_TIME){ level.castOff = null; finishLevel(); }
+    return;
+  }
   const gl = level.goal;
   if(p.lane===1 && Math.abs(p.x-gl.x) < 34 && Math.abs(p.y-gl.y) < 80){
     sfx.win();
-    if(levelIdx < LEVELS.length-1){
-      queueLevel(levelIdx+1);
-    } else {
-      $('endScreen').hidden = false;
-      state = 'end';
-    }
+    if(level.castOffAtGoal && !level.castOff){ level.castOff = {t:0}; p.vx = 0; return; }
+    finishLevel();
     return;
   }
 
@@ -1618,7 +1901,7 @@ function laneBegin(l){
   ctx.save();
   ctx.translate(W/2, HORIZON);
   ctx.scale(s, s);
-  ctx.translate(-W/2 - cam.x, -HORIZON - cam.y);
+  ctx.translate(-W/2 - cam.x - (l === 0 ? (level.drift||0) : 0), -HORIZON - cam.y);   // the quay slides away in the cast-off
   const shx = (Math.random()*2-1)*shake, shy = (Math.random()*2-1)*shake;
   ctx.translate(shx, shy);
 }
@@ -1706,7 +1989,7 @@ function drawPalm(x, y, sc, col){
 }
 
 function drawFarLayer(){
-  const px = cam.x*0.10;
+  const px = (cam.x + (level.drift||0))*0.10;
   ctx.save(); ctx.translate(-px, 0);
   const col = level.farCol || 'rgba(72,60,44,0.38)';
   if(level.far==='gopuram'){
@@ -1733,7 +2016,7 @@ function drawFarLayer(){
   ctx.restore();
 }
 function drawMidLayer(){
-  const px = cam.x*0.30;
+  const px = (cam.x + (level.drift||0))*0.30;
   ctx.save(); ctx.translate(-px, cam.y*-0.2);
   if(level.mid==='palms'){
     for(let i=0;i<26;i++){
@@ -1760,7 +2043,7 @@ function drawMidLayer(){
 }
 // architectural wall behind the far lane, with hanging red banners
 function drawWallLayer(){
-  const px = cam.x*0.5;
+  const px = (cam.x + (level.drift||0))*0.5;
   ctx.save(); ctx.translate(-px, cam.y*-0.4);
   ctx.fillStyle = 'rgba(88,72,52,0.30)';
   ctx.fillRect(px-10, 452, W+20, 280);
@@ -1824,6 +2107,10 @@ const AWNINGS = ['#E6D9A8','#3F5A80','#DDB02F','#7FA3A0'];   // ASSETS.md: undye
 function drawPlatform(bx,by,bw,bh,lane,kind,pal){
   const D = 18, DY = 10;
   if(kind === 'block'){ drawBlock(bx,by,bw,bh,pal); return; }
+  if(kind === 'bale'){ drawBale(bx,by,bw,bh); return; }
+  if(kind === 'awning'){ drawAwning(bx,by,bw); return; }
+  if(kind === 'wade'){ drawWadeBed(bx,by,bw); return; }
+  if(kind === 'sand' || kind === 'mud' || kind === 'roots') pal = GROUND_PAL[kind](pal);
   const wood = kind==='wood' || kind==='stall' || kind==='plank';
   const wTop = wood? '#A97F52' : pal.top,  wTopD = wood? '#8A6540' : pal.topD;
   const wFace = wood? '#8A6743' : pal.face, wFaceD = wood? '#6B4E31' : pal.faceD;
@@ -1952,6 +2239,77 @@ function drawPlatform(bx,by,bw,bh,lane,kind,pal){
   }
 }
 
+// ground skins for levels 2 and 3, tinted from the level palette (procedural until art exists)
+const GROUND_PAL = {
+  sand:  p=>mkPalInk(shade(p.top, 24), shade(p.face, 30), shade(p.side, 20), p.ink),
+  mud:   p=>mkPalInk('#6B5A3A', '#4A3B26', '#2E2518', p.ink),
+  roots: p=>mkPalInk('#3A4A30', '#26331F', '#182014', p.ink),
+};
+function mkPalInk(t, f, s, ink){ const q = mkPal(t, f, s); q.ink = ink; return q; }
+// §2a cloth awning, undyed: a taut sheet on two posts; it dips when bounced on
+function drawAwning(bx, by, bw){
+  const dip = 0;
+  ctx.fillStyle = '#5E4429'; ctx.fillRect(bx+6, by, 5, 120); ctx.fillRect(bx+bw-11, by, 5, 120);
+  ctx.fillStyle = '#E6D9A8';
+  ctx.beginPath(); ctx.moveTo(bx-6, by+2); ctx.quadraticCurveTo(bx+bw/2, by+10+dip, bx+bw+6, by+2);
+  ctx.lineTo(bx+bw, by+16); ctx.quadraticCurveTo(bx+bw/2, by+24+dip, bx, by+16); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(60,44,28,0.55)'; ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.fillStyle = 'rgba(120,96,60,0.25)';
+  for(let x = bx+10; x < bx+bw-6; x += 22){ ctx.beginPath(); ctx.arc(x+11, by+18, 8, 0, Math.PI); ctx.fill(); }
+}
+// §2a cargo bale: cotton in coir lashing, never a crate
+function drawBale(bx, by, bw, bh){
+  ctx.fillStyle = '#C8B48A'; ctx.beginPath(); ctx.ellipse(bx+bw/2, by+bh/2, bw/2, bh/2, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(80,62,36,0.25)'; ctx.beginPath(); ctx.ellipse(bx+bw/2+6, by+bh/2+8, bw/2-6, bh/2-8, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#6B4E31'; ctx.lineWidth = 3;
+  for(const f of [0.3, 0.7]){ ctx.beginPath(); ctx.moveTo(bx+bw*f, by+3); ctx.lineTo(bx+bw*f, by+bh-3); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(bx+4, by+bh/2); ctx.lineTo(bx+bw-4, by+bh/2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(40,28,18,0.6)'; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.ellipse(bx+bw/2, by+bh/2, bw/2, bh/2, 0, 0, 7); ctx.stroke();
+}
+// §2a shallow water: a sandy bed under a skin of brown water with a ripple at the surface
+function drawWadeBed(bx, by, bw){
+  ctx.fillStyle = 'rgba(92,80,56,0.85)'; ctx.fillRect(bx, by, bw, 60);
+  ctx.fillStyle = 'rgba(120,110,80,0.55)'; ctx.fillRect(bx, by-22, bw, 22);
+  ctx.strokeStyle = 'rgba(220,226,200,0.45)'; ctx.lineWidth = 1.6;
+  for(let x = bx + ((time*24)%40); x < bx+bw-20; x += 40){ ctx.beginPath(); ctx.moveTo(x, by-22); ctx.quadraticCurveTo(x+10, by-25, x+20, by-22); ctx.stroke(); }
+}
+// §2a slopes: a gangplank (planks with cleats) or a muddy bank
+function drawSlope(sl, pal){
+  if(sl.kind === 'mud'){
+    const yb = Math.max(sl.y1, sl.y2) + 120;
+    ctx.fillStyle = '#4A3B26';
+    ctx.beginPath(); ctx.moveTo(sl.x1, sl.y1); ctx.lineTo(sl.x2, sl.y2); ctx.lineTo(sl.x2, yb); ctx.lineTo(sl.x1, yb); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(30,22,14,0.6)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(sl.x1, sl.y1); ctx.lineTo(sl.x2, sl.y2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(160,140,100,0.35)'; ctx.lineWidth = 2;   // the slide streak
+    ctx.beginPath(); ctx.moveTo(sl.x1+10, sl.y1+4); ctx.lineTo(sl.x2-10, sl.y2+4); ctx.stroke();
+    return;
+  }
+  const n = Math.hypot(sl.x2-sl.x1, sl.y2-sl.y1), ux = (sl.x2-sl.x1)/n, uy = (sl.y2-sl.y1)/n;
+  ctx.strokeStyle = '#8A6743'; ctx.lineWidth = 12; ctx.lineCap = 'butt';
+  ctx.beginPath(); ctx.moveTo(sl.x1, sl.y1+6); ctx.lineTo(sl.x2, sl.y2+6); ctx.stroke();
+  ctx.strokeStyle = 'rgba(46,32,22,0.6)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(sl.x1, sl.y1); ctx.lineTo(sl.x2, sl.y2); ctx.stroke();
+  for(let d = 20; d < n; d += 34){ const x = sl.x1 + ux*d, y = sl.y1 + uy*d; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - uy*6, y + ux*6 + 10); ctx.stroke(); }
+}
+// a marked rope or vine carries the gate's lamp and an ink ring, and the gate's glyph (DECISIONS 15, 7)
+function drawRopeMark(o){
+  const fl = 0.7+0.3*Math.sin(time*9+o.x);
+  const g = ctx.createRadialGradient(o.x, o.ay-6, 0, o.x, o.ay-6, 40);
+  g.addColorStop(0,'rgba(240,205,130,0.35)'); g.addColorStop(1,'rgba(240,205,130,0)');
+  ctx.fillStyle = g; ctx.fillRect(o.x-40, o.ay-46, 80, 80);
+  ctx.fillStyle = 'rgba(244,200,110,'+(0.8*fl)+')'; ctx.beginPath(); ctx.arc(o.x, o.ay-8, 3.2, 0, 7); ctx.fill();
+  const ry = o.ay + o.len*0.6, rx = ropeX(o, ry);
+  ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.ellipse(rx, ry, 9, 5, 0, 0, 7); ctx.stroke();
+  const pul = 0.4+0.3*Math.sin(time*3+o.x), up = o.toLane < o.lane;
+  ctx.fillStyle = level.gateCrimson === false ? 'rgba(30,22,16,'+pul+')' : 'rgba(181,52,42,'+pul+')';
+  const yy = o.ay - 30;
+  ctx.beginPath();
+  if(up){ ctx.moveTo(o.x, yy-8); ctx.lineTo(o.x-7, yy); ctx.lineTo(o.x+7, yy); }
+  else { ctx.moveTo(o.x, yy+8); ctx.lineTo(o.x-7, yy); ctx.lineTo(o.x+7, yy); }
+  ctx.closePath(); ctx.fill();
+}
 // §2a block on rollers: a plain dressed stone on two wooden rollers (procedural until the art exists)
 function drawBlock(bx,by,bw,bh,pal){
   ctx.fillStyle = pal.side; ctx.fillRect(bx+bw, by-6, 10, bh-4);
@@ -1968,23 +2326,42 @@ function drawBlock(bx,by,bw,bh,pal){
     ctx.fillStyle = '#6B4E31';
   }
 }
-function drawPole(o){                        // §2a scaffold pole, lashed bamboo
-  ctx.strokeStyle = '#5E4429'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+function drawPole(o){                        // §2a scaffold pole, mast, rigging line, or ladder
+  if(o.kind === 'line'){
+    ctx.strokeStyle = '#8A6A44'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(o.x, o.top-10); ctx.lineTo(o.x, o.bot); ctx.stroke();
+    ctx.strokeStyle = 'rgba(40,28,18,0.6)'; ctx.lineWidth = 1.4;
+    for(let y = o.top; y < o.bot; y += 22){ ctx.beginPath(); ctx.moveTo(o.x-4, y); ctx.lineTo(o.x+4, y+3); ctx.stroke(); }
+    return;
+  }
+  if(o.kind === 'ladder'){
+    ctx.strokeStyle = '#6B5A3A'; ctx.lineWidth = 4;
+    for(const dx of [-10, 10]){ ctx.beginPath(); ctx.moveTo(o.x+dx, o.top-8); ctx.lineTo(o.x+dx, o.bot); ctx.stroke(); }
+    ctx.lineWidth = 3; for(let y = o.top; y < o.bot; y += 26){ ctx.beginPath(); ctx.moveTo(o.x-10, y); ctx.lineTo(o.x+10, y); ctx.stroke(); }
+    return;
+  }
+  ctx.strokeStyle = '#5E4429'; ctx.lineWidth = o.kind === 'mast' ? 11 : 7; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(o.x, o.top - 14); ctx.lineTo(o.x, o.bot); ctx.stroke();
   ctx.strokeStyle = 'rgba(233,210,160,0.35)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(o.x+1.5, o.top - 12); ctx.lineTo(o.x+1.5, o.bot); ctx.stroke();
   ctx.strokeStyle = 'rgba(40,28,18,0.7)'; ctx.lineWidth = 2;
   for(let y = o.top; y < o.bot; y += 46){ ctx.beginPath(); ctx.moveTo(o.x-5, y); ctx.lineTo(o.x+5, y+4); ctx.stroke(); }
 }
-function drawRope(o){                        // §2a hauling rope from a beam, swaying
-  ctx.fillStyle = '#5E4429'; ctx.fillRect(o.x-30, o.ay-10, 60, 10);
-  ctx.strokeStyle = '#8A6A44'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+function drawRope(o){                        // §2a hauling rope from a beam, or a rattan vine from a branch
+  if(o.vine){ ctx.fillStyle = '#26331F'; ctx.beginPath(); ctx.ellipse(o.x, o.ay-6, 34, 10, 0, 0, 7); ctx.fill(); }
+  else { ctx.fillStyle = '#5E4429'; ctx.fillRect(o.x-30, o.ay-10, 60, 10); }
+  ctx.strokeStyle = o.vine ? '#4E5B34' : '#8A6A44'; ctx.lineWidth = o.vine ? 3.5 : 4; ctx.lineCap = 'round';
   // a little sag toward the trailing side, so a fast swing reads as a rope and not a rod
   const [ex, ey] = ropeEnd(o), bend = clamp(-o.angV*6, -10, 10);
   ctx.beginPath(); ctx.moveTo(o.x, o.ay);
   ctx.quadraticCurveTo((o.x+ex)/2 + bend*Math.cos(o.ang), (o.ay+ey)/2 - bend*Math.sin(o.ang), ex, ey);
   ctx.stroke();
-  ctx.fillStyle = '#5E4429'; ctx.beginPath(); ctx.arc(ex, ey, 5, 0, 7); ctx.fill();
+  ctx.fillStyle = o.vine ? '#3A4A30' : '#5E4429'; ctx.beginPath(); ctx.arc(ex, ey, 5, 0, 7); ctx.fill();
+  if(o.vine){                                 // a few leaves along the rattan
+    ctx.fillStyle = '#4E6A3A';
+    for(const k of [0.3, 0.55, 0.8]){ const y = o.ay + o.len*k*Math.cos(o.ang), x = o.x + o.len*k*Math.sin(o.ang);
+      ctx.beginPath(); ctx.ellipse(x+5, y, 6, 3, 0.6, 0, 7); ctx.fill(); }
+  }
+  if(o.toLane !== null) drawRopeMark(o);
 }
 function drawSwordGlyph(x, y){               // §2 sign 2: an ink sword after the hearts, a sign, never a count
   if(!player.hasSword) return;
@@ -2101,6 +2478,44 @@ function drawGate(cx, gy){
   ctx.beginPath(); ctx.moveTo(cx, gy-90); ctx.lineTo(cx-7, gy-98); ctx.lineTo(cx+7, gy-98); ctx.closePath(); ctx.fill();
 }
 
+// Srivijayan fighter (DESIGN.md §4): indigo waist cloth, ochre head cloth, a short straight sword; the
+// shield-bearer carries an oblong hide shield. Procedural until rig sheet 39 exists. No red anywhere.
+function drawFighter(g){
+  const f = g.dir, x = g.x, y = g.y;
+  ctx.save();
+  if(g.mode === 'kneel'){                    // one knee, an open hand raised, washing out to paper
+    const a = clamp(g.kneelT/TUNE.FIGHT_KNEEL, 0, 1);
+    ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(1, 0.78); ctx.translate(-x, -y);
+  } else if(g.hitT > 0 && (time*30|0)%2) ctx.globalAlpha = 0.6;
+  const moving = g.mode === 'patrol' || g.mode === 'return' || (g.mode === 'engage' && g.atk === 'approach');
+  drawFigure(x, y, f, g.phase, {skin:'#7A5236', cloth:'#4B5E9A', sashC:'#C9A24A', isGuard:true, noSpear:true,
+    vx: moving ? 95 : 0, onGround:true, procedural:true});
+  ctx.lineCap = 'round';
+  const hx = x + f*10, hy = y - 46;
+  let tip;
+  if(g.mode === 'kneel'){
+    ctx.strokeStyle = '#7A5236'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x+f*4, y-56); ctx.lineTo(x+f*16, y-84); ctx.stroke();
+  } else if(g.atk === 'raise'){
+    tip = [x - f*6, y - 118];
+    ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(x+f*4, y-78); ctx.lineTo(tip[0], tip[1]); ctx.stroke();
+    const fl = 1 - g.atkT/TUNE.FIGHT_RAISE;                        // §4: an ink flare at the tip
+    ctx.fillStyle = 'rgba(20,14,10,'+(0.3+0.6*fl)+')'; ctx.beginPath(); ctx.arc(tip[0], tip[1], 5 + 9*fl, 0, 7); ctx.fill();
+  } else if(g.atk === 'thrust'){
+    ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(x + f*(g.w/2 + TUNE.FIGHT_REACH), hy - 4); ctx.stroke();
+  } else {
+    ctx.strokeStyle = '#D8D4C8'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(hx, hy+4); ctx.lineTo(hx + f*26, y - 16); ctx.stroke();
+  }
+  if(g.type === 'shield' && g.mode !== 'kneel'){                    // oblong hide shield, held forward
+    ctx.fillStyle = '#6B4E31'; ctx.beginPath(); ctx.ellipse(x + f*15, y - 40, 9, 26, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(30,22,14,0.8)'; ctx.lineWidth = 2; ctx.stroke();
+    if(g.puffT > 0){ ctx.fillStyle = 'rgba(20,14,10,'+(g.puffT*2)+')'; ctx.beginPath(); ctx.arc(x + f*22, y - 44, 10 + (0.3-g.puffT)*30, 0, 7); ctx.fill(); }
+  }
+  ctx.restore();
+  if(g.mode === 'engage' || g.seeT > 0){
+    ctx.fillStyle = INK; ctx.font = '30px "Marcellus SC", Marcellus, serif'; ctx.textAlign = 'center';
+    ctx.fillText(g.mode === 'engage' ? '!' : '?', x, y - 104); ctx.textAlign = 'left';
+  }
+}
 function drawBird(b){
   ctx.fillStyle = '#3A2A1C';                       // umber, never red (crimson rule)
   ctx.save(); ctx.translate(b.x, b.y-6);
@@ -2292,7 +2707,7 @@ function drawFigure(x, y, face, phase, opts){
       }
     }
   }
-  if(isGuard){                                     // spear
+  if(isGuard && !opts.noSpear){                    // spear
     ctx.strokeStyle = '#3A2A1C'; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(10,-80); ctx.lineTo(4,-14); ctx.stroke();
     ctx.fillStyle = '#C9C9C4';
@@ -2366,6 +2781,7 @@ function drawLaneContents(l){
   const pal = l===0? level.palBack : l===2? level.palFront : level.pal;
   laneBegin(l);
   for(const b of level.platforms) if(b[4]===l) drawPlatform(b[0],b[1],b[2],b[3],l,b[5]||'stone',pal);
+  for(const sl of level.slopes) if(sl.lane===l) drawSlope(sl, pal);
   for(const lk of level.links) if(lk.a===l || lk.b===l) drawGate(lk.cx, lk.gy[l]);
   for(const o of level.poles) if(o.lane===l) drawPole(o);
   for(const o of level.ropes) if(o.lane===l) drawRope(o);
@@ -2387,6 +2803,7 @@ function drawLaneContents(l){
   for(const c of level.coins) if(c.lane===l) drawCoin(c);
   for(const g of level.guards){
     if(g.dead || g.lane!==l) continue;
+    if(g.type !== 'guard'){ drawFighter(g); continue; }
     drawFigure(g.x, g.y, g.dir, g.phase, {
       skin:'#6E4530', cloth: levelIdx >= TUNE.SWORD_FROM_LEVEL ? '#4B5E9A' : CRIMSON,   // Srivijayan carries no red
       sashC:'#3A2A1C', isGuard:true, vx:95, onGround:true,
@@ -2404,7 +2821,7 @@ function drawLaneContents(l){
   }
   if(player.lane === l && state==='play' && player.leap){
     // §2 the gate leap: scale and position tween from the source lane to the target
-    const L = player.leap, k = Math.min(1, L.t/TUNE.GATE_LEAP);
+    const L = player.leap, k = Math.min(1, L.t/L.dur);
     const scr = (ln)=>{ const s = LANES[ln].s; return [(player.x - cam.x - W/2)*s + W/2, (player.y - cam.y - HORIZON)*s + HORIZON, s]; };
     const A = scr(L.from), B = scr(L.to);
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
@@ -2428,6 +2845,12 @@ function drawLaneContents(l){
       onGround:player.onGround || !!player.climb, hurt:player.hurtT>0, unarmed:!player.hasSword,
       rig:'hero', pose:player.rigS,
     });
+    if(player.strokeT > 0){                  // §2 sign 4: the first cut leaves an ink stroke along the blade
+      const t = 1 - player.strokeT/TUNE.FIRST_STROKE, f = player.face;
+      ctx.strokeStyle = 'rgba(20,14,10,'+(0.85*(1-t*0.6))+')'; ctx.lineWidth = 7*(1-t*0.5); ctx.lineCap = 'round';
+      ctx.save(); ctx.translate(player.x, player.y - 62); ctx.scale(f, 1);
+      ctx.beginPath(); ctx.arc(8, 0, 46, -2.2, -2.2 + 2.6*Math.max(0.05, t)); ctx.stroke(); ctx.restore();
+    }
     if(player.sheathT > 0){                  // hand on the hilt: an ink tick at the hip
       ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
       const hx = player.x - player.face*8, hy = player.y - 38, r = 10 + 8*(1 - player.sheathT/TUNE.SHEATH_PUSH);
