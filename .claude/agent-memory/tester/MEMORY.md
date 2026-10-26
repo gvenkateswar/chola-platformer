@@ -43,3 +43,10 @@ TRACE=1, DEV_LEVEL=<0-2> DEV_TELEPORT=x,y.
 - Fight controller: retreat when gap < 110 during raise/thrust, cut at gap <= 100 (shield: only in recover). Hitstop freezes game time, so the sim clock still advances; limits are game seconds.
 - `--film` flag: pauses the sim rAF (`__paused`, `__steps`). Playwright `waitForFunction` needs `{polling: 30}` because default polling uses rAF, which is replaced.
 - Runs: 35.8-36.1 / 47.0-47.1 / 59.0-59.3 game s, about 95 s wall.
+
+## Round 5 (build/systems, /home/claude/wt-sys)
+- Port click, parry, named-kasu errands added; runs 41.5 / 52.7 / 59.7 game s, about 110 s wall, three green.
+- Swing release sim must model ledge sides and undersides; floor drops (more than 330 px below the anchor) are not accepted until 12 s on the rope.
+- Rope 1: grip 160 px or less. D5 vine (x 1620): grip 70, run at it from x below 1585; a failed grab lands back on the mud and retries.
+- The detour errands are level-specific on purpose; the dead-end retreat is level 2 only (it misfired on level 1 lane 0).
+- Debug trick: window.__log pushes work inside botStep before `logit` is defined; using `logit` too early throws a TDZ error.

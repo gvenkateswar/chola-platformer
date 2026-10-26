@@ -14,10 +14,10 @@ const OUT = path.join(__dirname, 'out');
 const limitFor = (goalX) => 20 + 2 * goalX / 385;
 // What each level's run must have used, so a green run proves the pieces work and were not walked around.
 const NEEDED = [
-  { keys: ['handover', 'pole', 'rope', 'plank', 'push', 'leap'], text: 'handover, pole, rope, plank, block push, gate leap' },
-  { keys: ['bounce', 'bale', 'gangplank', 'mast', 'marked', 'swing', 'leap'], text: 'awning bounce, bale, gangplank, mast, marked rope, pumped swing, gate leap' },
-  { keys: ['vine', 'marked', 'wade', 'slide', 'sway', 'swing', 'sword', 'cuts', 'kills', 'telegraph', 'shieldKill'],
-    text: 'vine swing, marked vine, wading, mud slide, sway walkway, sword drawn, fighters cut and defeated, telegraph read, shield-bearer defeated' },
+  { keys: ['handover', 'pole', 'rope', 'plank', 'push', 'leap', 'named'], text: 'handover, pole, rope, plank, block push, gate leap, a named kasu' },
+  { keys: ['bounce', 'bale', 'gangplank', 'mast', 'marked', 'swing', 'leap', 'named'], text: 'awning bounce, bale, gangplank, mast, marked rope, pumped swing, gate leap, a named kasu' },
+  { keys: ['vine', 'marked', 'wade', 'slide', 'sway', 'swing', 'sword', 'cuts', 'kills', 'telegraph', 'shieldKill', 'parry', 'named'],
+    text: 'vine swing, marked vine, wading, mud slide, sway walkway, sword drawn, fighters cut and defeated, telegraph read, shield-bearer defeated, a parry landed, a named kasu' },
 ];
 fs.mkdirSync(OUT, { recursive: true });
 
@@ -89,6 +89,8 @@ sheet.save(out)`;
     await page.evaluate(() => { window.__paused = false; });
   };
 
+  // runs stay identical: the map persists in localStorage (TUNE.KEEP_MAP), so start every run with it empty
+  await page.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
   // --- load + title
   await page.goto('file://' + HTML);
   await sleep(800);
@@ -228,23 +230,23 @@ sheet.save(out)`;
         return null;
       };
       window.__falls = []; window.__log = [];
-      const trail = [], hpSeen = new Map(), raiseSeen = new Set();
+      const trail = [], hpSeen = new Map(), raiseSeen = new Set(), seenNamed = new Set(), parrySeen = new Set();
       // would a full jump from here, holding right, catch this rope or vine in flight? (its swing is advanced the same way the game does)
       const jumpGrabs = (o) => {
         const p = player, T = TUNE, dt = 1 / 60;
         let x = p.x, y = p.y, vx = p.vx, vy = -830, ang = o.ang, angV = o.angV, tt = 0;
-        const W2 = Math.pow(2 * Math.PI / T.ROPE_PERIOD, 2);
+        const W2 = T.ROPE_GRAVITY / o.len, wN = Math.sqrt(W2);   // DECISIONS 25: the period follows length (a free rope uses its full length)
         for (let i = 0; i < 80; i++) {
           tt += dt;
           vx = Math.min(385, vx + 2600 * dt); vy += 2300 * dt;
           if (tt > 0.38 && vy < -300) vy = -300;
           x += vx * dt; y += vy * dt;
           if (o.vine) {
-            const w = 2 * Math.PI / T.ROPE_PERIOD, A = T.VINE_AMP * Math.PI / 180;
+            const w = wN, A = T.VINE_AMP * Math.PI / 180;
             const amp = Math.sqrt(ang * ang + (angV / w) * (angV / w));
             angV += (-W2 * Math.sin(ang) + (amp < A ? Math.sign(angV || 1) * T.VINE_DRIVE : 0)) * dt; ang += angV * dt;
           } else {
-            const idle = Math.asin(Math.min(1, T.ROPE_SWAY / o.len)) * Math.sin((time + tt) * 2 * Math.PI / T.ROPE_PERIOD);
+            const idle = Math.asin(Math.min(1, T.ROPE_SWAY / o.len)) * Math.sin((time + tt) * wN);
             angV += ((idle - ang) * W2 - angV * T.ROPE_SETTLE) * dt; ang += angV * dt;
           }
           const hy = y - T.HANG_HANDS;
@@ -265,7 +267,7 @@ sheet.save(out)`;
         }
         return false;
       };
-      let ropeWait = null, plan = null, ropeT0 = null, curDir = 1, downDown = false;
+      let vineT0 = null, vineDone = false, vineJumpAt = -1e9, errand = null, retreating = false, ropeWait = null, plan = null, ropeT0 = null, curDir = 1, downDown = false;
       // hold right, left or neither (the run keys cancel each other when both are down)
       const setDir = (d) => {
         if (d === curDir) return;
@@ -287,8 +289,16 @@ sheet.save(out)`;
           vy = Math.min(1200, vy + 2300 * dt);
           if (tt > 0.38 && vy < -300 + liftV) vy = -300 + liftV;
           const px = x, py = y; x += vx * dt; y += vy * dt;
+          // solid ledges, as the game resolves them: sideways first (at the old height), then the head
+          for (const q of plats) {
+            if ((q[4] ?? 1) !== lane || ['awning', 'wade', 'plank'].includes(q[5])) continue;
+            const ph = player.h, ov = (cx, cy) => cx + 13 > q[0] && cx - 13 < q[0] + q[2] && cy > q[1] && cy - ph < q[1] + q[3];
+            if (ov(x, py) && py > q[1] + 0.5) { x = px; vx = 0; }
+            if (vy < 0 && ov(x, y)) { y = q[1] + q[3] + ph; vy = 0; }
+          }
           if (vy > 0) for (const q of nodes) {
             if (q[5] === 'wade' && !allowWade) continue;
+            if (q[1] - o.ay > 330 && !allowWade) continue;   // a drop to the canyon floor is not the way on (rope 1 must reach the ledge)
             if ((q[4] ?? 1) === lane && x >= q[0] + 30 && x <= q[0] + q[2] - 30 && py <= q[1] + 1 && y >= q[1] && x > o.x + 80) return [Math.round(x), q[0]];
           }
           if (y > level.killY) return null;
@@ -299,7 +309,7 @@ sheet.save(out)`;
       press('ArrowRight', true);
       // what the run actually exercised, so a green run proves the traversal pieces were used
       const cov = window.__cov = { pole: 0, rope: 0, plank: 0, leap: 0, push: 0, handover: 0, falls: 0, cuts: 0, kills: 0, telegraph: 0,
-        bounce: 0, bale: 0, gangplank: 0, slide: 0, mast: 0, ladder: 0, vine: 0, marked: 0, swing: 0, wade: 0, sway: 0, shieldKill: 0 };
+        bounce: 0, bale: 0, gangplank: 0, slide: 0, mast: 0, ladder: 0, vine: 0, marked: 0, swing: 0, wade: 0, sway: 0, shieldKill: 0, parry: 0, named: 0 };
       let prevVy = 0, prevSlope = null, prevWade = false, prevSway = false; let prev = { climb: null, plank: false, leap: false, hp: 3 }; const pushedBlocks = new Set();
       window.__botStep = () => {
         const p = player, now = time * 1000;   // game time, so timers do not depend on frame rate
@@ -312,6 +322,7 @@ sheet.save(out)`;
         }
         if (p.vy < -950 && prevVy >= -950 && !p.climb && plats.some(q => q[5] === 'awning' && (q[4] ?? 1) === p.lane && p.x > q[0] - 20 && p.x < q[0] + q[2] + 20 && Math.abs(p.y - q[1]) < 25)) cov.bounce++;   // an awning bounce (a jump is -830)
         prevVy = p.vy;
+        if (levelIdx === 2 && p.climb && p.climb.o.vine && Math.abs(p.climb.o.x - 1620) < 2) vineDone = true;
         if (p.leap && p.leap.moving && !prev.leap) cov.marked++;
         if (p.onSlope && p.onSlope !== prevSlope) cov[p.onSlope.kind === 'mud' ? 'slide' : 'gangplank']++;
         prevSlope = p.onSlope;
@@ -326,6 +337,7 @@ sheet.save(out)`;
         if (p.fadeT > 0 && !prev.fade) { cov.falls++; (window.__falls = window.__falls || []).push([Math.round(p.x), Math.round(p.y), p.lane, trail.filter((_, i) => i % 6 === 0).map(a => a.join(':')).join(' ')]); }
         trail.push([Math.round(p.x), Math.round(p.y), p.lane, p.onGround ? 1 : 0]); if (trail.length > 120) trail.shift();
         for (const b of level.blocks || []) if (b.p[0] !== (b.bale ? b.sx : b.x0) && !pushedBlocks.has(b)) { pushedBlocks.add(b); cov[b.bale ? 'bale' : 'push']++; }
+        if (prev.climb && !p.climb) (window.__log = window.__log || []).push(['released', Math.round(p.x), Math.round(p.y), Math.round(p.vx), Math.round(p.vy)]);
         prev = { climb: p.climb, plank: p.onPlank, leap: !!p.leap, scene: !!p.scene, fade: p.fadeT > 0 };
         const jump = (why) => { (window.__log = window.__log || []).push([why, Math.round(p.x), Math.round(p.y), Math.round(p.vy), p.jumps]); if (spaceDown) press(' ', false); press(' ', true); spaceDown = true; jumpAt = now; };
         if (spaceDown && now - jumpAt > 380) { press(' ', false); spaceDown = false; }
@@ -340,6 +352,8 @@ sheet.save(out)`;
           return;
         }
         if (!p.climb) { ropeT0 = null; if (curDir !== 1) setDir(1); if (downDown) { press('ArrowDown', false); downDown = false; } }
+        // flew past the goal (a swing release can overshoot it): walk back to it along this lane
+        if (!p.climb && p.onGround && p.lane === 1 && p.x > level.goal.x + 45 && Math.abs(p.y - level.goal.y) < 80) { setDir(-1); st = now; return; }
         // on a pole or rope: climb up if a ledge above lies ahead (always on a pole), then jump off toward the goal
         if (p.climb) {
           st = now;
@@ -371,11 +385,15 @@ sheet.save(out)`;
               return;
             }
             if (now - ropeT0 < 14000) {           // a free rope or vine: pump the swing, let go when the arc lands on footing
-              const hit = swingLanding(c, now - ropeT0 > 9000);
+              const hit = swingLanding(c, now - ropeT0 > 12000);
               if (hit) { cov.swing++; if (downDown) { press('ArrowDown', false); downDown = false; } logit('swing-release', Math.round(p.x), Math.round(p.y), +o.ang.toFixed(2), +o.angV.toFixed(2), hit[0], hit[1]); setDir(1); press('ArrowUp', false); upDown = false; jump('swing'); return; }
               // slide to the bottom of the rope first (more arm, more speed), pumping all the while
-              const low = c.r < o.len - 14;
+              // (builder's finding: under the length-based period a short grip, 160 px or less, gets rope 1's swing
+              // up to the ledge; the other ropes are fine at the bottom)
+              const want = levelIdx === 0 ? Math.min(160, o.len) : (levelIdx === 2 && Math.abs(o.x - 1620) < 2) ? 70 : o.len;   // the D5 vine: a short grip puts the feet at ledge height
+              const low = c.r < want - 10, high = c.r > want + 10 && want < o.len;
               if (low !== downDown) { press('ArrowDown', low); downDown = low; }
+              if (high !== upDown) { press('ArrowUp', high); upDown = high; }
               setDir(Math.abs(o.angV) < 0.15 ? 1 : Math.sign(o.angV));
               return;
             }
@@ -396,8 +414,10 @@ sheet.save(out)`;
         // blocks cuts from the front except in recovery, so we stay out of his thrust and cut after it.
         const foe = level.guards.find(g => g.type !== 'guard' && !g.dead && g.mode !== 'kneel' && g.lane === p.lane &&
           Math.abs(p.y - g.y) <= 90 && g.x - p.x > -20 && g.x - p.x < 330);
+        for (const k of Object.keys(RUN.found)) if (RUN.found[k] && NAMED[k].level === levelIdx && !seenNamed.has(k)) { seenNamed.add(k); cov.named++; logit('named', k, Math.round(p.x)); }
         for (const g of level.guards) {
           if (g.type === 'guard') continue;
+          if (g.parried && !parrySeen.has(g)) { parrySeen.add(g); cov.parry++; }
           const was = hpSeen.get(g); if (was !== undefined && g.hp < was) { cov.cuts++; if (g.hp <= 0) { cov.kills++; if (g.type === 'shield') cov.shieldKill++; } if (raiseSeen.has(g) && g.atk === 'recover') cov.telegraph++; }
           hpSeen.set(g, g.hp);
         }
@@ -410,12 +430,19 @@ sheet.save(out)`;
           let d = 1;
           if (shield) {
             // let him close and raise, step back out of the thrust, then rush in during his recovery
-            if (atk === 'recover') d = 1;
+            if (atk === 'recover' || atk === 'stun') d = 1;
+            else if (atk === 'raise' && foe.atkKind === 'thrust' && gap > 0 && gap < 105) d = 0;   // hold still and parry his thrust
             else if (atk === 'raise' || atk === 'thrust') d = gap < 110 ? -1 : 0;
             else d = gap > 170 ? 1 : 0;
           }
           setDir(d);
-          if (gap <= 100 && gap > -10 && p.attackT <= 0 && now - lastAtk > 250 && (!shield || atk === 'recover')) {
+          // the parry (DECISIONS 24): press J while his thrust is raised, 3 to 6 frames before the strike (window: 7 before to 3 after)
+          if (shield && atk === 'raise' && foe.atkKind === 'thrust' && gap > 0 && gap < 105 && foe.atkT * 60 <= 6 && foe.atkT * 60 >= 2 &&
+              p.parryCool <= 0 && p.attackT <= 0 && now - lastAtk > 250) {
+            logit('parry-press', Math.round(p.x), Math.round(gap), +(foe.atkT * 60).toFixed(1));
+            press('j', true); atkUp = now + 60; lastAtk = now;
+          }
+          if (gap <= 100 && gap > -10 && p.attackT <= 0 && now - lastAtk > 250 && (!shield || atk === 'recover' || atk === 'stun')) {
             logit('cut', Math.round(p.x), Math.round(gap), foe.type, atk);
             press('j', true); atkUp = now + 60; lastAtk = now;
             const F = window.__film;   // --film: the first cut on fighter S1, from the press on, 10 frames 3 apart
@@ -435,6 +462,7 @@ sheet.save(out)`;
         else if (upDown) { press('ArrowUp', false); upDown = false; }
         // crossing a lane-1 gap: plan a path over the platforms of all three lanes (hops across small gaps,
         // lane changes at gates) to the next lane-1 footing, and take a lane change when the plan asks for it
+        const foot1 = (x) => plats.some(([bx, by, bw, , l]) => (l ?? 1) === 1 && x >= bx && x <= bx + bw && by > p.y - 150 && by < p.y + 400);
         let wantFar = false;
         const here = p.onGround ? nodeOf(p.lane, p.x, p.y) : null;
         if (!plan && p.lane === 1 && here && groundAt(1, p.x + 130, p.y, 300) === null) {
@@ -457,9 +485,59 @@ sheet.save(out)`;
           }
         }
         // off the main lane with no plan running: step back to lane 1 where lane-1 footing runs on ahead
-        if (!plan && p.lane !== 1 && here && canShift(p, 1) && groundAt(1, p.x + 20, p.y, 400) !== null && groundAt(1, p.x + 150, p.y, 400) !== null) {
+        if (!plan && p.lane !== 1 && here && canShift(p, 1) && foot1(p.x + 20) && (foot1(p.x + 150) || level.goal.x - p.x < 400)) {
           wantFar = true;
           if (now - lastShift > 350) { logit('back', Math.round(p.x), p.lane); const key = p.lane > 1 ? 'ArrowUp' : 'ArrowDown'; press(key, true); press(key, false); lastShift = now; }
+        }
+        // the detour errand: a named kasu on a side-lane deck beside a gate we pass anyway (level 2's stern lantern).
+        // At the gate, step into that lane, walk to the coin, then walk back to the gate and step down again.
+        if (p.onGround && !p.climb) {
+          if (!errand) {
+            errand = { phase: 0, c: null, k: null };
+            for (const c of level.coins) {
+              if (c.kind !== 'named' || c.taken || c.lane === 1 || Math.abs(c.lane - 1) !== 1) continue;
+              const k = links.find(l => ((l.a === 1 && l.b === c.lane) || (l.b === 1 && l.a === c.lane)) && Math.abs(l.x + l.w / 2 - c.x) < 250);
+              const deck = plats.find(q => (q[4] ?? 1) === c.lane && c.x > q[0] && c.x < q[0] + q[2] && q[1] - c.y < 90 && q[1] - c.y > -10);
+              if (k && deck && (!errand.c || c.x < errand.c.x)) { errand.c = c; errand.k = k; }
+            }
+          }
+          const E = errand;
+          if (E.c && E.phase === 0 && p.lane === 1 && p.x > E.k.x + 12 && p.x < E.k.x + E.k.w - 12 && canShift(p, E.c.lane)) {
+            logit('errand-in', Math.round(p.x), E.c.nk); press(E.c.lane < 1 ? 'ArrowUp' : 'ArrowDown', true); press(E.c.lane < 1 ? 'ArrowUp' : 'ArrowDown', false); E.phase = 1; lastShift = now;
+          } else if (E.c && E.phase === 1 && p.lane === E.c.lane) {
+            st = now;
+            if (E.c.taken) E.phase = 2;
+            else { setDir(Math.sign(E.c.x - p.x) || 1); return; }
+          }
+          if (E.c && E.phase === 2) {
+            st = now;
+            if (p.lane !== 1) {
+              const mid = E.k.x + E.k.w / 2;
+              if (canShift(p, 1) && Math.abs(p.x - mid) < E.k.w / 2 - 12 && now - lastShift > 350) { logit('errand-out', Math.round(p.x)); press(E.c.lane < 1 ? 'ArrowDown' : 'ArrowUp', true); press(E.c.lane < 1 ? 'ArrowDown' : 'ArrowUp', false); lastShift = now; E.phase = 3; }
+              else { setDir(Math.sign(mid - p.x) || 1); return; }
+            }
+          }
+        }
+        // level 3's first detour (D5): off the mud, grab the extra vine at x 1620 and swing to the roots, where the named kasu lies
+        if (levelIdx === 2 && p.onGround && p.lane === 1 && p.x > 1480 && p.x < 1900 && Math.abs(p.y - 480) < 3 && !p.climb && !vineDone) {
+          const v = (level.ropes || []).find(o => Math.abs(o.x - 1620) < 2 && o.lane === 1);
+          if (vineT0 === null) vineT0 = now;
+          if (v && now - vineT0 < 25000) {
+            st = now;
+            if (jumpGrabs(v) && now - jumpAt > 400) { logit('errand-vine', Math.round(p.x)); vineJumpAt = now; jump('errand-vine'); return; }
+            if (p.x > 1585) setDir(-1);        // the swing carried him past it: walk back west of the vine and run at it
+            else { setDir(1); }
+            if (p.x > 1585 || jumpGrabs(v) === false) return;
+          }
+        }
+        // a dead end in a side lane (the detour decks): walk back to the gate we came by and step down to lane 1
+        if (p.lane === 1 || p.climb) retreating = false;
+        if (retreating && p.onGround) { setDir(-1); st = now; return; }
+        if (levelIdx === 1 && !plan && p.lane !== 1 && p.onGround && here && !wantFar && groundAt(p.lane, p.x + 45, p.y, 0) === null &&
+            !plats.some(q => (q[4] ?? 1) === p.lane && q[5] !== 'awning' && q[0] > p.x && q[0] < p.x + 450 && q[1] > p.y - 220 && q[1] < p.y + 300) &&
+            !(level.ropes || []).some(o => o.lane === p.lane && o.x > p.x && o.x < p.x + 400) &&
+            links.some(k => ((k.a === 1 && k.b === p.lane) || (k.b === 1 && k.a === p.lane)) && k.x < p.x + 40 && k.x > p.x - 800)) {
+          retreating = true; setDir(-1); st = now; return;
         }
         if (p.onGround && now - jumpAt > 250 && !wantFar) {
           // a tall wall ahead with an awning in front of it: jump so the arc comes down on the awning (it bounces)
@@ -480,14 +558,14 @@ sheet.save(out)`;
           else {
           const ahead = groundAt(p.lane, p.x + 45, p.y, 120);
           // stepping off a ledge with a higher ledge in reach ahead: jump for it rather than drop
-          const climb = ahead !== null && ahead > p.y + 30 && plats.some(([bx, by, , , l]) =>
-            (l ?? 1) === p.lane && bx > p.x + 10 && bx < p.x + 260 && by < p.y - 10 && by > p.y - 200);
+          const climb = ahead !== null && ahead > p.y + 30 && plats.some(([bx, by, , , l, kd]) =>
+            (l ?? 1) === p.lane && kd !== 'awning' && bx > p.x + 10 && bx < p.x + 260 && by < p.y - 10 && by > p.y - 200);
           // the ledge ahead drops away and plain walking off it would miss the next footing: jump
           const shortDrop = groundAt(p.lane, p.x + 45, p.y, 0) === null && !walkOffLands(p);
           if (ahead === null || climb || shortDrop || wallAhead(p.lane, p.x, p.y)) jump(shortDrop ? 'edge' : 'ground');
           }
           }
-        } else if (!p.onGround && p.vy > 50 && p.jumps === 1 && now - jumpAt > 200) {
+        } else if (!p.onGround && p.vy > 50 && p.jumps === 1 && now - jumpAt > 200 && !(levelIdx === 2 && !vineDone && now - vineJumpAt < 1500 && p.x < 1850)) {
           if (!landsOn(p.lane, p) || wallAhead(p.lane, p.x, p.y)) jump('air');
         }
         if (levelIdx >= 2 && now - lastAtk > 400 && level.guards.some(g => !g.dead && g.lane === p.lane && Math.abs(g.x - p.x) < 85)) {
@@ -529,6 +607,11 @@ sheet.save(out)`;
     s = await snap();
     const secs = (s.t - t0g).toFixed(1);   // game seconds
     if (done) {
+      if (L < 2) {   // a port scene follows levels 1 and 2: check it, then leave by its button
+        const port = await page.evaluate(() => ({ s: state, vis: !document.getElementById('portScreen').hidden, key: portKey }));
+        port.s === 'port' && port.vis ? pass(`${name} followed by a port scene (${port.key})`) : fail(`${name} followed by a port scene`, JSON.stringify(port));
+        if (port.s === 'port') { await page.click('#portBtn'); await sleep(100); s = await snap(); }
+      }
       const nextOk = L < 2 ? s.state === 'inter' && s.levelIdx === L + 1 : s.state === 'end';
       nextOk ? pass(`${name} completed by script (${secs} game s, ${s.deaths} deaths so far)`)
              : fail(`${name} completed`, `state=${s.state} levelIdx=${s.levelIdx}`);

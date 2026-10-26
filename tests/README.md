@@ -37,3 +37,11 @@ the path before a fall. Fix the rule for that spot; a new piece needs a rule.
 `node tests/smoke.js --film` also saves filmstrips to `tests/out/film/`: `rope1-NN.png` (level 1 rope 1, 8 frames across one pumped arc) and `cut-s1-NN.png` (level 3 fighter S1, 10 frames, 3 frames apart, one landed cut through hitstop and knockback), plus a contact sheet `*-sheet.png` for each (PIL, `python3 -I`). Frames are evenly spaced on the simulated clock.
 
 Fight numbers the bot follows: fighters halt at 60 px, the cut is live 0.085 to 0.16 s into the swing and reaches 64 px past the edge, hitstop freezes game time 3 to 10 frames. The shield is cut during his recovery.
+
+## Systems round (parry, ports, kasu, rope period)
+
+- localStorage is cleared at start (`addInitScript`), so the persisted voyage map never changes a run.
+- After levels 1 and 2 the bot checks the port scene (`state === 'port'`, `portKey`) and leaves by `#portBtn`.
+- Level 3: the shield-bearer is parried (J pressed 2 to 6 frames before the strike, while he stands still in range), then cut in his stun. `parry` must be at least 1.
+- One named kasu per level (`named`): level 1 on the scaffold route, level 2 by an errand to the stern lantern deck (step into lane 0 at the last gate, take it, step back), level 3 by an errand to the extra vine at x 1620 (short grip) and the roots.
+- Rope period follows grip length: the bot's grab and release sims use `ROPE_GRAVITY / length`. Level 1 rope 1 is pumped at a 160 px grip; the release sim treats ledges as solid (sides and undersides), as the game does.
