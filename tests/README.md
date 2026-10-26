@@ -31,3 +31,9 @@ raised weapon, wait out a shield).
 Run it. `START_LEVEL=<0-2>` begins at a level; `DEV_LEVEL=<0-2>
 DEV_TELEPORT=x,y` moves the hero. The `INFO ... returns to banner` line shows
 the path before a fall. Fix the rule for that spot; a new piece needs a rule.
+
+## Film mode
+
+`node tests/smoke.js --film` also saves filmstrips to `tests/out/film/`: `rope1-NN.png` (level 1 rope 1, 8 frames across one pumped arc) and `cut-s1-NN.png` (level 3 fighter S1, 10 frames, 3 frames apart, one landed cut through hitstop and knockback), plus a contact sheet `*-sheet.png` for each (PIL, `python3 -I`). Frames are evenly spaced on the simulated clock.
+
+Fight numbers the bot follows: fighters halt at 60 px, the cut is live 0.085 to 0.16 s into the swing and reaches 64 px past the edge, hitstop freezes game time 3 to 10 frames. The shield is cut during his recovery.

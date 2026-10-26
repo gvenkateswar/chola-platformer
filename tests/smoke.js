@@ -4,7 +4,8 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-const HTML = path.resolve(process.argv[2] || path.join(__dirname, '..', 'index.html'));
+const FILM = process.argv.includes('--film');   // also save filmstrips to tests/out/film/ (rope swing, landed cut)
+const HTML = path.resolve(process.argv.slice(2).find((a) => !a.startsWith('--')) || path.join(__dirname, '..', 'index.html'));
 const OUT = path.join(__dirname, 'out');
 // Level 1 is 8,800 px with a climb section, so its limit is longer than levels 2 and 3 (about 5,500 px).
 // Game seconds allowed per level (the clock is simulated): 20 s plus twice the time the bare run to the goal
@@ -40,6 +41,41 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   const missing = new Set();
   page.on('requestfailed', (r) => missing.add(path.basename(r.url())));
+  // --film: the page freezes the clock and asks for frames; the test steps it a few frames at a time
+  const FILM_DIR = path.join(OUT, 'film');
+  const handleFilm = async (req) => {
+    fs.mkdirSync(FILM_DIR, { recursive: true });
+    const files = [];
+    for (let i = 0; i < req.total; i++) {
+      await page.evaluate(() => { window.__fullRender = true; window.__realRender(); window.__fullRender = false; });
+      const f = path.join(FILM_DIR, `${req.name}-${String(i).padStart(2, '0')}.png`);
+      await page.screenshot({ path: f }); files.push(f);
+      if (i < req.total - 1) {
+        await page.evaluate((n) => { window.__steps = n; }, req.spacing);
+        await page.waitForFunction(() => window.__steps === 0, null, { polling: 30 });
+      }
+    }
+    let ok = true;
+    if (req.name === 'cut-s1') ok = await page.evaluate(() => level.guards[0].hp < window.__filmHp0);   // did the cut land?
+    await page.evaluate((retry) => { window.__filmReq = null; if (retry) window.__film.cutDone = false; window.__paused = false; }, !ok);
+    if (!ok) { files.forEach((f) => fs.unlinkSync(f)); console.log('INFO film: cut did not land, waiting for the next one'); return; }
+    const sheet = path.join(FILM_DIR, `${req.name}-sheet.png`);
+    const cols = req.total / 2;
+    const py = `
+import sys
+from PIL import Image, ImageDraw
+out, cols = sys.argv[1], int(sys.argv[2]); files = sys.argv[3:]
+w, h = 480, 270
+rows = (len(files) + cols - 1) // cols
+sheet = Image.new('RGB', (cols * w, rows * h), (20, 20, 20))
+for i, f in enumerate(files):
+    im = Image.open(f).convert('RGB').resize((w, h))
+    ImageDraw.Draw(im).text((8, 6), str(i), fill=(255, 255, 255))
+    sheet.paste(im, ((i % cols) * w, (i // cols) * h))
+sheet.save(out)`;
+    require('child_process').execFileSync('python3', ['-I', '-c', py, sheet, String(cols), ...files]);
+    console.log(`INFO film saved: ${sheet} (${req.total} frames, ${req.spacing} frames apart)`);
+  };
   const snap = () => page.evaluate(() => ({
     state, levelIdx, x: player.x, y: player.y, vy: player.vy, lane: player.lane,
     ground: player.onGround, jumps: player.jumps, hp: player.hp, deaths,
@@ -70,7 +106,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const later = window.setTimeout.bind(window);
     window.requestAnimationFrame = (cb) => {
       later(function tick() {
-        if (window.__paused) return later(tick, 5);
+        if (window.__paused) { if (window.__steps > 0) window.__steps--; else return later(tick, 5); }
         window.__fake += 1000 / 60;
         if (window.__botStep) window.__botStep();
         cb(window.__fake);
@@ -314,6 +350,26 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
               if (now - lastShift > 300) { const key = o.toLane < p.lane ? 'ArrowUp' : 'ArrowDown'; logit('marked', Math.round(p.x), Math.round(p.y)); press(key, true); press(key, false); lastShift = now; }
               return;
             }
+            // --film: on level 1's first rope keep pumping (no release) until the swing is big, measure one
+            // full period between two east-most points, then freeze the clock and ask the test to take 8 frames
+            const F = window.__film;
+            if (F && F.rope && !F.ropeDone && levelIdx === 0 && o === level.ropes[0]) {
+              const R = F.rs || (F.rs = { amp: 0, t: [], pv: 0 });
+              R.amp = Math.max(R.amp, Math.abs(o.ang));
+              if (R.amp >= 0.5 && R.pv > 0 && o.angV <= 0) {
+                R.t.push(time);
+                if (R.t.length === 2) {
+                  F.ropeDone = true;
+                  window.__filmReq = { name: 'rope1', total: 8, spacing: Math.max(1, Math.round((R.t[1] - R.t[0]) * 60 / 8)) };
+                  window.__paused = true;
+                }
+              }
+              R.pv = o.angV;
+              if (now - ropeT0 > 12000) F.ropeDone = true;
+              setDir(Math.abs(o.angV) < 0.15 ? 1 : Math.sign(o.angV));
+              const low = c.r < o.len - 14; if (low !== downDown) { press('ArrowDown', low); downDown = low; }
+              return;
+            }
             if (now - ropeT0 < 14000) {           // a free rope or vine: pump the swing, let go when the arc lands on footing
               const hit = swingLanding(c, now - ropeT0 > 9000);
               if (hit) { cov.swing++; if (downDown) { press('ArrowDown', false); downDown = false; } logit('swing-release', Math.round(p.x), Math.round(p.y), +o.ang.toFixed(2), +o.angV.toFixed(2), hit[0], hit[1]); setDir(1); press('ArrowUp', false); upDown = false; jump('swing'); return; }
@@ -348,12 +404,26 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         if (foe) {
           const gap = foe.x - p.x, shield = foe.type === 'shield', atk = foe.mode === 'engage' ? foe.atk : null;
           if (atk === 'raise') raiseSeen.add(foe);
+          // Numbers (TUNE): fighters walk in at 180 px/s and halt 60 px away; his thrust reaches 83 px past his
+          // center (hero center 96 px away is safe); the cut is live 0.085 to 0.16 s into the swing and reaches
+          // 77 px center to center, and the hero keeps sliding about 25 to 35 px during the swing.
           let d = 1;
-          if (shield && atk !== 'recover') d = gap < 104 ? -1 : gap > 132 ? 1 : 0;   // stay out of the thrust, wait for recovery
+          if (shield) {
+            // let him close and raise, step back out of the thrust, then rush in during his recovery
+            if (atk === 'recover') d = 1;
+            else if (atk === 'raise' || atk === 'thrust') d = gap < 110 ? -1 : 0;
+            else d = gap > 170 ? 1 : 0;
+          }
           setDir(d);
-          if (gap <= 95 && gap > -10 && p.attackT <= 0 && now - lastAtk > 250 && (!shield || atk === 'recover')) {
+          if (gap <= 100 && gap > -10 && p.attackT <= 0 && now - lastAtk > 250 && (!shield || atk === 'recover')) {
             logit('cut', Math.round(p.x), Math.round(gap), foe.type, atk);
             press('j', true); atkUp = now + 60; lastAtk = now;
+            const F = window.__film;   // --film: the first cut on fighter S1, from the press on, 10 frames 3 apart
+            if (F && F.cut && !F.cutDone && levelIdx === 2 && foe === level.guards[0]) {
+              F.cutDone = true; window.__filmHp0 = foe.hp;
+              window.__filmReq = { name: 'cut-s1', total: 10, spacing: 3 };
+              window.__paused = true;
+            }
           }
           st = now;
           return;
@@ -429,11 +499,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     });
     const start = Date.now();
     let done = false, midShot = false;
+    if (FILM) await page.evaluate(() => { window.__film = window.__film || { rope: true, cut: true }; });
     const t0g = s.t;   // game seconds
     const limitS = limitFor(s.gx);
     let lastT = s.t, lastTick = Date.now(), stalled = false;
     while (s.t - t0g < limitS) {
       await sleep(process.env.TRACE ? 40 : 100);
+      if (FILM) { const req = await page.evaluate(() => window.__filmReq || null); if (req) await handleFilm(req); }
       s = await snap();
       if (s.t !== lastT) { lastT = s.t; lastTick = Date.now(); }
       else if (Date.now() - lastTick > 6000) { stalled = true; break; }   // the game loop died (a thrown error)

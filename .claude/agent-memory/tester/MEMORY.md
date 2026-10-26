@@ -38,3 +38,8 @@ TRACE=1, DEV_LEVEL=<0-2> DEV_TELEPORT=x,y.
 - Piece counters in `cov`, required per level in NEEDED. Ladder, near-lane routes and drop-through planks are not used by the route and not required.
 - Falls print a trail in the INFO line; use it first when a level fails.
 - Do not `pkill -f` patterns present in your own command.
+
+## Round 4 (feel pass)
+- Fight controller: retreat when gap < 110 during raise/thrust, cut at gap <= 100 (shield: only in recover). Hitstop freezes game time, so the sim clock still advances; limits are game seconds.
+- `--film` flag: pauses the sim rAF (`__paused`, `__steps`). Playwright `waitForFunction` needs `{polling: 30}` because default polling uses rAF, which is replaced.
+- Runs: 35.8-36.1 / 47.0-47.1 / 59.0-59.3 game s, about 95 s wall.
