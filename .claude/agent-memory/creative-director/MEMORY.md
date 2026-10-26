@@ -151,3 +151,30 @@ The critic will not review a third time unless something new appears.
 - The "green awnings" reject is gone; awnings take the place's palette,
   never red. NOTES.md traversal note updated to match.
 - Budget after this pass: sections 1 to 7 at 898, revision notes 133.
+
+## Rulings 19 to 26 and the kasu revision (2026-10-26)
+
+- 19: cut-out animation from one painted image per character; decision 6
+  (redraw five hero poses) withdrawn. Scope and NOTES.md updated.
+- 20, 25: ropes swing with momentum; period follows rope length.
+- 23: Nagapattinam may use muted earth reds (terracotta, brick, laterite)
+  that read brown-red; crimson still reserved for Chola. Pillar 1 now
+  rejects "any red that reads as crimson outside Chola."
+- 24: parry (PoP 1989, The Lost Crown); telegraphs gold for parry, black or
+  indigo for avoid, never crimson. Pillar 2 approves it; Prince of Persia
+  entry in section 5 now includes 1989 and the parry.
+- 26: kasu economy. Gaurav relaxed my no-counter rule: spend at ports on
+  what a sailor needs (pilot, offering), clusters lead to detours marked
+  on a voyage map, rare named kasu open history cards; still no score,
+  grades, or tally of misses. Pillar 3 now: "What the player finds may be
+  spent or remembered, but the game never scores, grades, or tallies what
+  he missed." My added line: map and cards show what was found, never empty
+  slots (the research flagged empty slots as a tally of misses). Pillar 2
+  rejects buying rank, men, or ships. DKC entry now takes its map marks.
+- Lesson: Gaurav overrules austerity rules when play feels thin (palette in
+  17, counters in 26). Write pillars around the principle (no scores of
+  failure, crimson means Chola), not the mechanism, so they bend without
+  breaking.
+- Open question raised: do map and cards persist across sessions?
+  Recommended browser storage on the device.
+- Budget: sections 1 to 7 at 899; section 8 at 72.
