@@ -1599,7 +1599,7 @@ function buyGood(g){
 }
 $('portBtn').onclick = ()=>{
   leaveLine = PORTS[portKey].leave;   // ruling 32: shown on the next card, where it can be read
-  if(portKey === 'quay') RUN.legs = Math.max(RUN.legs, 2);   // strip line 2: leaving the quay
+  if(portKey === 'quay'){ RUN.legs = Math.max(RUN.legs, 2); RUN.legsShown = Math.max(RUN.legsShown, 2); }   // strip line 2: filled on leaving the quay; only 3 and 4 sail on the card
   $('portScreen').hidden = true; queueLevel(portNext);
 };
 // ---- the voyage map (DECISIONS 28, 29; DESIGN §6; ASSETS.md "Voyage map (drawn in code)")
@@ -1861,7 +1861,8 @@ function mapLoop(){
   const a = !$('mapScreen').hidden, b = !$('interScreen').hidden && !$('interMap').hidden;
   if(a) drawVoyage($('mapCanvas'));
   if(b) drawVoyage($('interMap'));
-  if(a && !mapAnim && RUN.legsShown >= RUN.legs && !RUN.pilotSeen){ RUN.pilotSeen = true; saveMap(); openPilotCard(); }
+  if(a && !mapAnim && RUN.legsShown >= RUN.legs && RUN.legsShown >= 2 && !RUN.pilotSeen && !(mapReturn && mapReturn.id === 'pauseScreen')){
+    RUN.pilotSeen = true; saveMap(); openPilotCard(); }   // the first time the strip shows a leg past Nagapattinam
   if(a || b) requestAnimationFrame(mapLoop); else mapLoopOn = false;
 }
 function startMapLoop(){ if(!mapLoopOn){ mapLoopOn = true; requestAnimationFrame(mapLoop); } }
@@ -1924,7 +1925,7 @@ document.querySelectorAll('[data-map]').forEach(b=> b.onclick = openMap);
 function showInterMap(i){
   const on = i >= 1;
   $('interMap').hidden = !on; $('interScreen').classList.toggle('tall', on);
-  const pilot = on && !RUN.pilotSeen;
+  const pilot = on && !RUN.pilotSeen && RUN.legs >= 2;   // first strip with a leg past Nagapattinam (the level 3 card)
   $('interPilot').hidden = !pilot;
   if(pilot){ $('interPilotTitle').textContent = PILOT_CARD.title; $('interPilotText').textContent = PILOT_CARD.text; RUN.pilotSeen = true; saveMap(); }
   if(on){ $('interScreen').scrollTop = 0; startMapLoop(); }
@@ -2792,7 +2793,7 @@ function updateWorld(dt){
   }
   const npc = level.npc;
   if(npc && !npc.given && !p.scene && p.lane === 1 && Math.abs(p.x - npc.x) < 34 && Math.abs(p.y - npc.y) < 60){
-    p.scene = {t:0};                         // §2: walking into him plays the handover
+    p.scene = {t:0, line:0, lt:0};           // §2: walking into him plays the handover
     p.vx = 0; p.face = Math.sign(npc.x - p.x) || 1;
   }
 
@@ -4230,7 +4231,7 @@ function render(){
     drawPanelStacked(f.text, f.who, inView(f.x, S.hw), f.y, clamp(f.t/0.3, 0, 1), S);
   }
   if(player.scene && level.npc && state === 'play' && !paused){             // the handover, one line at a time over the speaker
-    const i = Math.min(HANDOVER_LINES.length-1, player.scene.line);
+    const i = Math.min(HANDOVER_LINES.length-1, player.scene.line || 0);
     const [who, line] = HANDOVER_LINES[i];
     const spk = who === 'Ilamaran' ? player : level.npc;
     const pl = placeDialogue(spk.x, spk.y - 112, line, who);
