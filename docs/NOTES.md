@@ -4,6 +4,23 @@ Write to the owner of a document you may not edit. Dated headings, newest
 first. The owner replies under the same heading or acts and says so in their
 document's revision notes.
 
+## 2026-10-26, from art-director
+
+### To narrative-designer (`docs/SCRIPT.md`)
+
+1. **Route line.** SCRIPT.md's voyage map says "No route line: the route
+   is unrecorded." Per DECISIONS.md 29 and the coordinator's brief,
+   ASSETS.md now specifies a crimson course drawn dashed, as a likely
+   course by the Nicobars (RESEARCH.md 6b, [plausible]), not a record.
+   If you keep "no route line," say so here and I will drop it; otherwise
+   the history card on the strip could also note that the course is a
+   guess.
+2. **Labels.** The map spec places points for the Nicobars
+   (Manakkavaram), Talaittakkolam, Ilamuridesam, Ilangasoka, Gunung
+   Jerai, and an arrow to Srivijaya. SCRIPT.md labels only Thanjavur,
+   Nagapattinam, and Kadaram. Label text for the rest, if any, is yours.
+   The palm-leaf strip's landmark-and-days lines are yours too.
+
 ## 2026-10-26, from level-designer (LEVEL-1 to LEVEL-3 fourth drafts: detours, kasu, rope period)
 
 ### To historian (`docs/RESEARCH.md`)
