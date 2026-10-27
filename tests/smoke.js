@@ -1,5 +1,6 @@
 // Smoke test for Chola: Tides of Bronze. Run: node tests/smoke.js [path/to/index.html]
-// Plays all three levels by scripted input (a bot that reads game state), no game hooks needed.
+// Plays all three levels by scripted input (a bot that reads game state). The map, pause and paid-hint
+// checks read window.__test (docs/NOTES.md, build/systems).
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
@@ -132,14 +133,124 @@ sheet.save(out)`;
 
   const FIRST = +(process.env.START_LEVEL || 0);   // dev aid: begin at level n (0-2) via the game's own queueLevel
   if (FIRST > 0) await page.evaluate((n) => queueLevel(n), FIRST);
+  // --- voyage map, strip, pause and paid-hint checks (hooks: window.__test, docs/NOTES.md build/systems)
+  const T = (fn, arg) => page.evaluate(fn, arg);
+  // the coastline is drawn: COAST rings exist, and ink lies on (within 2 px of) most coast vertices on the canvas
+  const mapDrawn = (id) => T((id) => {
+    const cv = document.getElementById(id), g = cv.getContext('2d');
+    const d = g.getImageData(0, 0, cv.width, cv.height).data;
+    const dark = (x, y) => { for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      const i = ((y + dy) * cv.width + x + dx) * 4; if (d[i] + d[i + 1] + d[i + 2] < 300 && d[i + 3] > 200) return true; } return false; };
+    let n = 0, hit = 0;
+    for (const r of COAST.rings) for (let i = 0; i < r.length; i += 2) {
+      const x = Math.round(r[i]), y = Math.round(r[i + 1]);
+      if (x < 40 || x > cv.width - 40 || y < 40 || y > 560 || i % 8) continue;   // off the edges and clear of the strip
+      n++; if (dark(x, y)) hit++;
+    }
+    let ink = 0; for (let i = 0; i < d.length; i += 4) if (d[i] + d[i + 1] + d[i + 2] < 300 && d[i + 3] > 200) ink++;
+    return { rings: COAST.rings.length, verts: n, hit, ink, frac: n ? hit / n : 0 };
+  }, id);
+  const waitFor = async (fn, ms) => { const end = Date.now() + ms; let v; while (Date.now() < end) { v = await T(fn); if (v) return v; await sleep(50); } return v; };
+  const mapState = () => T(() => window.__test.map());
+
+  const interChecks = async (L) => {
+    const m0 = await mapState();
+    if (L === 0) {
+      !m0.visible && m0.legs === 0 ? pass('level 1 card: no map, strip empty') : fail('level 1 card: no map, strip empty', JSON.stringify(m0));
+      return;
+    }
+    if (L === 1) {
+      // DESIGN §6: line 1 fills in on finishing level 1; the level 2 card opens the map and sails it
+      m0.visible && m0.legs === 1 && m0.legsShown === 0 ? pass('level 2 card opens the map with strip line 1 to sail')
+        : fail('level 2 card opens the map with strip line 1 to sail', JSON.stringify(m0));
+      const m1 = await waitFor(() => window.__test.map().legsShown >= 1 && window.__test.map(), 4000);
+      m1 && m1.legsShown === 1 && !m1.sailing ? pass('strip line 1 written in on the level 2 card') : fail('strip line 1 written in on the level 2 card', JSON.stringify(m1 || await mapState()));
+    } else {
+      // DESIGN §6: lines 3 and 4 fill in on the level 3 card, leg by leg, about 2 s each
+      const seq = [m0.legsShown];
+      const tEnd = Date.now() + 9000;
+      while (Date.now() < tEnd) { const m = await mapState(); if (m.legsShown !== seq[seq.length - 1]) seq.push(m.legsShown); if (m.legsShown >= 4 && !m.sailing) break; await sleep(50); }
+      const steps = seq.every((v, i) => i === 0 || v === seq[i - 1] + 1);
+      m0.visible && m0.legs === 4 && m0.legsShown <= 2 && seq[seq.length - 1] === 4 && steps
+        ? pass(`level 3 card sails the strip leg by leg to line 4 (lines shown ${seq.join(' > ')})`)
+        : fail('level 3 card sails the strip leg by leg to line 4', `start ${JSON.stringify(m0)}, lines shown ${seq.join(' > ')}`);
+      if (m0.legsShown < 2) console.log(`INFO level 3 card: strip line 2 was still bare on arrival (legsShown ${m0.legsShown}), so it sails here too; DESIGN §6 has it filled on leaving the quay`);
+    }
+    await sleep(200);   // let a frame draw after the last leg
+    const md = await mapDrawn('interMap');
+    md.rings > 0 && md.frac > 0.6 ? pass(`level ${L + 1} card map draws the coastline (${md.rings} rings, ink on ${md.hit}/${md.verts} sampled vertices)`)
+      : fail(`level ${L + 1} card map draws the coastline`, JSON.stringify(md));
+    await page.screenshot({ path: path.join(OUT, `l${L + 1}-card-map.png`), fullPage: false });
+  };
+
+  // pause (Esc), the map from the pause screen (M), back (Esc), resume (P); the world must hold still while paused
+  const pauseChecks = async (L) => {
+    await page.keyboard.press('Escape');
+    let q = await T(() => ({ p: window.__test.paused(), vis: !document.getElementById('pauseScreen').hidden, title: document.getElementById('pauseTitle').textContent, t: time, x: player.x }));
+    q.p && q.vis && q.title === (await T(() => level.name)) ? pass('Esc opens the pause screen') : fail('Esc opens the pause screen', JSON.stringify(q));
+    await T(() => { window.__paused = false; });   // let the clock run: game time and the hero must not move
+    await page.keyboard.down('ArrowRight'); await sleep(400); await page.keyboard.up('ArrowRight');
+    const q2 = await T(() => ({ t: time, x: player.x, frames: window.__fake }));
+    await T(() => { window.__paused = true; });
+    q2.t === q.t && q2.x === q.x ? pass('the world holds still while paused') : fail('the world holds still while paused', `time ${q.t} > ${q2.t}, x ${q.x} > ${q2.x}`);
+    await T(() => { window.__paused = false; });
+    await page.keyboard.press('m');
+    await sleep(300);
+    let st = await T(() => state);
+    if (st === 'card') {   // the first map view opens the pilot's card (SCRIPT §4a); Esc goes back to the map
+      const title = await T(() => document.getElementById('cardTitle').textContent);
+      console.log(`INFO map from the pause screen opened a card first: "${title}"`);
+      await page.keyboard.press('Escape'); await sleep(300); st = await T(() => state);
+    }
+    const mm = await mapState();
+    st === 'map' && mm.visible ? pass('M on the pause screen opens the voyage map') : fail('M on the pause screen opens the voyage map', `state=${st} ${JSON.stringify(mm)}`);
+    const md = await mapDrawn('mapCanvas');
+    md.rings > 0 && md.frac > 0.6 ? pass(`pause-screen map draws the coastline (ink on ${md.hit}/${md.verts} sampled vertices)`) : fail('pause-screen map draws the coastline', JSON.stringify(md));
+    await page.screenshot({ path: path.join(OUT, `l${L + 1}-pause-map.png`) });
+    await page.keyboard.press('Escape'); await sleep(150);
+    q = await T(() => ({ s: state, p: window.__test.paused(), vis: !document.getElementById('pauseScreen').hidden }));
+    q.s === 'play' && q.p && q.vis ? pass('Esc on the map returns to the pause screen') : fail('Esc on the map returns to the pause screen', JSON.stringify(q));
+    await T(() => { window.__paused = true; });
+    await page.keyboard.press('p');
+    // resumeGame sets last = performance.now(); the test clock runs on window.__fake, so line them up again
+    q = await T(() => { last = window.__fake; return { p: window.__test.paused(), vis: !document.getElementById('pauseScreen').hidden, s: state }; });
+    !q.p && !q.vis && q.s === 'play' ? pass('P resumes play') : fail('P resumes play', JSON.stringify(q));
+  };
+
+  // paid hint lamps (DESIGN §6, DECISIONS 30): lit from the level's start once bought, and drawn
+  const lampStart = async (L) => {
+    const who = L === 1 ? "boatman's" : "pilot's", good = L === 1 ? 'boatman' : 'pilot';
+    const h = await T((good) => {
+      let calls = 0; const real = drawHintLamp; drawHintLamp = (...a) => { calls++; return real(...a); };
+      window.__fullRender = true; window.__realRender(); window.__fullRender = false;
+      drawHintLamp = real;
+      const had = RUN.goods[good]; delete RUN.goods[good]; const unbought = !!hintLit(); if (had) RUN.goods[good] = had;   // not bought: no lamp
+      return Object.assign(window.__test.hint() || {}, { calls, unbought });
+    }, good);
+    h.lit && !h.out && h.calls > 0 && h.unbought === false ? pass(`level ${L + 1}: the ${who} lamp burns at (${h.x}, ${h.y}) once bought`)
+      : fail(`level ${L + 1}: the ${who} lamp burns once bought`, JSON.stringify(h));
+  };
+  const lampEnd = async (L) => {
+    const who = L === 1 ? "boatman's" : "pilot's";
+    const h = await T(() => Object.assign(window.__test.hint() || {}, { outAt: window.__hintOutX }));
+    h.out && !h.lit ? pass(`level ${L + 1}: the ${who} lamp goes out when its target is taken (at x ${h.outAt})`)
+      : fail(`level ${L + 1}: the ${who} lamp goes out when its target is taken`, JSON.stringify(h));
+  };
+
   for (let L = FIRST; L < 3; L++) {
     const name = `level ${L + 1}`;
+    await interChecks(L);
+    // freeze the test clock across the load, so every run starts the level on the same frame and game time
+    // ropes and vines take their phase from `time` (also at load), so pin it per level before the load:
+    // the menus run on wall time, which varies from run to run
+    await T((t) => { window.__paused = true; time = t; window.__hintOutX = undefined; }, 1000 * (L + 1) + (+process.env.TIME_SHIFT || 0));   // TIME_SHIFT: dev aid
     await page.click('#interBtn');
-    await sleep(150);
     s = await snap();
     if (s.state !== 'play' || s.levelIdx !== L) { fail(name + ' loads', `state=${s.state} levelIdx=${s.levelIdx}`); break; }
     pass(name + ' loads');
-    await shot(`l${L + 1}-start`);
+    if (L === 0) await pauseChecks(L);
+    if (L > 0) await lampStart(L);
+    s = await snap();
 
     if (process.env.DEV_TELEPORT && L === +(process.env.DEV_LEVEL || 0)) { const [tx, ty] = process.env.DEV_TELEPORT.split(',').map(Number); await page.evaluate(([x, y]) => { player.x = x; player.y = y; cam.x = x - 400; }, [tx, ty]); }
     // The bot runs inside the page at ~60 Hz and presses keys with real KeyboardEvents.
@@ -322,6 +433,7 @@ sheet.save(out)`;
         }
         if (p.vy < -950 && prevVy >= -950 && !p.climb && plats.some(q => q[5] === 'awning' && (q[4] ?? 1) === p.lane && p.x > q[0] - 20 && p.x < q[0] + q[2] + 20 && Math.abs(p.y - q[1]) < 25)) cov.bounce++;   // an awning bounce (a jump is -830)
         prevVy = p.vy;
+        if (level.paidHint && level.paidHint.out && window.__hintOutX === undefined) window.__hintOutX = Math.round(p.x);
         if (levelIdx === 2 && p.climb && p.climb.o.vine && Math.abs(p.climb.o.x - 1620) < 2) vineDone = true;
         if (p.leap && p.leap.moving && !prev.leap) cov.marked++;
         if (p.onSlope && p.onSlope !== prevSlope) cov[p.onSlope.kind === 'mud' ? 'slide' : 'gangplank']++;
@@ -342,13 +454,20 @@ sheet.save(out)`;
         const jump = (why) => { (window.__log = window.__log || []).push([why, Math.round(p.x), Math.round(p.y), Math.round(p.vy), p.jumps]); if (spaceDown) press(' ', false); press(' ', true); spaceDown = true; jumpAt = now; };
         if (spaceDown && now - jumpAt > 380) { press(' ', false); spaceDown = false; }
         if (atkUp > 0 && now > atkUp) { press('j', false); atkUp = -1; }
-        const logit = (...a) => (window.__log = window.__log || []).push(a);
+        const logit = (...a) => (window.__log = window.__log || []).push([...a, 't' + Math.round(time % 1000)]);
         // ink-wash return to the banner: nothing to do until it ends
         if (p.fadeT > 0 || p.leap) { st = now; return; }   // the gate leap ignores input for 0.5 s
         // the sword handover scene: skip it with J once it has run a moment
+        // (ruling 32: one line per press; the first press is Enter, the rest J, and each press must advance one line)
         if (p.scene) {
           st = now;
-          if (p.scene.t > 0.3 && now - lastAtk > 300) { logit('skip-handover', Math.round(p.x)); press('j', true); atkUp = now + 60; lastAtk = now; }
+          const H = window.__ho || (window.__ho = { presses: 0, lines: [] });
+          if (H.lines[H.lines.length - 1] !== (p.scene.line || 0)) H.lines.push(p.scene.line || 0);
+          if (p.scene.t > 0.3 && now - lastAtk > 300) {
+            logit('skip-handover', Math.round(p.x), p.scene.line || 0);
+            if (H.presses === 0) { press('Enter', true); press('Enter', false); } else { press('j', true); atkUp = now + 60; }
+            H.presses++; lastAtk = now;
+          }
           return;
         }
         if (!p.climb) { ropeT0 = null; if (curDir !== 1) setDir(1); if (downDown) { press('ArrowDown', false); downDown = false; } }
@@ -382,6 +501,18 @@ sheet.save(out)`;
               if (now - ropeT0 > 12000) F.ropeDone = true;
               setDir(Math.abs(o.angV) < 0.15 ? 1 : Math.sign(o.angV));
               const low = c.r < o.len - 14; if (low !== downDown) { press('ArrowDown', low); downDown = low; }
+              return;
+            }
+            // a named kasu hangs on this rope's line (level 3's nk5 at the D5 vine's top grip, LEVEL-3 §9):
+            // climb to the grip that puts the body over it, and do not let go until it is taken
+            const onRope = level.coins.find(k => k.kind === 'named' && !k.taken && k.lane === p.lane && Math.abs(k.x - o.x) < 20 && k.y > o.ay && k.y < o.ay + o.len);
+            if (onRope && now - ropeT0 < 14000) {
+              const want = Math.max(10, Math.min(o.len, onRope.y - o.ay - 22));   // body center (feet - 28) on the coin
+              const high = c.r > want + 6, low = c.r < want - 6;
+              if (high !== upDown) { press('ArrowUp', high); upDown = high; }
+              if (low !== downDown) { press('ArrowDown', low); downDown = low; }
+              if (!window.__ropeCoinLogged) { window.__ropeCoinLogged = 1; logit('rope-coin', onRope.nk, Math.round(c.r), Math.round(want)); }
+              setDir(Math.abs(o.angV) < 0.15 ? 1 : Math.sign(o.angV));
               return;
             }
             if (now - ropeT0 < 14000) {           // a free rope or vine: pump the swing, let go when the arc lands on footing
@@ -485,7 +616,8 @@ sheet.save(out)`;
           }
         }
         // off the main lane with no plan running: step back to lane 1 where lane-1 footing runs on ahead
-        if (!plan && p.lane !== 1 && here && canShift(p, 1) && foot1(p.x + 20) && (foot1(p.x + 150) || level.goal.x - p.x < 400)) {
+        const onErrand = errand && errand.c && errand.phase >= 1 && errand.phase < 3;   // the errand steps back by itself
+        if (!plan && !onErrand && p.lane !== 1 && here && canShift(p, 1) && foot1(p.x + 20) && (foot1(p.x + 150) || level.goal.x - p.x < 400)) {
           wantFar = true;
           if (now - lastShift > 350) { logit('back', Math.round(p.x), p.lane); const key = p.lane > 1 ? 'ArrowUp' : 'ArrowDown'; press(key, true); press(key, false); lastShift = now; }
         }
@@ -575,6 +707,7 @@ sheet.save(out)`;
         else if (now - st > 1500 && p.onGround) { jump('stuck'); st = now; }
       };
     });
+    await shot(`l${L + 1}-start`);   // also starts the clock again
     const start = Date.now();
     let done = false, midShot = false;
     if (FILM) await page.evaluate(() => { window.__film = window.__film || { rope: true, cut: true }; });
@@ -601,6 +734,13 @@ sheet.save(out)`;
       miss.length === 0 ? pass(`${name} pieces exercised (${need.text})`)
                         : fail(`${name} pieces exercised`, 'never used: ' + miss.join(', '));
     }
+    if (done && L === 0) {   // ruling 32: the handover advances one line per press, so three presses skip it
+      const H = await T(() => ({ ho: window.__ho || null, n: HANDOVER_LINES.length }));
+      H.ho && H.ho.presses === H.n && H.ho.lines.join(',') === [...Array(H.n).keys()].join(',')
+        ? pass(`handover skipped in ${H.n} presses, one line each (Enter, then J)`)
+        : fail('handover skipped in three presses, one line each', JSON.stringify(H));
+    }
+    if (done && L > 0) await lampEnd(L);
     if (process.env.TRACE || process.env.LOGS) console.log('LOG ' + JSON.stringify(await page.evaluate(() => window.__log)));
     await page.evaluate(() => { window.__botStep = null; });
     for (const k of ['ArrowRight', ' ', 'j']) await page.keyboard.up(k).catch(() => {});
@@ -610,7 +750,18 @@ sheet.save(out)`;
       if (L < 2) {   // a port scene follows levels 1 and 2: check it, then leave by its button
         const port = await page.evaluate(() => ({ s: state, vis: !document.getElementById('portScreen').hidden, key: portKey }));
         port.s === 'port' && port.vis ? pass(`${name} followed by a port scene (${port.key})`) : fail(`${name} followed by a port scene`, JSON.stringify(port));
-        if (port.s === 'port') { await page.click('#portBtn'); await sleep(100); s = await snap(); }
+        if (port.s === 'port') {
+          const m = await mapState();
+          const want = 1;   // DESIGN §6: line 1 on finishing level 1; line 2 only on leaving the quay
+          m.legs === want ? pass(`strip at the ${port.key} port: ${m.legs} line(s) filled`) : fail(`strip at the ${port.key} port`, `legs ${m.legs}, want ${want}`);
+          // buy the paid hint (by its button when the purse allows, else through the hook)
+          const good = L === 0 ? 'boatman' : 'pilot';
+          const how = await T((good) => { const b = document.getElementById('buy_' + good);
+            if (b && !b.disabled && RUN.purse >= TUNE.PRICE_LAMPS) { b.click(); return 'bought with ' + TUNE.PRICE_LAMPS + ' copper'; }
+            window.__test.give(good); return 'given by hook (purse ' + RUN.purse + ')'; }, good);
+          console.log(`INFO ${good} at the ${port.key}: ${how}`);
+          await page.click('#portBtn'); await sleep(100); s = await snap();
+        }
       }
       const nextOk = L < 2 ? s.state === 'inter' && s.levelIdx === L + 1 : s.state === 'end';
       nextOk ? pass(`${name} completed by script (${secs} game s, ${s.deaths} deaths so far)`)
