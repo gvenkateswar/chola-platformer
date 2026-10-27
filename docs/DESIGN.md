@@ -5,7 +5,7 @@ draft, 2026-10-26, under `docs/VISION.md`, `docs/DECISIONS.md` (rulings 1
 to 26), `docs/RESEARCH.md`, and `docs/research/game-feel-deep-dive.md`
 ("the report").
 
-Budget: 4,000 words for sections 1 to 10, counting prose and table cells.
+Budget: 4,400 words for sections 1 to 10, counting prose and table cells.
 Revision notes sit outside it.
 
 Units: pixels at the 1280 by 720 canvas, seconds, px/s. "Lane" is the
@@ -288,8 +288,9 @@ bloom, distinct from the lane-change ink, and a soft clink, not a chime
 (report item 14). Sprite per RESEARCH 6. They never respawn: nothing to
 grind.
 
-**Detours.** A cluster of five to seven kasu fans off the route; a faint
-glint and a low bronze note within 400 px cue it. The detour is 300 to 800
+**Detours.** A cluster of five to seven kasu fans off the route; a free
+stake at the entrance (Decision 27) and a low bronze note within 400 px
+cue it. The detour is 300 to 800
 px, 15 to 30 s, one piece of the level's kit with a small twist, no guard,
 no `killY`, rejoining the route farther east. At its end, a lit place (a
 wayside shrine, a guild storeroom, a stilt-house porch) and a named kasu.
@@ -303,10 +304,36 @@ a lamp on the voyage map. Play never pauses.
 image, RESEARCH tags kept; topics and text from the historian and
 narrative designer (NOTES.md). Only found cards show.
 
-**The voyage map.** One painted map, Thanjavur to Nagapattinam to Kadaram,
-after each interstitial, at ports, and from the title; the cards are read
-here. Each found detour lights a lamp by its stop, as DKC marks its map
-(report). Unfound detours show nothing.
+**The voyage map (Decisions 28, 29).** A true-scale painted map of the
+Bay of Bengal (South India, Sri Lanka, the Nicobars, the Malay peninsula,
+Sumatra), with a palm-leaf strip of sailing directions along its lower
+edge. It opens by itself on the interstitials before levels 2 and 3, from
+a button in each port, and from the pause screen (Esc, P, or a touch
+pause button) at any time in a level.
+
+*On the map:* a dotted ink course drawn only as far as the fleet has come,
+a small ship (a walking figure in level 1) where it is now, ink labels. At each level's place
+(Thanjavur, Nagapattinam, Kadaram) sit a lamp for each detour found there
+and a small coin for each named kasu found; select the coin to read its
+card. Crew pennants sit at the port where they were bought. Nothing marks
+what was missed.
+
+*On the strip:* four lines, read left to right, each a small landmark
+drawing, its name, and the days, as the 1015 *Song Shi* counts a voyage
+(RESEARCH 6b). Days come from RESEARCH 6b's distances at 3 to 5 knots and
+are [plausible]:
+
+| Line | Leg | Days | Fills in |
+|---|---|---|---|
+| 1 | Thanjavur to Nagapattinam, overland | 2 on foot | On finishing level 1 |
+| 2 | Nagapattinam, south past Sri Lanka's north | 2 | Leaving the quay port |
+| 3 | Sri Lanka's north to the Nicobars (Nakkavaram) | 10 | On the level 3 interstitial |
+| 4 | The Nicobars across to Kadaram | 5 | On the level 3 interstitial, as the fleet lands |
+
+On the level 3 interstitial the ship sails lines 3 and 4 leg by leg,
+about 2 s each, each line writing itself in as the ship arrives; any key
+skips. Lines ahead are bare leaf. One fixed card, always there and not
+one of the six, says the strip's form is invented (Decision 29).
 
 **Ports.** Two scenes of about 45 s: Nagapattinam's market between levels
 1 and 2, and the quay the night before sailing between 2 and 3 (the
@@ -317,16 +344,26 @@ bought once:
 | Port | Good | Price | What it does |
 |---|---|---|---|
 | Market | Ghee for a temple lamp | 12 | A fourth heart in level 2 |
-| Market | A boatman's word | 10 | Level 2's detour entrances get a lamp |
+| Market | A boatman's word | 10 | Lights the target in LEVEL-2.md section 9 |
 | Market | Rice and fish for the crew | 6 | A crew line; a pennant on the map |
 | Quay | An offering before sailing | 12 | A fourth heart in level 3 |
-| Quay | A pilot for the Merbok river | 10 | Level 3's detour entrances get a lamp |
+| Quay | A pilot for the Merbok river | 10 | Lights the target in LEVEL-3.md section 9 |
 | Quay | Provisions for the crossing | 6 | A crew line; a pennant on the map |
 
 The main trail (about 24) buys two market goods; with the clusters (about
 12) all three. Unspent kasu carry over. No good opens the road, and
 "Onward" always leaves; a player short of a price hears one line and keeps
 his coins. Nothing persists past the run (saving is out of scope).
+
+**Paid hints (Decision 30).** A paid hint reveals one thing no free sign
+marks: a named kasu's hiding place or a shortcut, chosen per level by the
+level designer ("the target in LEVEL-N.md section 9"). It never points at
+a staked detour entrance. In the world, a coir-wrapped hand lamp burns at
+the target from the level's start, gold flame and a thin rising thread of
+light, visible 600 px off, unlike the free stake in shape and color. It lasts the whole
+level, through checkpoint returns, and goes out when the target is taken
+(kasu picked up, shortcut entered) or the level ends. No other good gives
+a hint.
 
 **How it is learned.** Level 1's first trail leads into rope 1's release;
 its first cluster sits in the first 1,500 px with a hint; the seller's
@@ -335,8 +372,10 @@ is kept.
 
 **The builder adds:** the port scene (two instances: backdrop, three
 goods, purse, buy, Onward; keys, mouse, touch); the voyage map; the card
-viewer; the three pickups and the cluster cue; the fourth heart; detour
-lamps; the run's purse, goods, marks, and cards held in memory.
+viewer; the pause screen with its map button; the strip's fill-in and
+the level 3 crossing sequence; the three pickups and the cluster cue; the
+fourth heart; the paid-hint lamp; the run's purse, goods, marks, strip
+lines, and cards held in memory.
 
 ## 7. Difficulty curve
 
@@ -415,6 +454,17 @@ never kills.
 
 ## Revision notes
 
+- 2026-10-26, fourth draft, voyage map and paid hints (Decisions 27 to
+  30, RESEARCH 6b). Budget raised to 4,400 for at most 400 added words,
+  per the coordinator. The voyage map is now a true-scale map with a
+  four-line palm-leaf strip (Thanjavur overland, past Sri Lanka, the
+  Nicobars, Kadaram), with when it opens, when each line fills, and where
+  lamps, named kasu, and pennants sit; a fixed card says the strip's form
+  is invented. The boatman and pilot no longer light staked detour
+  entrances; each lights one unmarked target the level designer names in
+  LEVEL-2.md and LEVEL-3.md section 9. Detours now cue by their free
+  stake (Decision 27). The day counts are computed, not sourced. The
+  pause screen is new to the build.
 - 2026-10-26, fourth draft, after Gaurav played all three levels, the
   game-feel report, and Decisions 24 to 26. Budget raised from 3,200 to
   4,000 words for the parry and kasu systems, per the coordinator.
