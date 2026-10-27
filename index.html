@@ -73,7 +73,14 @@
     background:linear-gradient(180deg,#E2BC6C,#C08A2E); color:var(--ink); white-space:nowrap;}
   .good button:disabled{background:#4a3a28; color:#9a8a6a; cursor:default;}
   .portMsg{min-height:1.6em; color:#E2D3AE;}
-  #mapCanvas{max-width:92vw; height:auto; border-radius:4px;}
+  .mapOv{background:#120D09; padding:12px 16px;}
+  #mapCanvas{width:min(calc(100vw - 32px), calc((100vh - 96px)*16/9)); height:auto; border-radius:4px; flex-shrink:0;}
+  .mapBar{display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; margin-top:10px;}
+  .mapBar .btn{margin-top:0;} .mapBar .mapInfo{margin:0; min-height:0;}
+  #interMap{width:min(calc(100vw - 32px), 1280px, calc((100vh - 48px)*16/9)); height:auto; border-radius:4px; flex-shrink:0; margin-bottom:22px;}
+  canvas[hidden]{display:none;}
+  #interScreen.tall{justify-content:flex-start; overflow-y:auto;}
+  .pilot{max-width:62ch; margin:18px auto 0; padding:14px 18px; border:1px solid rgba(201,154,63,.35); border-radius:4px;}
   #cardImage{margin:10px auto;}
   .mapInfo{min-height:3em;}
   /* DECISIONS 27: ports and cards sit on an opaque parchment sheet; the dimmed level shows only at the edges */
@@ -107,6 +114,7 @@
   }
   #tL{left:4%; bottom:5%;} #tR{left:calc(4% + 74px); bottom:5%;}
   #tJ{right:4%; bottom:5%;} #tA{right:calc(4% + 74px); bottom:5%;}
+  #tP{left:4%; top:4%; width:48px; height:48px; font-size:16px;}
   #tU{right:4%; bottom:calc(5% + 74px);} #tD{right:calc(4% + 74px); bottom:calc(5% + 74px);}
 </style>
 </head>
@@ -133,12 +141,14 @@
   </div>
 
   <div class="overlay" id="interScreen" hidden>
+    <canvas id="interMap" width="1280" height="720" hidden></canvas>
     <div class="eyebrow" id="interEyebrow">Chapter I</div>
     <h1 style="font-size:clamp(30px,5vw,54px)" id="interTitle">Thanjavur</h1>
     <div class="dateline" id="interDate" hidden></div>
     <div class="rule"></div>
     <p class="story" id="interStory"></p>
     <p class="story crew" id="interCrew" hidden></p>
+    <div class="pilot" id="interPilot" hidden><div class="eyebrow" id="interPilotTitle"></div><p class="story" id="interPilotText"></p></div>
     <button class="btn" id="interBtn">Onward</button>
     <button class="btn btn2" data-map>Voyage map</button>
   </div>
@@ -167,11 +177,22 @@
     <button class="btn btn2" data-map>Voyage map</button>
   </div></div>
   <!-- DESIGN §6 the voyage map: lamps for found detours, pennants for the crew; the cards are read here -->
-  <div class="overlay" id="mapScreen" hidden>
-    <canvas id="mapCanvas" width="900" height="520"></canvas>
-    <p class="story mapInfo" id="mapInfo"></p>
-    <button class="btn btn2" id="mapRead" hidden>Read the card.</button>
-    <button class="btn" id="mapBack">Back</button>
+  <div class="overlay mapOv" id="mapScreen" hidden>
+    <canvas id="mapCanvas" width="1280" height="720"></canvas>
+    <div class="mapBar">
+      <p class="story mapInfo" id="mapInfo"></p>
+      <button class="btn btn2" id="mapRead" hidden>Read the card.</button>
+      <button class="btn btn2" id="mapPilot">How a Pilot Found the Way</button>
+      <button class="btn" id="mapBack">Back</button>
+    </div>
+  </div>
+  <!-- the pause screen (Esc, P, or the touch pause button) -->
+  <div class="overlay" id="pauseScreen" hidden>
+    <div class="eyebrow" id="pauseEyebrow"></div>
+    <h1 style="font-size:clamp(28px,4.5vw,48px)" id="pauseTitle"></h1>
+    <div class="rule"></div>
+    <button class="btn" id="resumeBtn">Resume</button>
+    <button class="btn btn2" data-map>Voyage map</button>
   </div>
   <div class="overlay" id="cardScreen" hidden><div class="sheet">
     <div class="eyebrow">A card kept on the voyage</div>
@@ -186,6 +207,7 @@
     <div class="tbtn" id="tL">◀</div><div class="tbtn" id="tR">▶</div>
     <div class="tbtn" id="tJ">⤒</div><div class="tbtn" id="tA">⚔</div>
     <div class="tbtn" id="tU">▲</div><div class="tbtn" id="tD">▼</div>
+    <div class="tbtn" id="tP">❚❚</div>
   </div>
 </div>
 
@@ -339,7 +361,7 @@ const TUNE = {
   SHIELD_TURN:      0.8,   // §4: the shield-bearer turns 0.8 s after the hero gets behind him
   CLASH_PUSH:        16,   // §4: a cut into a raised blade pushes both 16 px apart
   PRICE_HEART:       12,   // §6 ports: ghee / the offering: a fourth heart in the next level
-  PRICE_LAMPS:       10,   // §6: the boatman / the pilot: lamps at the next level's detour entrances
+  PRICE_LAMPS:       10,   // §6 / DECISIONS 30: the boatman / the pilot: a paid hint lamp in the next level
   PRICE_CREW:         6,   // §6: rice and fish / provisions: a crew line and a pennant on the map
   // DECISIONS 27 (playtest: "hard to see"): the parry cue must be the brightest thing on screen
   TELE_FLARE:        38,   // ruling 27: the gold flare's arm length at full wind-up, px (was ~12: over 3x)
@@ -352,7 +374,10 @@ const TUNE = {
   // DECISIONS 27: each detour entrance carries a marker (chalk-marked stake, gold thread) seen from 400 px
   DETOUR_STAKE:     104,   // ruling 27: the stake's height, px
   DETOUR_SHIMMER:   1.6,   // ruling 27: period of the gold shimmer on a detour's first piece, s
-  LAMP_POST:         70,   // §6 the boatman's lamp: post height above the floor where a detour leaves
+  HINT_GLOW:         90,   // DESIGN §6 paid hint: the hand lamp's glow radius, px (seen 600 px off)
+  HINT_THREAD:      260,   // DESIGN §6: the thin rising thread of light above it, px
+  MAP_LEG_TIME:     2.0,   // DESIGN §6: the ship sails a newly reached leg in about 2 s
+  STRIP_INCISE:     0.8,   // ASSETS.md: a filled strip line incises left to right over 0.8 s
   CLUSTER_CUE:      400,   // §6: a detour's cluster glints and sounds once within 400 px
   NAMED_FLOAT:      1.5,   // §6: a named kasu's name floats 1.5 s
   KEEP_MAP:        true,   // option (b): the voyage map and cards persist on this device (localStorage)
@@ -429,14 +454,15 @@ const NAMED = {
 };
 // the run (DESIGN §6): the purse, goods bought, named kasu found (cards and map lamps), crew pennants.
 // Never shown during play (VISION pillar 3); the purse appears only at a port's point of trade.
-const RUN = {purse:0, goods:{}, found:{}, pennants:{}, firstNamed:false};
+const RUN = {purse:0, goods:{}, found:{}, pennants:{}, detours:{}, pilotSeen:false, firstNamed:false,
+             legs:0, legsShown:0, incise:{}};   // legs: palm-leaf strip lines reached this voyage (DESIGN §6)
 // Persistence, option (b): the browser remembers the map (found kasu, crew pennants) and so the cards, on
 // this device only. One flag, TUNE.KEEP_MAP, turns it off. Storage can be missing or throw (private
 // windows, files opened from disk in some browsers, blocked site data): then the game simply forgets.
 const MAP_KEY = 'chola-voyage-map-v1';
 function saveMap(){
   if(!TUNE.KEEP_MAP) return;
-  try{ localStorage.setItem(MAP_KEY, JSON.stringify({found:RUN.found, pennants:RUN.pennants})); }catch(e){}
+  try{ localStorage.setItem(MAP_KEY, JSON.stringify({found:RUN.found, pennants:RUN.pennants, detours:RUN.detours, pilotSeen:RUN.pilotSeen})); }catch(e){}
 }
 function loadMap(){
   if(!TUNE.KEEP_MAP) return;
@@ -445,12 +471,14 @@ function loadMap(){
     if(!d) return;
     for(const k in d.found || {}) if(NAMED[k] && d.found[k]) RUN.found[k] = true;
     for(const k in d.pennants || {}) if(d.pennants[k]) RUN.pennants[k] = true;
+    for(const k in d.detours || {}) if(d.detours[k]) RUN.detours[k] = true;
+    RUN.pilotSeen = !!d.pilotSeen;
   }catch(e){}
 }
 loadMap();
 // a new voyage empties the purse and the goods; the map keeps what was found only when KEEP_MAP is on
-function resetRun(){ RUN.purse = 0; RUN.goods = {}; RUN.firstNamed = false;
-  if(!TUNE.KEEP_MAP){ RUN.found = {}; RUN.pennants = {}; } }
+function resetRun(){ RUN.purse = 0; RUN.goods = {}; RUN.firstNamed = false; RUN.legs = 0; RUN.legsShown = 0; RUN.incise = {};
+  if(!TUNE.KEEP_MAP){ RUN.found = {}; RUN.pennants = {}; RUN.detours = {}; RUN.pilotSeen = false; } }
 const IS_TOUCH = 'ontouchstart' in window;
 
 function fit(){
@@ -1147,7 +1175,7 @@ function buildLevel2(){
     ],
     goal:{x:12040,y:430}, start:[40,620], castOffAtGoal:true,
     detours:[{at:[4400,0], first:['plank',4440,400,120]}, {at:[11360,1], first:['rope',11360]}],   // LEVEL-2 D3 awning, D4 the second marked rope
-    detourAt:[[4400,0],[11360,1]],   // LEVEL-2 D3 gallery step 2 (far lane), D4 ship 2's deck: the boatman's lamps
+    paidHint:{x:2120, y:420, lane:1, shortcut:[2100,2460,420]},   // LEVEL-2 §9: the boatman's lamp on dock D1's lip; out once he is on the dock
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#2F5E6E','#5E8F94','#A9C4B4','#E6D9A8'], sun:{x:.28,y:.32,r:70,c:'#FFF3D0'},
     far:'ships', mid:'docks',
@@ -1206,11 +1234,11 @@ function buildLevel3(){
       [9500,260,1,'trail'],[9600,240,1,'trail'],[9850,260,1,'trail'],[10250,340,1,'trail'],[10400,420,1,'trail'],[10550,510,1,'trail'],
       [1560,420,1,'cluster',5],[1600,360,1,'cluster',5],[1680,260,1,'cluster',5],[1740,140,1,'cluster',5],[1880,100,1,'cluster',5],[1960,100,1,'cluster',5],
       [10720,580,1,'cluster',6],[10800,520,1,'cluster',6],[10880,460,1,'cluster',6],[11000,400,1,'cluster',6],[11120,340,1,'cluster',6],[11220,320,1,'cluster',6],
-      [2060,100,1,'named','nk5'],[11340,320,1,'named','nk6'],
+      [1620,150,1,'named','nk5'],[11340,320,1,'named','nk6'],
     ],
     goal:{x:13300,y:620}, start:[50,620],
     detours:[{at:[1560,1], first:['rope',1620]}, {at:[10720,1], first:['plank',10720,620,70]}],   // LEVEL-3 D5 the vine, D6 the first root
-    detourAt:[[1560,1],[10720,1]],   // LEVEL-3 D5 bank B1, D6 the wade after slide 2: the pilot's lamps
+    paidHint:{x:1620, y:120, lane:1, nk:'nk5'},   // LEVEL-3 §9: the pilot's lamp at the D5 vine's anchor; out when nk5 is taken
     // color grade: ASSETS.md "Color grade for the builder" (DECISIONS 17)
     sky:['#2E3A52','#4F6A6A','#86A08A','#C9D3B0'], sun:{x:.80,y:.22,r:52,c:'#F2F6DA'},
     far:'stupas', mid:'jungle',
@@ -1416,8 +1444,10 @@ function showInter(i){
   $('interDate').hidden = !l.date;
   const crew = i === 2 && RUN.goods.fish ? CREW_LINES.market : '';   // SCRIPT §4a: market fish, on the Chapter III card
   $('interCrew').textContent = crew; $('interCrew').hidden = !crew;
+  if(i === 2) RUN.legs = 4;   // strip lines 3 and 4: on the level 3 interstitial, as the fleet lands
   $('interScreen').hidden = false;
   state = 'inter';
+  showInterMap(i);
 }
 $('startBtn').onclick = ()=>{
   audioInit();
@@ -1426,6 +1456,7 @@ $('startBtn').onclick = ()=>{
   showInter(0);
 };
 $('interBtn').onclick = ()=>{
+  mapSkip(); $('interMap').hidden = true;
   $('interScreen').hidden = true;
   loadLevel(levelIdx);
   state = 'play';
@@ -1438,7 +1469,7 @@ $('againBtn').onclick = ()=>{
 function queueLevel(i){ levelIdx = i; showInter(i); }
 // DESIGN §6: the market plays between levels 1 and 2; the quay after level 2, before the Chapter III card
 function finishLevel(){
-  if(levelIdx === 0) showPort('market', 1);
+  if(levelIdx === 0){ RUN.legs = Math.max(RUN.legs, 1); showPort('market', 1); }   // strip line 1: on finishing level 1
   else if(levelIdx === 1) showPort('quay', 2);
   else showEnd();
 }
@@ -1454,13 +1485,13 @@ const PORTS = {
     open:'Copper from the road spends here same as anywhere. Show me.',
     short:'Not enough copper. The road east will have more.', leave:'The ships are loading. Onward.',
     goods:[{id:'ghee', who:'Ghee seller', line:'Ghee for a lamp at the shrine before you sail. Twelve copper.', price:TUNE.PRICE_HEART},
-           {id:'boatman', who:'Boatman', line:"I'll hang a lamp where each side way starts. Ten copper.", price:TUNE.PRICE_LAMPS},
+           {id:'boatman', who:'Boatman', line:"I know a quicker way onto the docks. I'll hang a lamp at it. Ten copper.", price:TUNE.PRICE_LAMPS},
            {id:'fish', who:'Fish and rice woman', line:'Fried fish and rice for your whole crew. Six copper.', price:TUNE.PRICE_CREW}]},
   quay:{title:'The quay', setting:'Nagapattinam, the quay at night. The fleet sails at first light.',
     open:'',
     short:'My purse is light. The sea will not wait for it.', leave:'Sleep on deck. We sail at first light.',
     goods:[{id:'offering', who:'Shrine keeper', line:'A lamp and flowers at the shore shrine. Twelve copper.', price:TUNE.PRICE_HEART},
-           {id:'pilot', who:'Pilot', line:"I know the Kadaram river. I'll tell your helmsman where it branches. Ten copper.", price:TUNE.PRICE_LAMPS},
+           {id:'pilot', who:'Pilot', line:"I know the Kadaram shore. An old coin hides up high there. I'll mark it with a lamp. Ten copper.", price:TUNE.PRICE_LAMPS},
            {id:'provisions', who:'Provisioner', line:'Water jars, dried fish, coconuts for the crossing. Six copper.', price:TUNE.PRICE_CREW}]},
 };
 const CREW_LINES = {   // SCRIPT §4a, shown on the next card
@@ -1501,118 +1532,382 @@ function buyGood(g){
 }
 $('portBtn').onclick = ()=>{
   $('portMsg').textContent = PORTS[portKey].leave;
+  if(portKey === 'quay') RUN.legs = Math.max(RUN.legs, 2);   // strip line 2: leaving the quay
   $('portScreen').hidden = true; queueLevel(portNext);
 };
-// ---- the voyage map (DESIGN §6, SCRIPT §4a): three stops, no route line; a lamp per found named kasu
-const MAP_STOPS = [   // map canvas coordinates; levels 1, 2, 3
-  {label:'Thanjavur · 1010',    x:150, y:300, lx:-14, align:'right'},
-  {label:'Nagapattinam · 1025', x:212, y:338, lx:16,  align:'left'},
-  {label:'Kadaram · 1025',      x:742, y:268, lx:-14, align:'right'},
+// ---- the voyage map (DECISIONS 28, 29; DESIGN §6; ASSETS.md "Voyage map (drawn in code)")
+// Coastlines: Natural Earth 1:10m land and minor islands (public domain, naturalearthdata.com; GeoJSON from
+// github.com/nvkelso/natural-earth-vector), clipped to 0.5-15.5°N, 77.5-104.17°E, projected equirectangular at
+// 48 px per degree on 1280x720 (x = (lon - 77.5)*48, y = (15.5 - lat)*48), simplified (Douglas-Peucker, 1 px).
+// rings: flat [x0,y0,x1,y1,...] in map px; dots: islands under 3 px.
+const COAST = {"rings":[[1329,324,1325,330,1313,333,1307,331,1312,328,1312,326,1316,327,1318,325,1313,326,1317,324,1316,321,1311,323,1309,321,1311,315,1314,274,1315,271,1319,271,1324,267,1325,271,1325,265,1320,260,1315,259,1311,254,1307,253,1303,257,1301,257,1300,251,1298,250,1296,246,1297,244,1294,246,1293,243,1289,241,1286,241,1284,237,1276,237,1269,236,1266,230,1265,235,1263,238,1258,237,1260,240,1254,240,1253,237,1248,234,1251,229,1257,228,1257,226,1259,223,1259,221,1256,215,1256,213,1253,212,1251,209,1246,209,1243,222,1241,222,1237,219,1235,222,1230,222,1229,219,1230,209,1228,206,1227,205,1228,203,1231,201,1231,199,1229,199,1227,195,1230,194,1232,196,1231,192,1229,194,1227,192,1226,187,1225,190,1223,191,1222,189,1224,190,1224,185,1226,186,1223,184,1223,185,1223,182,1227,182,1228,181,1223,182,1219,176,1223,182,1222,189,1219,179,1213,173,1213,167,1206,161,1207,160,1205,157,1203,159,1204,166,1199,161,1190,159,1189,154,1191,154,1193,151,1192,150,1193,151,1190,153,1191,147,1189,149,1189,147,1186,147,1186,149,1188,149,1189,153,1180,146,1180,144,1181,144,1181,142,1176,141,1179,143,1179,146,1176,142,1174,142,1174,139,1173,143,1168,136,1165,134,1148,139,1144,137,1132,135,1127,137,1127,139,1124,138,1124,136,1121,137,1122,134,1120,134,1124,129,1122,124,1125,120,1122,115,1125,110,1124,106,1127,103,1128,96,1123,98,1113,96,1108,93,1109,91,1107,95,1096,97,1093,95,1080,102,1078,108,1084,113,1085,117,1078,136,1081,150,1079,155,1081,159,1072,172,1071,180,1068,182,1063,191,1059,200,1060,207,1057,207,1056,210,1057,222,1053,222,1050,231,1047,233,1044,239,1045,240,1044,242,1046,244,1046,247,1039,247,1040,250,1044,253,1042,254,1039,259,1041,263,1039,275,1043,286,1048,293,1043,296,1043,299,1044,301,1050,303,1055,302,1058,298,1065,297,1071,297,1073,298,1076,308,1078,331,1087,341,1089,341,1088,336,1086,335,1089,336,1091,338,1101,385,1108,398,1106,399,1100,395,1099,383,1097,380,1093,383,1093,380,1096,378,1095,374,1094,370,1090,371,1087,373,1089,383,1093,391,1098,392,1098,395,1100,396,1099,397,1100,400,1107,401,1108,397,1117,409,1121,410,1128,415,1137,415,1140,413,1145,414,1141,411,1142,410,1155,416,1167,434,1183,446,1186,445,1192,448,1201,462,1206,466,1208,469,1225,481,1235,493,1245,513,1246,529,1248,537,1246,543,1243,546,1245,554,1244,554,1243,555,1242,561,1240,564,1243,570,1246,574,1246,576,1247,575,1245,582,1246,590,1245,604,1255,616,1261,617,1263,620,1264,626,1270,632,1271,639,1277,649,1278,654,1281,658,1286,675,1285,678,1283,679,1277,678,1275,673,1279,670,1275,672,1270,665,1272,674,1271,676,1264,673,1257,674,1253,679,1250,678,1249,683,1242,670,1221,660,1216,655,1210,655,1201,645,1183,637,1175,629,1172,628,1170,629,1169,625,1165,620,1154,616,1147,609,1142,607,1142,604,1146,600,1142,587,1133,577,1130,570,1119,562,1121,559,1118,560,1114,558,1114,553,1122,551,1121,550,1117,551,1117,547,1113,544,1110,545,1107,537,1111,525,1109,525,1109,523,1112,520,1109,520,1110,514,1108,514,1106,510,1104,510,1105,508,1101,508,1097,500,1101,495,1101,490,1098,485,1098,480,1097,476,1097,472,1099,471,1097,455,1092,445,1087,440,1084,433,1085,430,1083,432,1080,427,1078,428,1078,424,1074,419,1065,414,1066,411,1065,407,1068,402,1065,402,1064,400,1061,401,1059,399,1058,395,1061,390,1058,394,1056,390,1055,395,1050,393,1048,390,1048,384,1046,384,1046,378,1044,378,1044,376,1038,371,1036,375,1034,373,1033,369,1035,367,1035,364,1033,365,1028,358,1024,360,1022,357,1021,359,1018,346,1014,347,1015,342,1013,341,1009,344,1005,345,1006,350,1004,353,1003,352,1003,353,998,349,994,333,994,332,996,335,995,325,998,316,1003,310,1000,311,1000,310,1002,309,999,302,1002,301,1001,300,1006,286,1007,287,1009,285,1006,283,1009,281,1008,278,1010,278,1011,276,1008,276,1008,275,1011,274,1012,272,1010,273,1009,272,1014,266,1013,264,1020,248,1020,247,1010,265,1008,255,1009,247,1006,230,1008,229,1009,231,1009,228,1011,229,1013,224,1014,223,1012,222,1018,220,1017,216,1019,214,1016,210,1019,209,1020,203,1019,198,1018,197,1018,195,1021,194,1020,191,1018,190,1019,185,1020,183,1023,183,1023,182,1027,183,1022,180,1024,176,1023,175,1021,179,1016,183,1013,181,1014,178,1013,177,1018,174,1010,174,1019,170,1018,165,1016,165,1014,162,1018,157,1016,157,1013,159,1010,156,1011,154,1018,151,1013,147,1014,145,1018,144,1014,141,1017,133,1015,133,1017,132,1014,131,1015,130,1014,126,1012,124,1013,122,1012,111,1007,106,1007,100,1006,102,1004,96,1000,91,998,86,996,86,995,72,993,69,993,94,991,94,990,92,992,87,989,86,990,85,988,83,989,82,989,77,987,72,989,64,984,56,984,50,982,50,979,39,981,37,985,41,982,34,981,36,979,34,979,37,977,37,974,30,975,25,973,23,975,23,975,14,973,13,971,8,974,4,970,-12,971,-16,964,-25,963,-27,966,-30,967,-37,966,-43,967,-48,1330,-48],[224,-48,202,-39,195,-41,195,-42,188,-40,188,-42,183,-42,180,-39,175,-23,168,-17,169,-13,164,-17,163,-25,163,-19,159,-10,157,-18,152,-20,147,-18,133,-10,130,0,124,9,123,23,125,38,129,43,127,45,129,45,128,55,126,60,122,62,127,61,127,71,132,82,131,87,135,99,127,85,127,90,125,87,123,90,126,96,133,98,135,100,136,99,137,103,132,131,129,142,125,151,117,158,120,156,113,167,110,179,108,188,111,198,108,198,104,202,108,199,112,200,113,250,110,251,108,249,102,248,101,249,108,250,108,252,99,250,101,248,100,248,94,249,91,248,86,252,83,256,85,262,71,280,68,289,70,294,76,298,84,298,88,297,89,300,94,304,86,300,71,299,56,303,54,305,44,307,36,314,33,318,32,324,34,322,34,323,30,328,31,332,30,337,27,343,13,351,5,353,3,356,-9,354,-24,342,-45,317,-46,316,-44,317,-43,316,-45,315,-44,314,-40,314,-42,313,-40,312,-44,312,-45,314,-45,312,-46,315,-48,311,-48,-48],[203,372,207,379,207,385],[206,425,199,435,185,445,159,454,154,458,148,460,136,457,130,455,125,449,113,417,113,407,111,399,111,398,113,402,113,400,112,398,109,379,110,376,105,355,105,349,109,343,108,347,109,348,107,355,108,357,107,359,111,361,112,360,110,357,112,353,111,348,114,334,117,329,116,315,122,311,125,303,126,298,123,296,123,293,129,289,123,283,131,286,134,290,140,288,150,291,143,287,138,287,129,281,129,284,118,279,116,275,119,273,126,273,126,275,131,276,136,282,141,284,132,276,127,274,132,272,140,282,156,295,158,298,156,298,159,301,160,299,162,305,160,305,163,306,166,311,162,310,165,314,164,315,165,315,167,313,179,329,178,331,180,334,178,333,178,336,176,334,174,336,176,335,178,337,181,338,182,336,184,335,186,337,187,343,185,341,185,343,187,344,190,354,189,355,187,351,187,353,189,356,190,354,193,360,195,360,196,367,199,368,202,374,198,372,197,373,200,373,202,378,202,377,204,378,205,386,206,386,207,388,208,386,210,392,211,407],[113,310,116,313,106,307,112,308,116,311],[107,288,104,288,104,285,107,287],[115,278,116,279,119,282,114,282,112,278,113,276,115,276],[1123,634,1130,634,1131,637,1142,646,1146,659,1148,662,1155,665,1164,664,1182,677,1183,684,1185,686,1186,695,1196,705,1202,709,1218,709,1228,719,1228,723,1206,733,1204,735,1200,733,1197,733,1204,736,1209,733,1219,731,1232,724,1235,721,1241,718,1250,723,1253,729,1255,727,1259,730,1262,744,1254,746,1252,745,1252,749,1248,750,1244,754,1237,756,1247,754,1248,756,1245,760,1241,762,1251,763,1253,765,1252,767,1243,768,1242,766,1242,768,1082,768,1072,759,1068,751,1069,747,1062,740,1051,736,1048,733,1043,734,1039,731,1040,729,1037,727,1038,724,1037,715,1034,714,1034,707,1031,704,1025,679,1018,669,1020,670,1023,666,1021,660,1019,658,1019,661,1017,661,1010,651,1000,646,997,646,991,640,982,635,978,636,972,635,968,628,965,606,955,603,951,597,949,590,944,588,937,575,930,567,925,564,915,564,911,563,897,546,894,545,888,541,875,526,867,521,867,520,860,512,857,502,853,498,854,495,850,490,852,484,849,478,861,473,865,475,869,474,883,479,885,484,892,490,908,494,919,494,928,491,935,491,947,497,961,492,968,500,980,509,984,522,984,526,991,526,997,532,997,542,993,544,993,547,997,543,999,548,1003,548,1016,556,1018,561,1022,565,1041,574,1053,582,1059,588,1068,591,1073,599,1079,602,1080,610,1078,615,1080,619,1081,615,1079,614,1083,613,1086,623,1086,616,1090,614,1095,621,1101,635,1107,640,1112,642,1119,646,1125,656,1123,648,1119,640,1119,636],[975,717,969,715,965,704,959,699,955,699,954,693,948,683,939,676,947,676,951,673,952,670,956,671,959,673,969,687,979,694,981,697,979,701,978,713],[1195,699,1187,692,1188,686,1186,682,1186,676,1190,677,1199,684,1197,692,1198,697],[1176,668,1179,666,1198,671,1200,672,1200,683,1197,682,1191,676,1181,673],[1005,662,1009,665,1011,663,1013,666,1005,665],[1157,662,1150,659,1147,651,1149,645,1154,645,1159,642,1164,647,1165,650,1162,659],[942,643,943,645,941,647,939,644],[952,646,946,640,941,638,950,637,952,642],[1127,633,1129,632,1130,633,1129,633],[903,630,904,629,902,627,890,620,885,619,881,617,878,617,878,615,873,609,877,607,878,603,884,605,882,607,884,607,888,611,894,613,893,617,896,617,896,615,903,621,906,625,907,623,909,624,911,631,908,632],[1140,604,1139,602,1140,602],[1144,597,1144,600,1141,602,1142,598],[1106,539,1108,541,1108,543,1106,541],[1089,491,1089,482,1094,482,1096,484,1094,491],[845,475,847,472,849,475],[843,473,843,469,841,469,842,468,846,471],[853,465,851,461,850,460,854,463,856,461,858,464,856,467],[1070,447,1069,445,1072,442,1072,447],[1072,440,1067,443,1067,439,1064,439,1063,435,1069,436,1073,434,1076,437,1076,440,1074,442],[1047,429,1048,431,1046,432,1045,429],[1044,428,1042,430,1040,429,1042,428],[1061,428,1064,421,1066,429,1064,432],[785,417,784,420,783,420,781,412,778,408,775,407,776,399,783,396,786,398,789,407,787,417],[1051,395,1054,397,1050,399],[774,396,774,390,776,390,777,387,779,392],[1035,384,1034,377,1036,379,1037,386],[1034,376,1038,376,1038,379,1035,378],[1029,368,1032,368,1032,370,1031,370],[761,366,761,364,759,363,759,360,763,359,766,364,766,366],[770,359,772,364,769,360],[1000,371,998,371,998,365,996,363,998,351,1000,352,1000,355,1005,356,1003,362,1005,365,1003,367,1003,369,1001,368],[1013,365,1012,359,1009,354,1013,357],[768,357,766,356,765,352,768,349,770,350,768,353,770,358,767,360],[1014,351,1014,356,1012,355],[748,343,749,348,752,350,747,347],[773,333,774,337,773,339],[998,312,999,314,997,318,996,312],[996,305,999,306,998,310,996,310],[733,300,736,302,734,307,731,306,730,304],[997,304,997,303,999,300,998,303],[1083,290,1077,292,1076,285,1084,284],[1080,274,1083,275,1084,280,1079,277,1079,275],[1002,277,1004,275,1003,278],[1006,274,1006,270,1007,271],[998,261,993,267,990,271,990,266,995,261],[1072,258,1073,260,1072,261,1071,260],[995,256,994,258,993,262,993,255],[980,245,979,244,979,241,980,240,981,243],[981,237,984,237,985,236,984,238],[722,239,714,238,716,234,714,232,714,226,716,226,717,223,721,221,723,223,725,231,722,234,724,236],[997,231,995,230,996,224,992,220,988,221,991,217,994,218,998,226],[1008,226,1008,224,1008,221,1011,224],[979,220,982,220,978,223],[1007,217,1010,212,1010,218,1008,219],[995,203,998,203,998,205,996,206],[1010,201,1010,203,1009,200],[724,198,726,196,727,192,729,194,728,196,730,198,726,199],[710,189,708,191,706,187,709,188],[1000,181,997,193,995,192,995,194,992,194,994,193,993,190,996,186,997,178],[1010,191,1006,188,1005,189,1002,183,1003,182,1002,180,1004,179,1002,178,1010,178],[988,186,985,182,984,179,985,174,987,181,988,181,987,182],[968,173,968,176,967,175],[741,168,743,166,745,166,747,173],[1006,171,1005,163,1009,168,1016,170,1008,173],[1191,169,1191,170,1190,169,1190,165,1188,161,1192,162,1197,169,1197,170,1194,168,1194,169],[746,160,747,164,747,166,745,164,745,161],[747,161,749,158,749,164],[987,159,986,155,989,154,989,159,990,158,991,161],[981,153,982,150,985,149,984,150,986,151,988,148,989,150,987,150,984,155],[1009,148,1007,148,1008,143],[1000,145,999,139,999,135,1003,137,1004,143,1006,139,1007,141,1006,146,1001,152,998,152],[996,141,998,143,997,144,995,143],[743,119,742,116,741,118,742,121,739,121,738,124,740,124,742,126,744,143,741,148,739,146,739,147,737,147,740,152,738,153,739,158,736,162,732,164,734,166,732,169,731,174,733,171,734,173,732,182,729,185,729,187,731,183,733,184,730,192,726,187,727,185,725,181,723,181,723,176,721,175,723,171,726,174,727,161,729,157,731,157,731,160,734,158,732,155,734,154,731,153,730,151,731,139,734,136,732,135,731,129,734,127,736,120,735,119,737,113,737,103,742,94,745,94,745,92,747,94,748,101,743,104,748,108,746,117],[1001,134,1000,132,1000,131],[729,130,729,122,730,121,731,125],[743,124,742,121,744,120],[998,119,998,124,996,110,998,116,1000,116],[1009,110,1008,111,1008,109],[980,82,980,80,981,79],[762,65,763,67,762,69],[1252,717,1253,721,1251,717],[1234,710,1238,713,1238,718,1232,719,1231,716,1232,712],[1226,712,1228,714,1228,716,1227,715],[1248,710,1249,712,1247,714,1247,713],[1228,707,1230,707,1228,709],[1240,705,1243,701,1247,705,1248,708,1246,712,1244,712],[1258,706,1258,707,1256,704],[1247,703,1249,707,1244,702],[1263,702,1267,703,1269,707,1268,707],[1260,701,1263,704,1264,707,1260,705,1259,702],[1277,702,1277,698,1280,702,1285,703,1280,706],[1246,700,1246,702,1244,700],[1219,706,1209,705,1203,707,1198,704,1196,702,1200,698,1198,691,1201,689,1206,693,1206,696,1213,695,1220,699,1226,704,1226,709,1224,711],[1265,695,1266,696,1266,694,1270,699,1268,699,1265,697],[1214,695,1206,695,1210,689,1214,688,1226,694,1232,703,1228,704],[1260,695,1262,694,1263,698],[1240,690,1243,690,1245,696,1240,695,1239,693],[1276,696,1274,697,1270,696,1267,692,1270,692,1269,690,1272,690,1273,687,1276,690,1276,687,1278,687,1279,690],[1264,683,1255,681,1257,676,1264,675,1272,678,1270,681],[1278,612,1281,605,1283,613,1280,614],[1224,465,1226,467,1224,468],[1271,256,1265,246,1269,246,1272,242,1276,247,1276,252,1274,259,1274,264,1273,263],[1261,239,1262,240,1262,242,1260,241],[1239,235,1239,236,1240,236,1240,238,1238,235],[1237,232,1234,228,1234,227,1239,229],[1224,204,1223,197,1225,196,1226,203],[1224,191,1226,194,1225,196],[1205,189,1201,187,1203,180,1203,182,1205,183],[1198,177,1199,176,1201,176,1200,178]],"dots":[[116,315],[103,309],[99,308],[75,303],[119,298],[112,284],[952,704],[919,643],[918,640],[1111,638],[1140,598],[1073,421],[1060,403],[1002,379],[755,348],[747,339],[967,329],[977,292],[978,290],[1065,287],[1065,282],[982,282],[986,273],[983,257],[994,240],[1005,217],[999,215],[990,197],[723,188],[958,178],[960,178],[997,174],[996,170],[971,162],[1003,160],[785,155],[1006,151],[977,141],[1118,135],[977,130],[730,116],[805,99],[745,88],[755,73],[974,64],[973,53],[778,30],[1257,714],[1276,714],[1259,710],[1256,709],[1250,707],[1274,701],[1275,699],[1280,698],[1280,696],[1280,694],[1263,691],[1259,690],[1238,690],[1267,689],[1243,689],[1266,688],[1244,680],[1278,633],[1268,615],[1212,461],[1247,298]]};
+const MAP_PT = {   // ASSETS.md points table
+  thanjavur:[79,226], naga:[112,227], lankaN:[131,272], nicobar:[763,360], kadaram:[1099,470], jerai:[1101,466],
+};
+// the likely course [plausible] (ASSETS.md), cut into the strip's four legs
+const MAP_LEGS = [
+  [[79,226],[112,227]],                       // 1 Thanjavur to Nagapattinam, overland
+  [[112,227],[200,245]],                      // 2 Nagapattinam, south past Lanka's north
+  [[200,245],[408,288],[773,379]],            // 3 Lanka astern to Manakkavaram (9.5N 86.0E, 7.6N 93.6E)
+  [[773,379],[936,446],[1099,470]],           // 4 Manakkavaram to Kadaram (6.2N 97.0E, the Merbok)
 ];
+const STRIP_LINES = [   // SCRIPT §4a "Palm-leaf sailing directions", verbatim
+  'Thanjavur, the great tower. East by the river road three days to Nagapattinam.',
+  'Nagapattinam, the brick tower. Wait for the southwest wind. Two days, Lanka to the south.',
+  'Lanka astern. Open sea, wind behind, stars by night. Nine days to Manakkavaram.',
+  'Manakkavaram. Five days east to one great hill. Under it, the river of Kadaram.',
+];
+const PILOT_CARD = {title:'How a Pilot Found the Way',   // SCRIPT §4a, shown the first time the strip opens
+  text:'No Chola sea chart survives, and no Indian sailing text from anywhere near 1025. The best record of the route is Chinese. The Song court history gives the voyage of the Chola envoys of 1015 as a list of legs: so many days, past this mountain or that island, to the next port. It gives no distances and no bearings. Pilots likely steered by headlands, soundings, the color of the water, birds, stars, and the monsoon. The palm-leaf strip on this map is our invention, written in the manner of that list.'};
+// labels: SCRIPT §4a. [place, year or '', x, y, align]
+const MAP_LABELS = [
+  ['Thanjavur', '· 1010', 14, 256, 'left'], ['Nagapattinam', '· 1025', 124, 216, 'left'],
+  ['Lanka', '', 162, 382, 'center'], ['Manakkavaram', '', 780, 366, 'left'],
+  ['Kadaram', '· 1025', 1114, 480, 'left'], ['Srivijaya', '', 1228, 576, 'right'],
+];
+// where each level's lamps (detours found) and coins (named kasu found) sit, and the crew pennants
+const MAP_GROUPS = [{lamp:[[36,196],[68,196]], coin:[[36,166],[68,166]]},
+                    {lamp:[[148,186],[180,186]], coin:[[148,156],[180,156]]},
+                    {lamp:[[1040,436],[1072,436]], coin:[[1040,406],[1072,406]]}];
+const MAP_PENNANTS = {fish:[214,182], provisions:[236,182]};
 const PENNANT_LINE = 'The crew ate well here.';
-let mapReturn = null, mapPick = null, cardFrom = null, mapHits = [];
+const MAP_INK = '#2B2520', MAP_SEA = '#F1E3B4', MAP_LAND = '#F6E2A8', MAP_GOLD = '#C9A24A', MAP_CRIMSON = '#B5342A';
+let mapBaseC = null, mapLandPath = null;
+function mapLand(){
+  if(mapLandPath) return mapLandPath;
+  const P = new Path2D();
+  for(const r of COAST.rings){ P.moveTo(r[0], r[1]); for(let i = 2; i < r.length; i += 2) P.lineTo(r[i], r[i+1]); P.closePath(); }
+  return mapLandPath = P;
+}
+function mapStrokeRings(m, w){ m.lineWidth = w; m.lineJoin = 'round'; m.stroke(mapLand()); }
+let mapBigPath = null;   // the larger coasts only: small islands get a narrow wash and no echo lines
+function mapBig(){
+  if(mapBigPath) return mapBigPath;
+  const P = new Path2D();
+  for(const r of COAST.rings){ let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for(let i = 0; i < r.length; i += 2){ x0 = Math.min(x0, r[i]); x1 = Math.max(x1, r[i]); y0 = Math.min(y0, r[i+1]); y1 = Math.max(y1, r[i+1]); }
+    if(Math.max(x1 - x0, y1 - y0) < 40) continue;
+    P.moveTo(r[0], r[1]); for(let i = 2; i < r.length; i += 2) P.lineTo(r[i], r[i+1]); P.closePath(); }
+  return mapBigPath = P;
+}
+function mapBase(){
+  if(mapBaseC) return mapBaseC;
+  const c = document.createElement('canvas'); c.width = 1280; c.height = 720; const m = c.getContext('2d');
+  m.fillStyle = MAP_SEA; m.fillRect(0, 0, 1280, 720);
+  const layer = (fn, alpha)=>{ const t = document.createElement('canvas'); t.width = 1280; t.height = 720;
+    const q = t.getContext('2d'); fn(q); q.globalCompositeOperation = 'destination-out'; q.fill(mapLand(), 'evenodd');
+    m.globalAlpha = alpha; m.drawImage(t, 0, 0); m.globalAlpha = 1; };
+  // three 1 px echo lines at 6, 12, 20 px, fading; then the 14 px shore wash at 60 percent
+  [[20, 0.35], [12, 0.6], [6, 0.85]].forEach(([d, a])=> layer(q=>{
+    q.strokeStyle = '#5E8F94'; q.lineJoin = 'round'; q.lineWidth = 2*d + 1; q.stroke(mapBig());
+    q.globalCompositeOperation = 'destination-out'; q.lineWidth = 2*d - 1; q.stroke(mapBig()); q.globalCompositeOperation = 'source-over';
+  }, a));
+  layer(q=>{ q.strokeStyle = '#A9C4B4'; mapStrokeRings(q, 8); q.lineWidth = 28; q.stroke(mapBig());
+    q.fillStyle = '#A9C4B4'; for(const [x, y] of COAST.dots){ q.beginPath(); q.arc(x, y, 4, 0, 7); q.fill(); } }, 0.6);
+  // land, an 8 px bloom inside the coast
+  m.fillStyle = MAP_LAND; m.fill(mapLand(), 'evenodd');
+  m.save(); m.clip(mapLand(), 'evenodd'); m.filter = 'blur(4px)'; m.strokeStyle = 'rgba(176,138,82,0.55)'; mapStrokeRings(m, 16); m.restore();
+  // hills: small ink humps where the land rises (ghats, Lanka's hills, the peninsula's spine, Sumatra's Barisan)
+  const HILLS = [[0,40,60,360], [132,330,190,420], [1000,40,1100,300], [1090,300,1230,590], [880,500,1060,600]];
+  m.strokeStyle = 'rgba(122,85,48,0.85)'; m.lineWidth = 1.4; m.lineCap = 'round';
+  let n = 0;
+  for(const [x0, y0, x1, y1] of HILLS) for(let i = 0; i < 40; i++){
+    const x = x0 + hash(n*7.1 + 1)*(x1 - x0), y = y0 + hash(n*3.3 + 2)*(y1 - y0); n++;
+    const inside = [[0,0],[12,0],[-12,0],[0,10],[0,-10]].every(([dx, dy])=> m.isPointInPath(mapLand(), x+dx, y+dy, 'evenodd'));
+    if(!inside) continue;
+    m.beginPath(); m.moveTo(x - 6, y); m.quadraticCurveTo(x, y - 8, x + 6, y); m.stroke();
+  }
+  // Gunung Jerai, the "one great hill" over the Merbok
+  const [jx, jy] = MAP_PT.jerai;
+  m.fillStyle = 'rgba(122,85,48,0.35)'; m.beginPath(); m.moveTo(jx - 13, jy + 3); m.quadraticCurveTo(jx, jy - 18, jx + 13, jy + 3); m.fill();
+  m.strokeStyle = MAP_INK; m.lineWidth = 1.6; m.beginPath(); m.moveTo(jx - 13, jy + 3); m.quadraticCurveTo(jx, jy - 18, jx + 13, jy + 3); m.stroke();
+  // the coast in ink, 2 px (islands 1.5 px), with a 0.4 px wobble
+  m.strokeStyle = MAP_INK; m.lineJoin = 'round';
+  COAST.rings.forEach((r, k)=>{
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for(let i = 0; i < r.length; i += 2){ x0 = Math.min(x0, r[i]); x1 = Math.max(x1, r[i]); y0 = Math.min(y0, r[i+1]); y1 = Math.max(y1, r[i+1]); }
+    m.lineWidth = Math.max(x1 - x0, y1 - y0) < 40 ? 1.5 : 2;
+    m.beginPath();
+    for(let i = 0; i < r.length; i += 2){ const wx = r[i] + (hash(k*31 + i) - 0.5)*0.8, wy = r[i+1] + (hash(k*17 + i + 0.5) - 0.5)*0.8;
+      i ? m.lineTo(wx, wy) : m.moveTo(wx, wy); }
+    m.closePath(); m.stroke();
+  });
+  m.fillStyle = MAP_INK; for(const [x, y] of COAST.dots){ m.beginPath(); m.arc(x, y, 1.3, 0, 7); m.fill(); }
+  // places and labels (Marcellus SC: places 18 px ink, years 14 px, a 3 px sea-colored halo)
+  for(const k of ['thanjavur', 'naga', 'kadaram', 'nicobar']){ const [x, y] = MAP_PT[k]; m.fillStyle = MAP_INK; m.beginPath(); m.arc(x, y, 3.5, 0, 7); m.fill(); }
+  for(const [place, year, x, y, align] of MAP_LABELS){
+    m.font = "18px 'Marcellus SC', Marcellus, serif"; const wp = m.measureText(place).width;
+    m.font = "14px 'Marcellus SC', Marcellus, serif"; const wy = year ? m.measureText(' ' + year).width : 0;
+    const left = align === 'left' ? x : align === 'right' ? x - wp - wy : x - (wp + wy)/2;
+    m.textAlign = 'left'; m.lineJoin = 'round'; m.strokeStyle = MAP_SEA; m.lineWidth = 6;
+    m.font = "18px 'Marcellus SC', Marcellus, serif"; m.strokeText(place, left, y); m.fillStyle = MAP_INK; m.fillText(place, left, y);
+    if(year){ m.font = "14px 'Marcellus SC', Marcellus, serif"; m.strokeText(' ' + year, left + wp, y); m.fillStyle = '#4A3220'; m.fillText(' ' + year, left + wp, y); }
+  }
+  // an ink arrow to Srivijaya (Palembang, 3°S), off the map
+  m.strokeStyle = MAP_INK; m.lineWidth = 2; m.beginPath(); m.moveTo(1240, 548); m.lineTo(1240, 588); m.stroke();
+  m.fillStyle = MAP_INK; m.beginPath(); m.moveTo(1240, 594); m.lineTo(1234, 582); m.lineTo(1246, 582); m.closePath(); m.fill();
+  if(document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(()=>{ mapBaseC = null; });   // redraw labels in the font
+  return mapBaseC = c;
+}
+// legs: RUN.legs filled (the story has reached them); RUN.legsShown drawn; a newly reached leg sails ~2 s
+let mapAnim = null;
+const mapNow = ()=> performance.now()/1000;
+function mapStep(){
+  const now = mapNow();
+  if(!mapAnim && RUN.legsShown < RUN.legs) mapAnim = {leg:RUN.legsShown, t0:now};
+  if(mapAnim && now - mapAnim.t0 >= TUNE.MAP_LEG_TIME){ RUN.incise[mapAnim.leg] = now; RUN.legsShown = mapAnim.leg + 1; mapAnim = null; }
+}
+function mapSkip(){   // any key or tap skips the sailing
+  if(!mapAnim && RUN.legsShown >= RUN.legs) return false;
+  for(let i = RUN.legsShown; i < RUN.legs; i++) RUN.incise[i] = -1e9;
+  RUN.legsShown = RUN.legs; mapAnim = null; return true;
+}
+function legPoint(leg, u){   // a point a fraction u along a leg's polyline
+  const P = MAP_LEGS[leg]; let tot = 0; const seg = [];
+  for(let i = 1; i < P.length; i++){ const d = Math.hypot(P[i][0]-P[i-1][0], P[i][1]-P[i-1][1]); seg.push(d); tot += d; }
+  let s = clamp(u, 0, 1)*tot;
+  for(let i = 0; i < seg.length; i++){ if(s <= seg[i] || i === seg.length-1){ const k = seg[i] ? Math.min(1, s/seg[i]) : 1;
+    return [lerp(P[i][0], P[i+1][0], k), lerp(P[i][1], P[i+1][1], k), Math.atan2(P[i+1][1]-P[i][1], P[i+1][0]-P[i][0])]; } s -= seg[i]; }
+}
+function drawCourse(m, leg, u){
+  const P = MAP_LEGS[leg]; m.beginPath(); m.moveTo(P[0][0], P[0][1]);
+  if(u >= 1) for(let i = 1; i < P.length; i++) m.lineTo(P[i][0], P[i][1]);
+  else { let tot = 0; const seg = []; for(let i = 1; i < P.length; i++){ const d = Math.hypot(P[i][0]-P[i-1][0], P[i][1]-P[i-1][1]); seg.push(d); tot += d; }
+    let s = u*tot; for(let i = 1; i < P.length; i++){ if(s >= seg[i-1]){ m.lineTo(P[i][0], P[i][1]); s -= seg[i-1]; } else { const [x, y] = legPoint(leg, u); m.lineTo(x, y); break; } } }
+  m.stroke();
+}
+function drawMapLamp(m, x, y, sel){
+  const g = m.createRadialGradient(x, y, 0, x, y, sel ? 22 : 16);
+  g.addColorStop(0, 'rgba(246,226,168,0.95)'); g.addColorStop(1, 'rgba(246,226,168,0)');
+  m.fillStyle = g; m.beginPath(); m.arc(x, y, sel ? 22 : 16, 0, 7); m.fill();
+  m.fillStyle = MAP_GOLD; m.beginPath(); m.moveTo(x - 7, y + 2); m.quadraticCurveTo(x, y + 9, x + 7, y + 2); m.closePath(); m.fill();
+  m.strokeStyle = MAP_INK; m.lineWidth = 1.2; m.stroke();
+  m.fillStyle = MAP_GOLD; m.beginPath(); m.ellipse(x, y - 4, 2.6, 5, 0, 0, 7); m.fill();
+}
+function drawMapCoin(m, x, y, sel){
+  const g = m.createRadialGradient(x, y, 0, x, y, sel ? 22 : 15);
+  g.addColorStop(0, 'rgba(246,226,168,0.9)'); g.addColorStop(1, 'rgba(246,226,168,0)');
+  m.fillStyle = g; m.beginPath(); m.arc(x, y, sel ? 22 : 15, 0, 7); m.fill();
+  m.fillStyle = MAP_GOLD; m.beginPath(); m.arc(x, y, 7, 0, 7); m.fill();
+  m.strokeStyle = MAP_INK; m.lineWidth = 1.2; m.stroke(); m.beginPath(); m.arc(x, y, 4, 0, 7); m.stroke();
+}
+function drawFleet(m, x, y, ang, walking){
+  if(walking){   // level 1: a walking figure on the river road
+    m.strokeStyle = MAP_INK; m.fillStyle = MAP_INK; m.lineWidth = 2; m.lineCap = 'round';
+    m.beginPath(); m.arc(x, y - 16, 3, 0, 7); m.fill();
+    m.beginPath(); m.moveTo(x, y - 13); m.lineTo(x, y - 5); m.moveTo(x, y - 5); m.lineTo(x - 4, y); m.moveTo(x, y - 5); m.lineTo(x + 4, y);
+    m.moveTo(x, y - 11); m.lineTo(x + 5, y - 7); m.moveTo(x + 6, y - 15); m.lineTo(x + 6, y); m.stroke();
+    return;
+  }
+  m.save(); m.translate(x, y); const f = Math.cos(ang) < 0 ? -1 : 1; m.scale(f, 1);
+  m.fillStyle = MAP_INK; m.beginPath(); m.moveTo(-14, -2); m.lineTo(14, -2); m.quadraticCurveTo(10, 6, 0, 6); m.quadraticCurveTo(-10, 6, -14, -2); m.fill();
+  m.strokeStyle = MAP_INK; m.lineWidth = 2; m.beginPath(); m.moveTo(0, -2); m.lineTo(0, -26); m.stroke();
+  m.fillStyle = MAP_CRIMSON; m.fillRect(-10, -25, 20, 20);                     // a 22 px crimson square sail
+  m.strokeStyle = MAP_INK; m.lineWidth = 1.2; m.strokeRect(-10, -25, 20, 20);
+  m.restore();
+}
+// the palm-leaf strip: one dried palmyra leaf along the map's lower edge (ASSETS.md)
+const STRIP = {x:30, y:600, w:1220, h:110};
+function drawStripGlyph(m, i, x, y){
+  m.strokeStyle = MAP_INK; m.fillStyle = MAP_INK; m.lineWidth = 1.6; m.lineCap = 'round'; m.beginPath();
+  if(i === 0){ m.moveTo(x - 9, y + 12); m.lineTo(x - 3, y - 10); m.lineTo(x + 3, y - 10); m.lineTo(x + 9, y + 12); m.closePath();   // the great tower
+    m.moveTo(x - 6, y + 2); m.lineTo(x + 6, y + 2); m.moveTo(x - 4, y - 4); m.lineTo(x + 4, y - 4); m.moveTo(x, y - 10); m.lineTo(x, y - 15); }
+  else if(i === 1){ m.rect(x - 6, y - 10, 12, 22); m.moveTo(x - 6, y - 3); m.lineTo(x + 6, y - 3); m.moveTo(x - 6, y + 4); m.lineTo(x + 6, y + 4);   // the brick tower
+    m.moveTo(x - 3, y - 10); m.lineTo(x, y - 15); m.lineTo(x + 3, y - 10); }
+  else if(i === 2){ for(const [sx, sy] of [[-6, -9], [5, -12], [8, -2]]){ m.moveTo(x + sx - 3, y + sy); m.lineTo(x + sx + 3, y + sy); m.moveTo(x + sx, y + sy - 3); m.lineTo(x + sx, y + sy + 3); }   // stars over waves
+    m.moveTo(x - 11, y + 8); m.quadraticCurveTo(x - 5, y + 3, x, y + 8); m.quadraticCurveTo(x + 5, y + 13, x + 11, y + 8); }
+  else { m.moveTo(x - 12, y + 6); m.quadraticCurveTo(x, y - 18, x + 12, y + 6);   // the great hill and its river
+    m.moveTo(x - 10, y + 12); m.quadraticCurveTo(x - 2, y + 8, x + 3, y + 12); m.quadraticCurveTo(x + 8, y + 15, x + 12, y + 11); }
+  m.stroke();
+}
+function wrapText(m, text, w){
+  const words = text.split(' '), lines = []; let cur = '';
+  for(const wd of words){ const t = cur ? cur + ' ' + wd : wd; if(m.measureText(t).width > w && cur){ lines.push(cur); cur = wd; } else cur = t; }
+  if(cur) lines.push(cur); return lines;
+}
+function drawStrip(m){
+  const {x, y, w, h} = STRIP, r = h/2, now = mapNow();
+  m.save();
+  m.shadowColor = 'rgba(40,26,12,0.35)'; m.shadowBlur = 8; m.shadowOffsetY = 3;
+  m.beginPath(); m.moveTo(x + r, y); m.lineTo(x + w - r, y); m.quadraticCurveTo(x + w + 6, y + r, x + w - r, y + h);
+  m.lineTo(x + r, y + h); m.quadraticCurveTo(x - 6, y + r, x + r, y); m.closePath();
+  m.fillStyle = '#E3BC6A'; m.fill(); m.shadowColor = 'transparent';
+  m.strokeStyle = '#B08A52'; m.lineWidth = 2; m.stroke();
+  m.save(); m.clip(); m.strokeStyle = 'rgba(176,138,82,0.35)'; m.lineWidth = 1;   // lengthwise veins every 7 px
+  for(let vy = y + 7; vy < y + h; vy += 7){ m.beginPath(); m.moveTo(x, vy + 0.5); m.lineTo(x + w, vy + 0.5); m.stroke(); }
+  m.restore();
+  const cw = w/4, holes = [x + w/4, x + 3*w/4], hy = y + h/2;
+  for(let i = 0; i < 4; i++){
+    const x0 = x + i*cw, tx = x0 + 52, tw = cw - 70;
+    if(i >= RUN.legsShown){   // bare leaf, one faint scored line
+      m.strokeStyle = 'rgba(122,85,48,0.35)'; m.lineWidth = 1; m.beginPath(); m.moveTo(x0 + 30, hy); m.lineTo(x0 + cw - 24, hy); m.stroke();
+      continue;
+    }
+    const t0 = RUN.incise[i], k = t0 === undefined ? 1 : clamp((now - t0)/TUNE.STRIP_INCISE, 0, 1);
+    m.save(); m.beginPath(); m.rect(x0, y, 30 + (cw - 30)*k, h); m.clip();
+    drawStripGlyph(m, i, x0 + 30, y + 36);
+    m.font = "16px Marcellus, Georgia, serif"; m.textAlign = 'left';
+    const lines = wrapText(m, STRIP_LINES[i], tw), ly = y + 28 + (4 - lines.length)*9;
+    lines.forEach((ln, j)=>{ m.fillStyle = '#F6E2A8'; m.fillText(ln, tx, ly + j*20 + 1); m.fillStyle = MAP_INK; m.fillText(ln, tx, ly + j*20); });
+    m.restore();
+  }
+  // two binding holes and a twisted cord through both, knotted at the left
+  for(const hx of holes){ m.fillStyle = '#2A1A10'; m.beginPath(); m.arc(hx, hy, 5, 0, 7); m.fill();
+    m.strokeStyle = '#7A5530'; m.lineWidth = 2.5; m.beginPath(); m.moveTo(hx, hy - 3); m.quadraticCurveTo(hx + 7, y + 20, hx + 2, y - 2); m.stroke(); }
+  m.strokeStyle = '#7A5530'; m.lineWidth = 2.5; m.beginPath(); m.moveTo(x + 6, hy); m.lineTo(x - 10, hy + 4); m.stroke();
+  m.fillStyle = '#7A5530'; m.beginPath(); m.arc(x - 12, hy + 5, 4, 0, 7); m.fill();
+  m.beginPath(); m.moveTo(x - 12, hy + 8); m.quadraticCurveTo(x - 18, hy + 22, x - 14, hy + 34); m.moveTo(x - 10, hy + 8); m.quadraticCurveTo(x - 6, hy + 20, x - 9, hy + 30); m.stroke();
+  m.restore();
+}
+let mapHits = [], mapPick = null;
+function drawVoyage(cv){
+  mapStep();
+  const m = cv.getContext('2d'), now = mapNow();
+  m.drawImage(mapBase(), 0, 0);
+  // the course in crimson, dashed: a likely course, not a record; each leg draws on when reached
+  m.save(); m.strokeStyle = MAP_CRIMSON; m.lineWidth = 3; m.setLineDash([10, 6]); m.lineCap = 'butt';
+  for(let i = 0; i < RUN.legsShown; i++) drawCourse(m, i, 1);
+  let fleet;
+  if(mapAnim){ const u = clamp((now - mapAnim.t0)/TUNE.MAP_LEG_TIME, 0, 1), e = u*u*(3 - 2*u);
+    drawCourse(m, mapAnim.leg, e); fleet = [...legPoint(mapAnim.leg, e), mapAnim.leg === 0]; }
+  else if(RUN.legsShown === 0) fleet = [...MAP_PT.thanjavur, 0, true];
+  else fleet = [...legPoint(RUN.legsShown - 1, 1), false];
+  m.restore();
+  // lamps for detours found, coins for named kasu found; nothing marks what was missed
+  mapHits = [];
+  MAP_GROUPS.forEach((G, li)=>{
+    for(let j = 0; j < 2; j++){
+      const d = li*2 + 1 + j, nk = 'nk' + d, sel = mapPick === nk;
+      if(RUN.detours[d] || RUN.found[nk]){ const [x, y] = G.lamp[j]; drawMapLamp(m, x, y, sel); mapHits.push({x, y, r:16, nk}); }
+      if(RUN.found[nk]){ const [x, y] = G.coin[j]; drawMapCoin(m, x, y, sel); mapHits.push({x, y, r:16, nk}); }
+    }
+  });
+  for(const id in MAP_PENNANTS){ if(!RUN.pennants[id]) continue; const [px, py] = MAP_PENNANTS[id];
+    m.fillStyle = MAP_INK; m.fillRect(px, py, 2, 24); m.fillStyle = MAP_GOLD;
+    m.beginPath(); m.moveTo(px + 2, py); m.lineTo(px + 17, py + 5); m.lineTo(px + 2, py + 10); m.closePath(); m.fill();
+    m.strokeStyle = MAP_INK; m.lineWidth = 1; m.stroke(); mapHits.push({x:px + 8, y:py + 10, r:16, pennant:true}); }
+  drawFleet(m, fleet[0], fleet[1], fleet[2], fleet[3]);
+  drawStrip(m);
+}
+let mapLoopOn = false;
+function mapLoop(){
+  const a = !$('mapScreen').hidden, b = !$('interScreen').hidden && !$('interMap').hidden;
+  if(a) drawVoyage($('mapCanvas'));
+  if(b) drawVoyage($('interMap'));
+  if(a && !mapAnim && RUN.legsShown >= RUN.legs && !RUN.pilotSeen){ RUN.pilotSeen = true; saveMap(); openPilotCard(); }
+  if(a || b) requestAnimationFrame(mapLoop); else mapLoopOn = false;
+}
+function startMapLoop(){ if(!mapLoopOn){ mapLoopOn = true; requestAnimationFrame(mapLoop); } }
+let mapReturn = null;
 function openMap(){
-  const open = ['titleScreen','interScreen','portScreen','endScreen'].find(id=>!$(id).hidden);
+  const open = ['titleScreen','interScreen','portScreen','endScreen','pauseScreen'].find(id=>!$(id).hidden);
   mapReturn = {id:open, state}; if(open) $(open).hidden = true;
-  mapPick = null; $('mapInfo').textContent = ''; $('mapRead').hidden = true;
+  mapPick = null; $('mapRead').hidden = true;
   const any = Object.keys(NAMED).some(k=>RUN.found[k]);
-  if(!any){ $('mapInfo').textContent = 'No cards yet. Old coins lie off the path.'; }
-  $('mapScreen').hidden = false; state = 'map'; drawMap();
+  $('mapInfo').textContent = any ? '' : 'No cards yet. Old coins lie off the path.';
+  $('mapScreen').hidden = false; state = 'map'; startMapLoop();
 }
 function closeMap(){
+  mapSkip();
   $('mapScreen').hidden = true;
-  if(mapReturn){ if(mapReturn.id) $(mapReturn.id).hidden = false; state = mapReturn.state; }
-}
-function drawMap(){
-  const cv = $('mapCanvas'), m = cv.getContext('2d'), W2 = cv.width, H2 = cv.height;
-  m.fillStyle = '#2C3E4A'; m.fillRect(0, 0, W2, H2);                     // the sea
-  for(let i = 0; i < 40; i++){ m.strokeStyle = 'rgba(200,220,230,0.06)'; m.beginPath();
-    const y = hash(i*3.1)*H2, x = hash(i*5.7)*W2; m.moveTo(x, y); m.quadraticCurveTo(x+14, y-4, x+28, y); m.stroke(); }
-  const land = (pts)=>{ m.beginPath(); pts.forEach(([x,y],i)=> i ? m.lineTo(x,y) : m.moveTo(x,y)); m.closePath();
-    m.fillStyle = '#C9B48A'; m.fill(); m.strokeStyle = '#6B4E33'; m.lineWidth = 2; m.stroke(); };
-  // the Tamil coast and the tip of India, Lanka, then Sumatra and the peninsula (hand-drawn, not to scale)
-  land([[0,0],[260,0],[250,80],[232,160],[222,240],[214,320],[204,380],[176,430],[140,470],[110,520],[0,520]]);
-  land([[232,448],[256,440],[272,470],[266,510],[246,518],[230,490]]);
-  land([[700,0],[900,0],[900,520],[840,520],[790,430],[758,350],[736,280],[716,200],[706,110]]);
-  m.font = "italic 13px 'Cormorant Garamond', serif"; m.fillStyle = 'rgba(230,220,190,0.45)'; m.textAlign = 'center';
-  m.fillText('the Bay', 470, 260);
-  mapHits = [];
-  MAP_STOPS.forEach((st, li)=>{
-    m.fillStyle = '#3A2A1C'; m.beginPath(); m.arc(st.x, st.y, 5, 0, 7); m.fill();
-    m.font = "15px 'Marcellus SC', serif"; m.fillStyle = '#2A1E14'; m.textAlign = st.align;
-    m.fillText(st.label, st.x + st.lx, st.y + 5);
-    // lamps for found named kasu from this level's detours
-    Object.keys(NAMED).filter(k=>NAMED[k].level === li).forEach((k, j)=>{
-      if(!RUN.found[k]) return;                                            // unfound detours show nothing
-      const lx = st.x - 11 + j*22, ly = st.y - 30, on = mapPick === k;   // two lamps above the stop
-      const g = m.createRadialGradient(lx, ly, 0, lx, ly, 18);
-      g.addColorStop(0, 'rgba(255,205,120,'+(on ? 0.9 : 0.6)+')'); g.addColorStop(1, 'rgba(255,205,120,0)');
-      m.fillStyle = g; m.fillRect(lx-18, ly-18, 36, 36);
-      m.fillStyle = '#6B4A2A'; m.fillRect(lx-4, ly-3, 8, 9);
-      m.fillStyle = '#FFD488'; m.beginPath(); m.ellipse(lx, ly-1, 2.4, 4, 0, 0, 7); m.fill();
-      mapHits.push({x:lx, y:ly, r:18, kind:'lamp', k});
-    });
-  });
-  // crew pennants: the market's and the quay's, both at Nagapattinam
-  [['fish', 0], ['provisions', 1]].forEach(([id, j])=>{
-    if(!RUN.pennants[id]) return;
-    const st = MAP_STOPS[1], px = st.x + 24 + j*26, py = st.y + 20;
-    m.fillStyle = '#3A2A1C'; m.fillRect(px, py, 2, 26);
-    m.fillStyle = '#B5342A'; m.beginPath(); m.moveTo(px+2, py); m.lineTo(px+18, py+5); m.lineTo(px+2, py+10); m.closePath(); m.fill();
-    mapHits.push({x:px+8, y:py+10, r:16, kind:'pennant'});
-  });
+  if(mapReturn){ if(mapReturn.id) $(mapReturn.id).hidden = false; state = mapReturn.state; if(mapReturn.id === 'interScreen') startMapLoop(); }
 }
 function mapTap(ev){
+  if(mapSkip()) return;
   const cv = $('mapCanvas'), r = cv.getBoundingClientRect();
   const x = (ev.clientX - r.left) * cv.width / r.width, y = (ev.clientY - r.top) * cv.height / r.height;
-  const h = mapHits.find(h=> Math.hypot(h.x - x, h.y - y) <= h.r);
+  let h = null, best = 1e9;
+  for(const q of mapHits){ const d = Math.hypot(q.x - x, q.y - y); if(d <= q.r && d < best){ best = d; h = q; } }
   if(!h) return;
-  if(h.kind === 'pennant'){ mapPick = null; $('mapInfo').textContent = PENNANT_LINE; $('mapRead').hidden = true; }
-  else pickLamp(h.k);
-  drawMap();
+  if(h.pennant){ mapPick = null; $('mapInfo').textContent = PENNANT_LINE; $('mapRead').hidden = true; }
+  else pickLamp(h.nk);
 }
-function pickLamp(k){
+function pickLamp(k){   // SCRIPT §4a: place line, coin name, "Read the card."
   mapPick = k; const N = NAMED[k];
-  $('mapInfo').textContent = N.place + ' ' + N.name + '.';
-  $('mapRead').hidden = false;
+  $('mapInfo').textContent = RUN.found[k] ? N.place + ' ' + N.name + '.' : N.place;
+  $('mapRead').hidden = !RUN.found[k];
 }
+function showCardScreen(){ $('mapScreen').hidden = true; $('cardScreen').hidden = false; state = 'card'; }
 function openCard(k){
   const N = NAMED[k];
   $('cardTitle').textContent = N.title; $('cardText').textContent = N.text;
-  $('cardKept').textContent = 'Kept from ' + placeName(N.place) + ', with ' + N.name;
-  const cv = $('cardImage'), c2 = cv.getContext('2d');
+  $('cardKept').textContent = 'Kept from ' + placeName(N.place) + ', with ' + N.name; $('cardKept').hidden = false;
+  const cv = $('cardImage'), c2 = cv.getContext('2d'); cv.hidden = false;
   c2.clearRect(0, 0, cv.width, cv.height);
   const keep = ctx; ctx = c2; ctx.save(); ctx.translate(cv.width/2, cv.height/2); ctx.scale(4, 4);
   drawCoin({x:0, y:0, kind:'named', nk:k, spin:0, glintT:0}); ctx.restore(); ctx = keep;
-  $('mapScreen').hidden = true; $('cardScreen').hidden = false; state = 'card';
+  showCardScreen();
+}
+function openPilotCard(){   // the fixed card: no coin (SCRIPT §4a)
+  $('cardTitle').textContent = PILOT_CARD.title; $('cardText').textContent = PILOT_CARD.text;
+  $('cardKept').hidden = true; $('cardImage').hidden = true;
+  showCardScreen();
 }
 // "Kept from [place]": the place line without its closing stop, lowercased at the start
 function placeName(line){ const t = line.replace(/\.$/, ''); return t.charAt(0).toLowerCase() + t.slice(1); }
 $('mapCanvas').addEventListener('pointerdown', mapTap);
+$('interMap').addEventListener('pointerdown', ()=>mapSkip());
 $('mapRead').onclick = ()=>{ if(mapPick) openCard(mapPick); };
+$('mapPilot').onclick = openPilotCard;
 $('mapBack').onclick = closeMap;
-$('cardBack').onclick = ()=>{ $('cardScreen').hidden = true; $('mapScreen').hidden = false; state = 'map'; drawMap(); };
+$('cardBack').onclick = ()=>{ $('cardScreen').hidden = true; $('mapScreen').hidden = false; state = 'map'; startMapLoop(); };
 document.querySelectorAll('[data-map]').forEach(b=> b.onclick = openMap);
+// the interstitials before levels 2 and 3 open the map by themselves (DESIGN §6); the first time, the pilot's card
+function showInterMap(i){
+  const on = i >= 1;
+  $('interMap').hidden = !on; $('interScreen').classList.toggle('tall', on);
+  const pilot = on && !RUN.pilotSeen;
+  $('interPilot').hidden = !pilot;
+  if(pilot){ $('interPilotTitle').textContent = PILOT_CARD.title; $('interPilotText').textContent = PILOT_CARD.text; RUN.pilotSeen = true; saveMap(); }
+  if(on){ $('interScreen').scrollTop = 0; startMapLoop(); }
+}
+// ---- the pause screen (Esc, P, or the touch pause button): Resume and the voyage map
+let paused = false;
+function pauseGame(){
+  if(state !== 'play' || paused) return;
+  paused = true; for(const k in keys) keys[k] = false;
+  $('pauseEyebrow').textContent = level.chapter; $('pauseTitle').textContent = level.name;
+  $('pauseScreen').hidden = false;
+}
+function resumeGame(){ if(!paused) return; paused = false; $('pauseScreen').hidden = true; last = performance.now(); }
+$('resumeBtn').onclick = resumeGame;
+bindTouch('tP', ()=>{ paused ? resumeGame() : pauseGame(); });
 // keys on the menus: 1 2 3 buy at a port, Enter goes onward, M opens the map, Esc goes back
 addEventListener('keydown', e=>{
+  if(state === 'play' && (e.key === 'Escape' || e.key === 'p' || e.key === 'P')){
+    paused ? resumeGame() : pauseGame(); e.preventDefault(); return;
+  }
+  if(state === 'play' && paused && (e.key === 'm' || e.key === 'M')){ openMap(); return; }
+  if(state === 'inter'){ mapSkip(); return; }   // any key skips the sailing
   if(state === 'port'){
     const g = PORTS[portKey].goods[+e.key - 1];
     if(g){ buyGood(g); e.preventDefault(); }
     else if(e.key === 'Enter'){ $('portBtn').click(); e.preventDefault(); }
     else if(e.key === 'm' || e.key === 'M') openMap();
   } else if(state === 'map'){
+    if(mapSkip()){ e.preventDefault(); return; }
     if(e.key === 'Escape' || e.key === 'Backspace'){ closeMap(); e.preventDefault(); }
     const ks = Object.keys(NAMED).filter(k=>RUN.found[k]);
-    if(+e.key >= 1 && +e.key <= ks.length){ pickLamp(ks[+e.key-1]); drawMap(); }
-    if(e.key === 'Enter' && mapPick){ openCard(mapPick); e.preventDefault(); }
+    if(+e.key >= 1 && +e.key <= ks.length) pickLamp(ks[+e.key-1]);
+    if(e.key === 'Enter' && mapPick && RUN.found[mapPick]){ openCard(mapPick); e.preventDefault(); }
   } else if(state === 'card'){
     if(e.key === 'Escape' || e.key === 'Backspace' || e.key === 'Enter'){ $('cardBack').click(); e.preventDefault(); }
   }
 });
+// test hooks for tests/smoke.js and screenshots (no effect on play)
+window.__test = {
+  pause: pauseGame, resume: resumeGame, paused: ()=>paused,
+  openMap, closeMap, skipMap: mapSkip,
+  map: ()=>({legs:RUN.legs, legsShown:RUN.legsShown, sailing:!!mapAnim, visible:!$('mapScreen').hidden || (!$('interScreen').hidden && !$('interMap').hidden)}),
+  setLegs: (n, shown)=>{ RUN.legs = n; RUN.legsShown = shown ?? n; mapAnim = null; for(let i = 0; i < 4; i++) delete RUN.incise[i]; },
+  hint: ()=> level.paidHint ? {x:level.paidHint.x, y:level.paidHint.y, lane:level.paidHint.lane, lit:hintLit(), out:!!level.paidHint.out} : null,
+  give: (id)=>{ RUN.goods[id] = true; },
+};
 // the fourth heart (ghee in level 2, the offering in level 3)
 function maxHearts(){ return 3 + ((levelIdx === 1 && RUN.goods.ghee) || (levelIdx === 2 && RUN.goods.offering) ? 1 : 0); }
-// detour lamps (boatman in level 2, pilot in level 3): a lamp where each side way starts
-function detourLamps(){ return (levelIdx === 1 && RUN.goods.boatman) || (levelIdx === 2 && RUN.goods.pilot); }
+// paid hints (DECISIONS 30, DESIGN §6): the boatman's lamp in level 2, the pilot's in level 3, lit from the level's start
+function hintLit(){ return !!level.paidHint && !level.paidHint.out &&
+  ((levelIdx === 1 && RUN.goods.boatman) || (levelIdx === 2 && RUN.goods.pilot)); }
 
 // ============================================================ physics
 function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh){
@@ -2409,10 +2704,16 @@ function updateWorld(dt){
         const n = NAMED[c.nk]; RUN.found[c.nk] = true; saveMap(); sfx.named();
         floats.push({x:c.x, y:c.y-30, t:TUNE.NAMED_FLOAT, text:n.name});
         if(!RUN.firstNamed){ RUN.firstNamed = true; floats.push({x:c.x, y:c.y-56, t:TUNE.NAMED_FLOAT+1.2, text:LINE_FIRST_NAMED}); }
-      } else { RUN.purse += 1; sfx.coin(); }   // copper into the purse, a soft clink (not a chime)
+      } else { RUN.purse += 1; sfx.coin(); if(c.kind === 'cluster' && !RUN.detours[c.detour]){ RUN.detours[c.detour] = true; saveMap(); } }   // copper into the purse, a soft clink (not a chime)
     }
   }
 
+  const PH = level.paidHint;   // the paid hint goes out when its target is taken
+  if(PH && !PH.out){
+    if(PH.nk){ const c = level.coins.find(c=>c.nk === PH.nk); if(!c || c.taken) PH.out = true; }
+    if(PH.shortcut){ const [x0, x1, top] = PH.shortcut;
+      if(p.lane === PH.lane && p.onGround && p.x >= x0 && p.x <= x1 && Math.abs(p.y - top) < 6) PH.out = true; }
+  }
   const npc = level.npc;
   if(npc && !npc.given && !p.scene && p.lane === 1 && Math.abs(p.x - npc.x) < 34 && Math.abs(p.y - npc.y) < 60){
     p.scene = {t:0};                         // §2: walking into him plays the handover
@@ -3142,16 +3443,26 @@ function drawDetourSign(d){
   ctx.fillStyle = tg; ctx.fillRect(-18, -H - 14, 56, 56); ctx.restore();
   ctx.restore();
 }
-// the boatman's / pilot's lamp on a post where a side way starts (DESIGN §6)
-function drawDetourLamp(x, y){
-  ctx.fillStyle = '#3A2A1C'; ctx.fillRect(x-2, y-TUNE.LAMP_POST, 4, TUNE.LAMP_POST);
-  ctx.fillRect(x-2, y-TUNE.LAMP_POST, 14, 3);
-  const fl = 0.8 + 0.2*Math.sin(time*9 + x), ly = y - TUNE.LAMP_POST + 12;
-  const g = ctx.createRadialGradient(x+10, ly, 0, x+10, ly, 34);
-  g.addColorStop(0, 'rgba(255,200,110,'+(0.45*fl)+')'); g.addColorStop(1, 'rgba(255,200,110,0)');
-  ctx.fillStyle = g; ctx.fillRect(x-24, ly-34, 68, 68);
-  ctx.fillStyle = '#6B4A2A'; ctx.fillRect(x+6, ly-5, 8, 10);
-  ctx.fillStyle = 'rgba(255,214,130,'+fl+')'; ctx.beginPath(); ctx.ellipse(x+10, ly-1, 2.2, 3.6, 0, 0, 7); ctx.fill();
+// DESIGN §6 paid hint: a coir-wrapped hand lamp, gold flame and a thin rising thread of light, seen 600 px off;
+// unlike the free stake (no post, no chalk) and never crimson
+function drawHintLamp(x, y){
+  const fl = 0.85 + 0.15*Math.sin(time*11 + x) + 0.05*Math.sin(time*23), sway = Math.sin(time*1.7)*3;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const th = ctx.createLinearGradient(x, y - 10, x, y - TUNE.HINT_THREAD);      // the rising thread of light
+  th.addColorStop(0, 'rgba(255,214,120,0.75)'); th.addColorStop(1, 'rgba(255,214,120,0)');
+  ctx.strokeStyle = th; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x, y - 12);
+  ctx.quadraticCurveTo(x + sway, y - TUNE.HINT_THREAD*0.5, x - sway, y - TUNE.HINT_THREAD); ctx.stroke();
+  const g = ctx.createRadialGradient(x, y - 10, 0, x, y - 10, TUNE.HINT_GLOW);
+  g.addColorStop(0, 'rgba(255,214,120,'+(0.6*fl)+')'); g.addColorStop(0.3, 'rgba(240,180,80,'+(0.22*fl)+')'); g.addColorStop(1, 'rgba(240,180,80,0)');
+  ctx.fillStyle = g; ctx.fillRect(x - TUNE.HINT_GLOW, y - 10 - TUNE.HINT_GLOW, TUNE.HINT_GLOW*2, TUNE.HINT_GLOW*2);
+  ctx.restore();
+  // the clay lamp bowl, wrapped in coir
+  ctx.fillStyle = '#7A4A26'; ctx.beginPath(); ctx.moveTo(x - 11, y - 8); ctx.quadraticCurveTo(x, y + 2, x + 11, y - 8); ctx.lineTo(x + 14, y - 10); ctx.lineTo(x - 11, y - 10); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#3A2414'; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.strokeStyle = '#A9824E'; ctx.lineWidth = 1.4;
+  for(let i = -8; i <= 8; i += 4){ ctx.beginPath(); ctx.moveTo(x + i - 2, y - 9); ctx.lineTo(x + i + 2, y - 3); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(255,226,140,'+fl+')'; ctx.beginPath(); ctx.ellipse(x + 10, y - 15, 3, 6*fl, 0.15, 0, 7); ctx.fill();   // gold flame at the spout
+  ctx.fillStyle = 'rgba(255,248,220,0.9)'; ctx.beginPath(); ctx.ellipse(x + 10, y - 13, 1.4, 2.6, 0, 0, 7); ctx.fill();
 }
 function drawFlag(x, y, lit){
   ctx.fillStyle = '#3A2A1C'; ctx.fillRect(x-3, y-120, 6, 120);
@@ -3642,7 +3953,7 @@ function drawLaneContents(l){
     ctx.textAlign='left';
   }
   if(level.detours) for(const d of level.detours) if(d.at[1] === l) drawDetourSign(d);
-  if(detourLamps() && level.detourAt) for(const [dx, dl] of level.detourAt) if(dl === l) drawDetourLamp(dx, topAt(dl, dx));
+  if(hintLit() && level.paidHint.lane === l) drawHintLamp(level.paidHint.x, level.paidHint.y);
   for(const c of level.coins) if(c.lane===l) drawCoin(c);
   for(const g of level.guards){
     if(g.dead || g.lane!==l) continue;
@@ -3915,6 +4226,7 @@ let last = performance.now(), frameDt = 1/60;
 function frame(now){
   let dt = Math.min(0.033, (now-last)/1000);
   last = now;
+  if(paused){ requestAnimationFrame(frame); return; }   // the pause screen: the world holds still
   if(state === 'play' && hitstopT > 0){       // frozen on contact: draw, but do not advance the world
     hitstopT -= dt; hitstopFrame++; frameDt = 0;
     render();
