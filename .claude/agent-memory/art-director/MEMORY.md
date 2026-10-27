@@ -87,3 +87,14 @@
 - Sprite-artist has not yet reported which phrasings produced good
   results under Canva; record them here when they arrive.
 - Critic has not reviewed the third edition.
+
+## Fifth edition (2026-10-26): voyage map
+
+- Owner: the old map was "so off, not to scale." DECISIONS.md 29: true
+  map plus palm-leaf strip. Spec in ASSETS.md "Voyage map (drawn in
+  code)": box 0.5-15.5N, 77.5-104.17E, equirectangular 48 px/deg on
+  1280x720. Nagapattinam to Merbok checks at 2,330 km (RESEARCH 6b: 2,300).
+- Route crimson dashed (likely course); conflicts with SCRIPT.md "No route
+  line"; note left to narrative-designer in NOTES.md 2026-10-26.
+- Budget for that section: under 450 words, counted with numbers.
+- The repo is now git, pushed to origin main; pull with rebase first.

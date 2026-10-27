@@ -49,12 +49,10 @@ main lane, so the marked rope is the way on. **Ledge**: walk 830 px of
 loading ledge over M1, or leap to the near wharf. **Basin**: far is
 safer, near richer. **Ship 1**: the hull side is 190 px inside M2's
 leash; the forced beat (a wall-slide is a stop). **The swing (R2)** is
-the only route to ship 2. Re-checked on the grip-length period: at 250
-px out, R2 needed 45 degrees and left a 60 px window, so it hangs 340 px
-out (anchor 100, length 320). Now no release lands from rest or below
-30 degrees, a running grab gives 21, and releases land from 35 (40 to
-50 is comfortable). Reaching it from ship 1's stern takes a running
-double jump. No running or double jump reaches ship 2 above the water. A miss is the
+the only route to ship 2. On the grip-length period it hangs 340 px out
+(anchor 100, length 320): no release lands from rest or below 30
+degrees, a running grab gives 21, releases land from 35. Grabbing it
+takes a running double jump; no jump reaches ship 2 above the water. A miss is the
 harbor: one heart, back to CP on ship 1's deck. **Ship 2**: the bale is
 cover and a step to the awning; a plain bounce reaches the line; a held
 bounce reaches the yard. The near lighter (G7, G8) is the easier way.
@@ -91,9 +89,8 @@ Spacing 1100 to 1420; none within 150 px of a cone.
 
 ## 7. Props and set dressing
 
-ASSETS.md: backdrop 2 (repainted), band 15, wood 5, gate 13, guard rig
-37, `kodi.png` 19, `bales.png` 23 (stall skin), `dugout.png` 24,
-`hull.png` 25, `kasu.png` 36. New, by name: undyed cloth awning on a
+ASSETS.md: backdrop 2, band 15, wood 5, gate 13, guard rig 37, slots
+19, 23 to 25, 36. New, by name: undyed cloth awning on a
 stall; pushable cotton bale; gangplank; beached hull with mast, yard and
 furled matting sail; mast with lashings; rigging line; marked rope with
 lamp and ink ring; warehouse wall and roof gallery; cargo spar (R2's
@@ -103,8 +100,8 @@ two named kasu.
 
 ## 8. Story hooks
 
-Intro: find your ship. Mid at 4780: the vihara tower. Before the swing:
-no way but over. End: the quay slides away.
+Intro: find your ship. Mid at 4780: the vihara tower. End: the quay
+slides away.
 
 ## 9. Builder notes
 
@@ -152,8 +149,15 @@ falls, occludes like a block, resets on checkpoint return; SLOPE: feet
 follow the line between its ends, up at 330, down at 385 (24 degrees).
 Not in the engine: all of those, marked ropes, the cast-off drift.
 
+**Paid hint target.** The boatman (market, ten copper)
+reveals a shortcut: a run off W2 `[1400,320,300,300,1,stone]`
+at (1700, 320), double jump at 0.2 s, lands on dock D1
+`[2100,420,360,200,1,stone]`, skipping the bale. A single jump falls
+short. Bought, a lamp burns on the dock's lip at (2120, 420).
+
 ## Revision notes
 
+- 2026-10-26, ruling 30: paid hint target added to section 9.
 - 2026-10-26, fourth draft, for DESIGN.md draft 4: detours D3 and D4;
   trail kasu cut from 47 to 24 and reshaped as arcs, none in a sweep; R2
   moved 90 px farther out for the grip-length period; ship 2 lengthened

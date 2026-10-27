@@ -825,6 +825,65 @@ open raised hand is a forearm rotation. The figure keeps the same scale as
 slot 37 so the builder sets one height for all characters.
 
 
+---
+
+## Voyage map (drawn in code)
+
+DECISIONS.md 29, RESEARCH.md 6b. Drawn in `index.html`; no image slot.
+
+**Extent and projection.** 0.5°N to 15.5°N, 77.5°E to 104.17°E.
+Equirectangular, 48 px per degree on 1280×720: `x = (lon − 77.5) × 48`,
+`y = (15.5 − lat) × 48`; error under 1 percent, 1 px ≈ 2.3 km.
+
+**Coastlines**, from Natural Earth 1:10m (public domain), clipped and
+simplified
+to 0.02°: Coromandel coast, Sri Lanka, Andamans and Nicobars
+(islands under 3 px as dots), Burma and Thai coasts, Malay peninsula with
+Penang and Langkawi, Gulf of Thailand, northern Sumatra with Simeulue.
+
+| Point | Lat, lon | x, y |
+|---|---|---|
+| Thanjavur | 10.79, 79.14 | 79, 226 |
+| Nagapattinam | 10.77, 79.84 | 112, 227 |
+| Sri Lanka, north tip | 9.83, 80.23 | 131, 272 |
+| Nicobars (Manakkavaram) | 8.0, 93.4 | 763, 360 |
+| Kadaram, Merbok estuary | 5.70, 100.40 | 1099, 470 |
+| Gunung Jerai, peak glyph | 5.79, 100.43 | 1101, 466 |
+| Talaittakkolam (Takuapa) | 8.87, 98.35 | 1001, 318 |
+| Ilamuridesam (Lamuri) | 5.55, 95.32 | 855, 478 |
+| Ilangasoka (Langkasuka) | 6.87, 101.25 | 1140, 414 |
+
+An ink arrow at 1240, 560 points to Srivijaya (Palembang, 3°S), off
+the map. Label text comes from SCRIPT.md only. Course [plausible],
+by the Nicobars: Nagapattinam, 9.5°N 86.0°E, 7.6°N 93.6°E, 6.2°N 97.0°E,
+Merbok.
+
+**Look.** Sea `#F1E3B4`; a 14 px `#A9C4B4` shore wash at 60 percent,
+with three 1 px `#5E8F94` echo lines at 6, 12 and 20 px, fading. Land
+`#F6E2A8` with an 8 px `#B08A52` bloom inside the coast. Hills are small `#7A5530` ink humps. Coastline ink `#2B2520`,
+2 px (islands 1.5 px), with a 0.4 px wobble. Labels in Marcellus SC:
+places 18 px ink, years 14 px `#4A3220`, with a 3 px `#F1E3B4` halo.
+
+The route is crimson `#B5342A`, 3 px, dashed 10 on and 6 off, a likely
+course, not a record. Each leg draws on when reached. Fleet
+marker: a 22 px crimson square sail on an ink hull. Detour lamps and
+named kasu are gold `#C9A24A` with a `#F6E2A8` glow, never crimson;
+unlit, an ink outline.
+
+**The palm-leaf strip.** One dried palmyra leaf, 1220×110 px, at y 600
+to 710. Rounded ends, `#E3BC6A` body, `#B08A52` edges, lengthwise veins
+every 7 px. Two 10 px `#2A1A10` binding holes at a quarter and three
+quarters of its length; a twisted `#7A5530` cord, 2.5 px, through both,
+knotted at the left. Legs run left to right.
+Letters are incised and lamp-blacked: ink, 16 px, with a 1 px
+`#F6E2A8` highlight below. An unfilled leg is bare leaf with one faint
+scored line. A filled leg incises left to right over 0.8 s under a small
+landmark glyph. No crimson on the strip. Its text comes from SCRIPT.md.
+
+**Readability** at 1280×720: nothing important under 14 px; marks at
+least 12 px; lamp tap areas 32 px. If the canvas scales down, text stays
+at 14 CSS px or more.
+
 ## Open questions for Gaurav
 
 1. **The hero's sword in the rig.** DECISIONS.md 19 rigs the hero from
@@ -1004,6 +1063,18 @@ fixes") and the level documents.
 - Not done: no pivots were tested in code, and the part map assumes the
   builder removes the background first.
 
+2026-10-26, fifth edition, after DECISIONS.md 28 and 29.
+
+- **Voyage map (drawn in code)** added: a lat/lon box, an equirectangular
+  projection at 48 px per degree, a coastline source and list, nine
+  points with coordinates and canvas positions, and the course by the
+  Nicobars (RESEARCH.md 6b). Also the map's look, the palm-leaf strip, and
+  readability minimums. Colors come from the style sheet. The route and
+  fleet are crimson; lamps and kasu are gold.
+- The route is dashed and tagged [plausible]. SCRIPT.md says "No route
+  line: the route is unrecorded"; the dash marks it as a likely course,
+  and the narrative designer is told in NOTES.md.
+
 ## Revision notes
 
 - 2026-10-25: four editions in one day. First, written from the build.
@@ -1011,3 +1082,4 @@ fixes") and the level documents.
   slots 19 to 36 from the level documents and the critic's six findings.
   Fourth, per-level palettes and color grade (DECISIONS.md 17) and cut-out
   rigs (DECISIONS.md 19). The changelog above has the detail.
+- 2026-10-26: fifth edition, voyage map (DECISIONS.md 29).

@@ -148,6 +148,23 @@ to 717, `updateWorld` 719 to 800. Canvas 1280 by 720. Lanes 0 far (scale
   6 (crew line + map pennant). Nothing required; no persistence.
 - Runtime: 569 s play; 11-14 min full run with detours and ports.
 
+## Voyage map and paid hints 2026-10-26 (Decisions 27-30)
+
+- Map: true-scale Bay of Bengal + 4-line palm-leaf strip. Lines: 1
+  Thanjavur-Nagapattinam overland, 2 days, fills on finishing L1; 2 past
+  Sri Lanka's north, 2 days, fills leaving the quay port; 3 to the
+  Nicobars (Nakkavaram), 10 days, and 4 across to Kadaram, 5 days, both
+  fill on the L3 interstitial crossing (2 s a leg). Days computed from
+  RESEARCH 6b at 3-5 knots, [plausible]. Opens on L2/L3 interstitials,
+  port button, pause screen (new). Lamps + coins at each level's place;
+  fixed card says the strip form is invented.
+- Paid hints: boatman (L2) and pilot (L3) light "the target in LEVEL-N.md
+  section 9" (named kasu hiding place or shortcut), never a staked detour;
+  coir hand lamp, gold flame, 600 px; lasts the level, out when taken.
+- Budget now 4,400; body 4,370.
+- Repo is a shared working tree: other agents leave uncommitted files;
+  stage only my own paths.
+
 ## Open with Gaurav
 
 - Ship-deck closing beat in level 2: keep (recommended) or end at quay.
