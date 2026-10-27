@@ -3,6 +3,8 @@
 Owner: narrative-designer. Readers: builder, design-critic, level-designer.
 Fourth draft, 2026-10-26. Budget 2,600 words (raised from 1,500 for the
 handover, DECISIONS.md 10, then for ports and cards, DECISIONS.md 26).
+The sailing-directions work (DECISIONS.md 29) puts the script about 470 words
+over budget; see Open questions.
 Facts follow `docs/RESEARCH.md`.
 
 ## 1. Voice
@@ -174,8 +176,11 @@ card, already in Kadaram; play it before that card.
 
 ### The voyage map
 
-**Labels:** Thanjavur · 1010 / Nagapattinam · 1025 / Kadaram · 1025. No
-route line: the route is unrecorded.
+**Labels** (true-scale Bay of Bengal, DECISIONS.md 29): Thanjavur · 1010 /
+Nagapattinam · 1025 / Lanka / Manakkavaram / Kadaram · 1025 / Srivijaya
+(on Sumatra, off the course). A dotted ink course follows the four legs of
+the strip below; it is [invented] and the "How a Pilot Found the Way" card
+says so.
 
 **A lit lamp, on tap:** place line, coin name, "Read the card." The coin name also floats 1.5 s at pickup.
 
@@ -193,6 +198,36 @@ route line: the route is unrecorded.
 **Card viewer frame:** title; "Kept from [place], with [coin name]" under
 the image; "Back to the map." With none kept: "No cards yet. Old coins lie
 off the path."
+
+### Palm-leaf sailing directions (DECISIONS.md 29)
+
+A strip along the map's lower edge, read left to right, in the pilot's
+voice. Each line fills in when the player reaches that leg. Days follow
+RESEARCH.md 6b: the open crossing from Nagapattinam to Kadaram is 16 days,
+inside the 10 to 17 at 3 to 5 knots. No kamal or star-height reckoning
+(attested only c. 1500).
+
+1. Thanjavur, the great tower. East by the river road three days to Nagapattinam.
+2. Nagapattinam, the brick tower. Wait for the southwest wind. Two days, Lanka to the south.
+3. Lanka astern. Open sea, wind behind, stars by night. Nine days to Manakkavaram.
+4. Manakkavaram. Five days east to one great hill. Under it, the river of Kadaram.
+
+<!-- Form [documented] Song Shi 489. Wording, day counts, river road
+[invented]; counts fit distances, southwest wind, stars, passing Lanka
+[plausible] RESEARCH 6b. Overland 80 km in three days [plausible]. Great
+hill = Gunung Jerai; Manakkavaram = Nicobars [documented] RESEARCH 3.3. -->
+
+**History card: How a Pilot Found the Way** (shown the first time the
+strip opens; no coin; the game designer may move it)
+No Chola sea chart survives, and no Indian sailing text from anywhere near
+1025. The best record of the route is Chinese. The Song court history
+gives the voyage of the Chola envoys of 1015 as a list of legs: so many
+days, past this mountain or that island, to the next port. It gives no
+distances and no bearings. Pilots likely steered by headlands, soundings,
+the color of the water, birds, stars, and the monsoon. The palm-leaf strip
+on this map is our invention, written in the manner of that list.
+<!-- [documented] Song Shi 489; no surviving chart or text [plausible]
+Schwartzberg 1992; pilots' methods [plausible] RESEARCH 6b; strip [invented] -->
 
 ### The six cards
 
@@ -278,7 +313,7 @@ Leiden plates, 1006); sewn-plank hulls; the 1025 raid, the captured king,
 the seized gateway (Rajendra's Thanjavur inscription); Srivijaya's embassy
 to China in 1028 (*Song Shi* 489). Whether the thirteen places fell in one
 campaign is disputed; the game follows Kulke. **Invented:** Ilamaran,
-Adittan, Sattan, the sellers, every guard, fighter, and route, the
+Adittan, Sattan, the sellers, every guard, fighter, and route, the sailing strip, the
 lamplit gates, and copper kasu lying on the road. Nobody knows how many
 ships sailed or how long the crossing took.
 
@@ -300,15 +335,26 @@ and Sakhuja, eds., *Nagapattinam to Suvarnadwipa* (2009). Balasubrahmanyam,
 | Anaimangalam | Village granted to the vihara in 1006; Sattan's home. |
 | Srivijaya | Malay Buddhist kingdom, centered on Palembang. |
 | Kadaram | Kedah, Malay peninsula. |
+| Manakkavaram | The Nicobar Islands, in Rajendra's list. |
+| Lanka | Sri Lanka. |
 | kasu | Chola coin and unit of account (SII II). Copper on the road; named kasu gold, silver, or bronze. |
 | sevagan | A common soldier. |
 | tiger | The Chola emblem, on a crimson field on a pole. |
 
 ## Open questions for Gaurav
 
-None.
+1. **Budget.** Ruling 29's strip and card put the script about 470 words
+   over 2,600. Options: (a) raise the budget to 3,100; (b) cut the
+   handover and crew lines to pay for it. Recommendation: (a).
 
 ## Revision notes
+
+- 2026-10-26, fourth draft, third pass (DECISIONS.md 29): palm-leaf sailing
+  directions, four legs in landmarks and days per RESEARCH.md 6b; map
+  labels for the true-scale map (adds Lanka, Manakkavaram, Srivijaya, an
+  invented dotted course in place of "no route line"); history card "How a
+  Pilot Found the Way"; sailing strip added to the sources screen's
+  invented list; Manakkavaram and Lanka in the glossary.
 
 - 2026-10-26, fourth draft (DECISIONS.md 24, 26): section 4a (ports,
   crew lines, map, card viewer, named kasu, six cards), parry and detour
