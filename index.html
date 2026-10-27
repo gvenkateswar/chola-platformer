@@ -66,6 +66,8 @@
     padding:10px 16px; margin:12px auto 6px; max-width:56ch; text-align:center;}
   .crew::before, .said::before{content:attr(data-who); display:block; font-size:15px; color:#7A4A1C; margin-bottom:2px;}
   .crew[hidden], .said[hidden]{display:none;}
+  .said[data-who=""]::before{display:none;}
+  #interStory{text-align:left; max-width:62ch; padding:14px 20px;}
   .purse{display:flex; align-items:center; gap:12px; margin-bottom:10px; font-family:'Marcellus SC',serif; color:#D59A6E; font-size:20px;}
   .heap{display:inline-block; width:12px; height:12px; border-radius:50%; background:#B8754A; box-shadow:inset -2px -2px 0 #6B3A1E; margin-left:-5px;}
   #portGoods{display:flex; flex-direction:column; gap:10px; max-width:640px; width:100%; margin:6px auto;}
@@ -153,7 +155,7 @@
     <h1 style="font-size:clamp(30px,5vw,54px)" id="interTitle">Thanjavur</h1>
     <div class="dateline" id="interDate" hidden></div>
     <div class="rule"></div>
-    <p class="story" id="interStory"></p>
+    <p class="story said" id="interStory" data-who=""></p>
     <p class="story said" id="interLeave" data-who="Ilamaran" hidden></p>
     <p class="story crew" id="interCrew" data-who="Ilamaran" hidden></p>
     <div class="pilot" id="interPilot" hidden><div class="eyebrow" id="interPilotTitle"></div><p class="story" id="interPilotText"></p></div>
@@ -387,7 +389,9 @@ const TUNE = {
   PANEL_NAME_FONT:   15,   // ruling 32: the speaker's name on the panel
   PANEL_PAD:         10,   // ruling 32: padding inside the panel, px
   PANEL_MAX_W:      470,   // ruling 32: lines wrap at this width, px
-  PANEL_BORDER:     1.5,   // ruling 32: the thin ink border, px
+  PANEL_BORDER:     1.5,
+  HINT_NEAR:        600,   // ruling 32: world hints farther than this from Ilamaran are hidden, px
+  HINT_FAR_ALPHA:  0.35,   // ruling 32: hints within HINT_NEAR but not the nearest show faded   // ruling 32: the thin ink border, px
   LINE_PER_CHAR:   0.06,   // ruling 32: a line stays up about 0.06 s per character...
   LINE_MIN:         2.5,   // ruling 32: ...and at least 2.5 s; Enter (or jump / J in the handover) advances
   HINT_GLOW:         90,   // DESIGN §6 paid hint: the hand lamp's glow radius, px (seen 600 px off)
@@ -1410,6 +1414,17 @@ function drawPanel(text, who, cx, base, alpha = 1, S = panelSize(text, who)){
   ctx.restore();
   return [x0, y0, x0 + w, y0 + h];
 }
+// ruling 32: panels never overlap; a later panel moves up above whatever it would cover
+let panelBoxes = [];
+function drawPanelStacked(text, who, cx, base, alpha, S){
+  for(let k = 0; k < 8; k++){
+    const hit = panelBoxes.find(([a,b,c,d])=> cx + S.hw > a && cx - S.hw < c && base + S.down > b && base - S.up < d);
+    if(!hit) break; base = hit[1] - S.down - 6;
+  }
+  const box = drawPanel(text, who, cx, base, alpha, S); panelBoxes.push(box); return box;
+}
+// ruling 32: close any open dialogue when a chapter card, port, map or pause screen opens
+function closeDialogue(){ floats = []; if(player.scene) endHandover(); }
 function placeText(cx, base, hw, up, down, obstacles, dxs, dys){
   let best = null, bestCost = Infinity;
   for(const dx of dxs) for(const dy of dys){
@@ -1485,6 +1500,7 @@ function loadLevel(i){
 // ============================================================ ui flow
 const $ = id=>document.getElementById(id);
 function showInter(i){
+  closeDialogue();
   const l = LEVELS[i]();
   $('interEyebrow').textContent = l.chapter;
   $('interTitle').textContent = l.name;
@@ -1551,6 +1567,7 @@ const CREW_LINES = {   // SCRIPT §4a, shown on the next card
 };
 let portNext = 0, portKey = null, leaveLine = '';
 function showPort(key, next){
+  closeDialogue();
   portKey = key; portNext = next; const P = PORTS[key];
   $('portTitle').textContent = P.title; $('portSetting').textContent = P.setting;
   $('portOpen').textContent = P.open; $('portOpen').hidden = !P.open; $('portMsg').textContent = '';
@@ -1850,6 +1867,7 @@ function mapLoop(){
 function startMapLoop(){ if(!mapLoopOn){ mapLoopOn = true; requestAnimationFrame(mapLoop); } }
 let mapReturn = null;
 function openMap(){
+  closeDialogue();
   const open = ['titleScreen','interScreen','portScreen','endScreen','pauseScreen'].find(id=>!$(id).hidden);
   mapReturn = {id:open, state}; if(open) $(open).hidden = true;
   mapPick = null; $('mapRead').hidden = true;
@@ -1915,7 +1933,7 @@ function showInterMap(i){
 let paused = false;
 function pauseGame(){
   if(state !== 'play' || paused) return;
-  paused = true; for(const k in keys) keys[k] = false;
+  paused = true; for(const k in keys) keys[k] = false; closeDialogue(); render();   // the frozen frame without dialogue
   $('pauseEyebrow').textContent = level.chapter; $('pauseTitle').textContent = level.name;
   $('pauseScreen').hidden = false;
 }
@@ -4000,11 +4018,17 @@ function drawLaneContents(l){
     drawGoal(level.goal.x, level.goal.y);
     for(const b of birds) drawBird(b);
     // plane-shift hint markers
-    for(const h of level.hintsPlaced){
-      drawPanel(h.text, null, h.x, h.base, 1, h.S || panelSize(h.text, null));   // ruling 32: on a solid panel
+    // ruling 32: the nearest hint in full, others within 600 px at 35 percent, the rest hidden; nearest drawn first
+    panelBoxes = [];
+    const hs = level.hintsPlaced.map(h=>({h, d:Math.abs(h.x - player.x)})).filter(o=>o.d <= TUNE.HINT_NEAR).sort((a,b)=>a.d - b.d);
+    for(const [n, {h}] of hs.entries()){
+      const S = h.S || panelSize(h.text, null), a = n === 0 ? 1 : TUNE.HINT_FAR_ALPHA;
+      const [, , , bottom] = drawPanelStacked(h.text, null, h.x, h.base, a, S);
+      ctx.globalAlpha = a;
       ctx.fillStyle = level.gateCrimson === false ? 'rgba(30,22,16,0.8)' : 'rgba(181,52,42,0.8)';
-      const ay = h.base + (h.S ? h.S.down : 10) + 4;
+      const ay = bottom + 4;
       ctx.beginPath(); ctx.moveTo(h.x, ay); ctx.lineTo(h.x-7, ay+12); ctx.lineTo(h.x+7, ay+12); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
     }
     ctx.textAlign='left';
   }
@@ -4201,20 +4225,16 @@ function render(){
   laneBegin(1);
   // ruling 32: every float is a panel (speaker's name when spoken), kept inside the view and off the others
   const inView = (x, hw)=> clamp(x, cam.x + hw + 8, cam.x + W - hw - 8);
-  const drawn = [];
   for(const f of floats){
-    const S = panelSize(f.text, f.who), x = inView(f.x, S.hw);
-    let base = f.y;
-    for(let k = 0; k < 6; k++){ const hit = drawn.find(([a,b,c,d])=> x + S.hw > a && x - S.hw < c && base + S.down > b && base - S.up < d);
-      if(!hit) break; base = hit[1] - S.down - 6; }
-    drawn.push(drawPanel(f.text, f.who, x, base, clamp(f.t/0.3, 0, 1), S));
+    const S = panelSize(f.text, f.who);
+    drawPanelStacked(f.text, f.who, inView(f.x, S.hw), f.y, clamp(f.t/0.3, 0, 1), S);
   }
-  if(player.scene && level.npc){             // the handover, one line at a time over the speaker
+  if(player.scene && level.npc && state === 'play'){             // the handover, one line at a time over the speaker
     const i = Math.min(HANDOVER_LINES.length-1, player.scene.line);
     const [who, line] = HANDOVER_LINES[i];
     const spk = who === 'Ilamaran' ? player : level.npc;
     const pl = placeDialogue(spk.x, spk.y - 112, line, who);
-    drawPanel(line, who, inView(pl.x, pl.S.hw), pl.base, 1, pl.S);
+    drawPanelStacked(line, who, inView(pl.x, pl.S.hw), pl.base, 1, pl.S);
   }
   ctx.textAlign='left';
   laneEnd();
