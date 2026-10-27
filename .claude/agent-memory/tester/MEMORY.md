@@ -50,3 +50,12 @@ TRACE=1, DEV_LEVEL=<0-2> DEV_TELEPORT=x,y.
 - Rope 1: grip 160 px or less. D5 vine (x 1620): grip 70, run at it from x below 1585; a failed grab lands back on the mud and retries.
 - The detour errands are level-specific on purpose; the dead-end retreat is level 2 only (it misfired on level 1 lane 0).
 - Debug trick: window.__log pushes work inside botStep before `logit` is defined; using `logit` too early throws a TDZ error.
+
+## Round 6 (build/systems 663acab: map, pause, lamps)
+- Real index.html FAILS: handover first frame crashes in render (scene.line undefined, line 4233). Tested on a scratch copy with `|| 0`: 34 PASS twice.
+- Determinism fixes: fake rAF advances __fake only when cb === frame (map loop also uses rAF); `time` pinned to 1000*(L+1) before each interBtn click with the clock paused; level 1 reloaded (queueLevel(0)) after the pause checks, which left traces.
+- Render wrapper also draws the first frame after a change in (state, scene, scene.line, climb, leap, lane): this caught the handover crash.
+- After resumeGame set `last = window.__fake` (the game sets performance.now()).
+- nk5: rope rule climbs to grip y-ay-22 (min 10) when a named coin hangs on the rope line, no release until taken.
+- Level 2 errand: the `back` rule must not fire while an errand is in lane 0 (onErrand).
+- Bot is phase-sensitive: TIME_SHIFT=0.3 etc. change routes (mud slide skipped at 1.1). Keep the pin.

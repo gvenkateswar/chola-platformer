@@ -37,7 +37,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     if (m.type() === 'error') {
       // resource-load errors are reported by the asset check below, not here
       if (!/Failed to load resource/.test(m.text())) errors.push('console.error: ' + m.text());
-    } else if (m.type() === 'warning') warnings.push(m.text());
+    } else if (m.type() === 'warning' && !/willReadFrequently/.test(m.text())) warnings.push(m.text());   // that one comes from the test's own map readback
   });
 
   const missing = new Set();
@@ -85,7 +85,7 @@ sheet.save(out)`;
   const shot = async (n) => {
     await page.evaluate(() => { window.__paused = true; });   // freeze the clock, draw one full frame
     await sleep(60);
-    await page.evaluate(() => { if (window.__realRender) { window.__fullRender = true; window.__realRender(); window.__fullRender = false; } });
+    await page.evaluate(() => { if (window.__realRender) { window.__fullRender = true; try { window.__realRender(); } catch (e) { window.__shotErr = e.message; } window.__fullRender = false; } });   // a draw error is already caught as a page error
     await page.screenshot({ path: path.join(OUT, n + '.png') });
     await page.evaluate(() => { window.__paused = false; });
   };
@@ -110,15 +110,26 @@ sheet.save(out)`;
     window.requestAnimationFrame = (cb) => {
       later(function tick() {
         if (window.__paused) { if (window.__steps > 0) window.__steps--; else return later(tick, 5); }
+        // only the game's own frame advances the clock: other loops (the voyage map) also use rAF, and if they
+        // advanced it too, the game's next dt would depend on how the two loops interleave
+        if (cb !== frame) return cb(window.__fake);
         window.__fake += 1000 / 60;
         if (window.__botStep) window.__botStep();
         cb(window.__fake);
       }, 0);
       return 0;
     };
-    const realRender = render; let n = 0;
+    const realRender = render;
     window.__realRender = realRender;
-    render = () => { if (window.__fullRender || ++n % 20 === 0) realRender(); };
+    // ...and always on the first frame after the hero's situation changes (a scene, climb or leap starts or
+    // ends, a lane change): first frames of a new state are where a draw bug hides (the handover crash, 663acab)
+    let sig = '';
+    render = () => {
+      const p = window.player || player, now = [state, !!p.scene, p.scene && p.scene.line, !!p.climb, !!p.leap, p.lane].join();
+      const fresh = now !== sig; sig = now;
+      if (window.__fullRender || fresh || ++window.__n % 20 === 0) realRender();
+    };
+    window.__n = 0;
   });
   await page.click('#startBtn');
   let s = await snap();
@@ -248,7 +259,15 @@ sheet.save(out)`;
     s = await snap();
     if (s.state !== 'play' || s.levelIdx !== L) { fail(name + ' loads', `state=${s.state} levelIdx=${s.levelIdx}`); break; }
     pass(name + ' loads');
-    if (L === 0) await pauseChecks(L);
+    if (L === 0) {
+      // the pause checks leave small traces in the run (a frozen-frame render, key state), so after them
+      // reload level 1 from its card the way the game does, and play it from a clean start
+      await pauseChecks(L);
+      await T(() => { window.__paused = true; queueLevel(0); time = 1000; last = window.__fake; window.__n = 0; });
+      await page.click('#interBtn');
+      s = await snap();
+      s.state === 'play' && s.levelIdx === 0 ? 0 : fail('level 1 reloads after the pause checks', `state=${s.state}`);
+    }
     if (L > 0) await lampStart(L);
     s = await snap();
 
