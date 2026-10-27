@@ -117,3 +117,10 @@ grep the function names.
   drawDetourSign with `level.detours` [{at:[x,lane,y?], first:['plank',x,y,w]|['rope',x]}],
   `.sheet` parchment panel on port and card overlays. tests/out is gitignored;
   review shots are made by a scratch Playwright script (shots27.js).
+- Voyage map (6386314): COAST data from Natural Earth via scratch coast.py
+  (shapely), drawVoyage/mapBase, RUN.legs/legsShown, map embedded on the
+  L2/L3 inter screen (#interMap) so the bot's #interBtn stays clickable.
+  Pause via `paused` flag (state stays 'play'). Gotcha: a local `const H`
+  in updateWorld shadowed the global canvas height and blanked every lane.
+- Ruling 32 (panels): drawPanel/panelSize/lineTime; floats get lineTime on
+  first update; handover scene.line advances per press.
