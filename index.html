@@ -1867,7 +1867,7 @@ function mapLoop(){
 function startMapLoop(){ if(!mapLoopOn){ mapLoopOn = true; requestAnimationFrame(mapLoop); } }
 let mapReturn = null;
 function openMap(){
-  closeDialogue();
+  if(!paused) closeDialogue();   // from the pause screen the dialogue is only hidden, and returns on Resume
   const open = ['titleScreen','interScreen','portScreen','endScreen','pauseScreen'].find(id=>!$(id).hidden);
   mapReturn = {id:open, state}; if(open) $(open).hidden = true;
   mapPick = null; $('mapRead').hidden = true;
@@ -1933,7 +1933,7 @@ function showInterMap(i){
 let paused = false;
 function pauseGame(){
   if(state !== 'play' || paused) return;
-  paused = true; for(const k in keys) keys[k] = false; closeDialogue(); render();   // the frozen frame without dialogue
+  paused = true; for(const k in keys) keys[k] = false; render();   // the frozen frame; dialogue hidden, kept for Resume
   $('pauseEyebrow').textContent = level.chapter; $('pauseTitle').textContent = level.name;
   $('pauseScreen').hidden = false;
 }
@@ -4225,11 +4225,11 @@ function render(){
   laneBegin(1);
   // ruling 32: every float is a panel (speaker's name when spoken), kept inside the view and off the others
   const inView = (x, hw)=> clamp(x, cam.x + hw + 8, cam.x + W - hw - 8);
-  for(const f of floats){
+  if(!paused) for(const f of floats){   // paused: dialogue hidden, not ended
     const S = panelSize(f.text, f.who);
     drawPanelStacked(f.text, f.who, inView(f.x, S.hw), f.y, clamp(f.t/0.3, 0, 1), S);
   }
-  if(player.scene && level.npc && state === 'play'){             // the handover, one line at a time over the speaker
+  if(player.scene && level.npc && state === 'play' && !paused){             // the handover, one line at a time over the speaker
     const i = Math.min(HANDOVER_LINES.length-1, player.scene.line);
     const [who, line] = HANDOVER_LINES[i];
     const spk = who === 'Ilamaran' ? player : level.npc;
