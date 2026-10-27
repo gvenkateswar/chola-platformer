@@ -140,3 +140,12 @@ note in docs/NOTES.md addressed to Gaurav.
     carry free stakes (ruling 27), the boatman's and pilot's paid lamps
     reveal something otherwise unmarked: a named kasu's hiding place or a
     shortcut.
+31. **SCRIPT.md budget raised to 3,100 words.** Owner ruling, to fit the
+    sailing strip, map labels, and pilot card.
+32. **Conversations and hints must be easy to read.** The owner found
+    them hard to read. Spoken lines and hints sit on a solid parchment
+    panel (or a dark one in dark scenes) with a thin ink border, never
+    straight on the painted backdrop. Sentence case, not small caps. At
+    least 20 px text at 1280x720, high contrast, one speaker per panel
+    with the speaker's name. Lines stay up long enough to read (about
+    0.06 s per character, at least 2.5 s) and a key press advances them.
