@@ -57,11 +57,9 @@ bank (100 above his band), or fight him.
 The slide ends any chase. **Gateway**: lane 0 ends at 8020, so the
 palisade closes the road: sentinel, banner, shield-bearer, no reward.
 
-Vines are pumped ropes on the grip-length period (DESIGN 2a, hop -420).
-Re-checked: every chain link and landing holds, with more margin than
-before (shorter grips swing faster); the release over S3 still needs a
-forward swing to clear his sweep. The shield-bearer has 650 px of clear
-court behind him.
+Vines are pumped ropes on the grip-length period; every link and
+landing holds. The release over S3 needs a forward swing. The
+shield-bearer has 650 px of clear court behind him.
 
 Gates are slot 35 (`gate_l3.png`, timber, no pennant), arrow glyph black
 (Decision 7): G1 4320, G2 5060, G3 5860, G4 6560, G5 7700. MV1 pairs
@@ -71,7 +69,7 @@ with G1.
 
 | # | Place, for the historian | Leaves at | Kit and twist | Rejoins | Named |
 |---|---|---|---|---|---|
-| D5 | A small brick candi on the hillside (Bukit Batu Pahat type) | Bank B1, 1560, after the vine chain | A vine pumped from standing: from 30 degrees it lands on a canopy knot, then the hill ledge | Dropping onto slide 1, 2100 | nk5 |
+| D5 | A small brick candi on the hillside (Bukit Batu Pahat type) | Bank B1, 1560, after the vine chain | A vine pumped from standing: from 30 degrees it lands on a canopy knot, then the hill ledge | Dropping onto slide 1, 2100 | nk5, at the vine's top |
 | D6 | A stilt-house porch over the Merbok, its lamp lit | The wade after slide 2, 10720 | Roots out of the water, one swaying section, a porch 260 above the bank | The bank, 11390, 160 px short of S5's sweep | nk6 |
 
 ## 5. Guards and enemies
@@ -107,9 +105,8 @@ hillside candi and a stilt-house porch, each lit; two named kasu.
 
 ## 8. Story hooks
 
-Intro: rain, many ships. The draw prompt at 4800. Mid at 9800 on the
-high bank: the palisade seen for the first time. End in the court: the
-line of cost (Decision 4).
+Intro: rain, many ships. The draw prompt at 4800. Mid at 9800: the
+palisade first seen. End: the line of cost.
 
 ## 9. Builder notes
 
@@ -143,7 +140,7 @@ C: [840,350,1] [900,320,1] [960,340,1] [1140,330,1] [1200,300,1] [1260,320,1] [1
    [7200,330,0] [7480,380,0] [9500,260,1] [9600,240,1] [9850,260,1] [10250,340,1] [10400,420,1] [10550,510,1]
 CL: [1560,420,1,5] [1600,360,1,5] [1680,260,1,5] [1740,140,1,5] [1880,100,1,5] [1960,100,1,5]
    [10720,580,1,6] [10800,520,1,6] [10880,460,1,6] [11000,400,1,6] [11120,340,1,6] [11220,320,1,6]
-NK: [2060,100,1,nk5] [11340,320,1,nk6]
+NK: [1620,150,1,nk5] [11340,320,1,nk6]
 ```
 
 New fields: VINE is a rope (pumped, grip-length period), with `toLane, landX` when marked; WADE is a bed the hero walks
@@ -153,8 +150,14 @@ or 1 opposite, carrying the hero (no fighter stands on one); SLOPE `mud` slides 
 ends; fighter type and `stand`. None exist yet; nor the telegraph,
 thrust, shield, kneel, rain, or the palisade across lanes.
 
+**Paid hint target** (ruling 30). The pilot (quay, ten copper) reveals
+nk5's hiding place: (1620, 150), at the top of the D5 vine
+`[1620,120,240,1]`, touched only from the top grip; a mid-vine swing
+passes under it. Bought, a lamp burns at the anchor (1620, 120).
+
 ## Revision notes
 
+- 2026-10-26, ruling 30: paid hint target added to section 9.
 - 2026-10-26, fourth draft, for DESIGN.md draft 4: detours D5 and D6;
   trail kasu reshaped as 24 route arcs (none in a sweep); vines re-checked
   on the grip-length period, no changes needed; gateway moved 100 px east

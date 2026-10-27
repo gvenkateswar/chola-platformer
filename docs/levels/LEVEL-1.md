@@ -149,8 +149,12 @@ Changed from main: plinth, ledger, rope 1 length, R3, D1 planks,
 shelf, width, goal, all kasu. Not in the engine
 yet: cluster cue (glint, low note), named kasu pickup and float.
 
+**Paid hint target.** None: no port precedes level 1. D1 and D2 have
+only their free stakes.
+
 ## Revision notes
 
+- 2026-10-26, ruling 30: paid hint target added to section 9.
 - 2026-10-26, fourth draft, for DESIGN.md draft 4: two detours with named
   kasu; trail kasu cut from 35 to 26 and reshaped as route arcs (no flat
   rows, none in a sweep); every rope re-checked on the grip-length
