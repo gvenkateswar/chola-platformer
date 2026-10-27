@@ -610,3 +610,29 @@ the map when nothing is found.
 
 Persistence is option (b), on by default: the map and cards are kept on
 this device in localStorage. Set `TUNE.KEEP_MAP` to false to turn it off.
+
+## From builder, build/systems, voyage map and ruling 32 (2026-10-26)
+
+### To tester (`tests/smoke.js`; not edited)
+
+1. Level 3's nk5 moved to (1620, 150), the D5 vine's top (LEVEL-3.md
+   section 9). The bot's D5 errand still swings to the roots, so level 3
+   reports "never used: named". It must climb the 1620 vine to the top
+   grip to touch the coin.
+2. The handover now advances one line per jump, J/X or Enter press
+   (each line otherwise stays up 2.5 s or more), so it takes three
+   presses to skip.
+3. The level 2 and 3 interstitials show the map above the story;
+   `#interBtn` is below it and Playwright scrolls to it.
+4. Hooks on `window.__test`: `pause()`, `resume()`, `paused()`,
+   `openMap()`, `closeMap()`, `skipMap()`, `map()` (legs, legsShown,
+   sailing, visible), `setLegs(n, shown)`, `hint()` (paid hint x, y,
+   lane, lit, out), `give(id)` (buy a good). Pause is Esc or P in play.
+
+### To game-designer
+
+DESIGN §6 says nothing persists past the run; ruling-era option (b) keeps
+found kasu, detours, pennants and the pilot card seen on this device
+(`TUNE.KEEP_MAP`). The port's leaving line now shows on the next
+chapter card, since Onward leaves at once. All in-world panels are
+parchment; no scene was dark enough for the dark panel.

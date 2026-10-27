@@ -61,18 +61,25 @@
   .btn:hover{filter:brightness(1.08);}
   .btn2{margin-top:14px; font-size:13px; padding:9px 26px 8px 30px; background:transparent; color:var(--gold);
     box-shadow:0 0 0 1px #7A5326;}
-  .crew{font-style:italic; color:#E2D3AE; margin-bottom:6px;}
+  /* DECISIONS 32: spoken lines on a solid parchment panel, thin ink border, the speaker's name, 20 px */
+  .crew, .said{font-style:normal; font-size:20px; line-height:1.5; color:#1C120A; background:#F2E7CA; border:1.5px solid #2A1C10;
+    padding:10px 16px; margin:12px auto 6px; max-width:56ch; text-align:center;}
+  .crew::before, .said::before{content:attr(data-who); display:block; font-size:15px; color:#7A4A1C; margin-bottom:2px;}
+  .crew[hidden], .said[hidden]{display:none;}
   .purse{display:flex; align-items:center; gap:12px; margin-bottom:10px; font-family:'Marcellus SC',serif; color:#D59A6E; font-size:20px;}
   .heap{display:inline-block; width:12px; height:12px; border-radius:50%; background:#B8754A; box-shadow:inset -2px -2px 0 #6B3A1E; margin-left:-5px;}
   #portGoods{display:flex; flex-direction:column; gap:10px; max-width:640px; width:100%; margin:6px auto;}
   .good{display:flex; align-items:center; gap:14px; justify-content:space-between; text-align:left;
     border:1px solid rgba(201,154,63,.35); border-radius:4px; padding:10px 14px; background:rgba(30,22,14,.45);}
-  .good .who{font-family:'Marcellus SC',serif; color:var(--gold); font-size:13px; letter-spacing:.1em;}
-  .good .line{color:#D3C6A6; font-size:15px; line-height:1.5;}
+  .good .who{font-family:Marcellus,serif; color:var(--gold); font-size:15px;}
+  .good .line{color:#D3C6A6; font-size:20px; line-height:1.4;}
   .good button{font-family:'Marcellus SC',serif; font-size:13px; padding:7px 14px; cursor:pointer; border:none; border-radius:3px;
     background:linear-gradient(180deg,#E2BC6C,#C08A2E); color:var(--ink); white-space:nowrap;}
   .good button:disabled{background:#4a3a28; color:#9a8a6a; cursor:default;}
-  .portMsg{min-height:1.6em; color:#E2D3AE;}
+  .portMsg{color:#E2D3AE;}
+  .portMsg:empty{display:none;}
+  .sheet .portMsg{font-size:20px; color:#1C120A; background:#FBF4DF; border:1.5px solid #2A1C10; padding:8px 14px; margin-top:8px;}
+  .sheet .portMsg::before{content:'Ilamaran'; display:block; font-size:15px; color:#7A4A1C;}
   .mapOv{background:#120D09; padding:12px 16px;}
   #mapCanvas{width:min(calc(100vw - 32px), calc((100vh - 96px)*16/9)); height:auto; border-radius:4px; flex-shrink:0;}
   .mapBar{display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; margin-top:10px;}
@@ -98,7 +105,7 @@
   .sheet .purse{color:#7A3F1E;}
   .sheet .good{background:rgba(255,248,230,.55); border-color:rgba(122,83,38,.45);}
   .sheet .good .who{color:#7A4E1A;}
-  .sheet .good .line{color:#3A2A1C;}
+  .sheet .good .line{color:#1C120A;}
   .sheet .good button:disabled{background:#CDBB92; color:#7A6A4A;}
   .sheet .btn{margin-top:22px;}
   .sheet .btn2{color:#6B4A22; box-shadow:0 0 0 1px #8A6A3A;}
@@ -147,7 +154,8 @@
     <div class="dateline" id="interDate" hidden></div>
     <div class="rule"></div>
     <p class="story" id="interStory"></p>
-    <p class="story crew" id="interCrew" hidden></p>
+    <p class="story said" id="interLeave" data-who="Ilamaran" hidden></p>
+    <p class="story crew" id="interCrew" data-who="Ilamaran" hidden></p>
     <div class="pilot" id="interPilot" hidden><div class="eyebrow" id="interPilotTitle"></div><p class="story" id="interPilotText"></p></div>
     <button class="btn" id="interBtn">Onward</button>
     <button class="btn btn2" data-map>Voyage map</button>
@@ -157,7 +165,7 @@
     <div class="eyebrow">1025 CE · Kadaram has fallen</div>
     <h1 style="font-size:clamp(30px,5vw,58px)">The Sea Belongs<small style="letter-spacing:.2em">to the Tiger</small></h1>
     <div class="rule"></div>
-    <p class="story crew" id="endCrew" hidden></p>
+    <p class="story crew" id="endCrew" data-who="Ilamaran" hidden></p>
     <p class="story">Rajendra Chola's fleet crossed the Bay of Bengal and broke the power of
     Srivijaya — the only great overseas naval expedition in Indian history. Trade with Song
     China flowed free, and Tamil merchant guilds rose across Southeast Asia.</p>
@@ -374,6 +382,14 @@ const TUNE = {
   // DECISIONS 27: each detour entrance carries a marker (chalk-marked stake, gold thread) seen from 400 px
   DETOUR_STAKE:     104,   // ruling 27: the stake's height, px
   DETOUR_SHIMMER:   1.6,   // ruling 27: period of the gold shimmer on a detour's first piece, s
+  // DECISIONS 32: spoken lines and hints sit on a solid panel, easy to read
+  PANEL_FONT:        20,   // ruling 32: at least 20 px text at 1280x720, sentence case (Marcellus, not small caps)
+  PANEL_NAME_FONT:   15,   // ruling 32: the speaker's name on the panel
+  PANEL_PAD:         10,   // ruling 32: padding inside the panel, px
+  PANEL_MAX_W:      470,   // ruling 32: lines wrap at this width, px
+  PANEL_BORDER:     1.5,   // ruling 32: the thin ink border, px
+  LINE_PER_CHAR:   0.06,   // ruling 32: a line stays up about 0.06 s per character...
+  LINE_MIN:         2.5,   // ruling 32: ...and at least 2.5 s; Enter (or jump / J in the handover) advances
   HINT_GLOW:         90,   // DESIGN §6 paid hint: the hand lamp's glow radius, px (seen 600 px off)
   HINT_THREAD:      260,   // DESIGN §6: the thin rising thread of light above it, px
   MAP_LEG_TIME:     2.0,   // DESIGN §6: the ship sails a newly reached leg in about 2 s
@@ -398,7 +414,7 @@ const TUNE = {
   BLOCK_TURN:        80,   // §2a, §3 "Hiding": a guard turns 80 px off a block's face
   SHEATH_PUSH:      0.3,   // §2 "The sheathed sword": hand on hilt, no movement lock
   SHEATH_REPEAT:     30,   // §2: the line floats on the first press and after 30 s without one
-  HANDOVER_LINE:    1.4,   // §2: seconds per line of the handover (see NOTES.md: three lines, not 2 s)
+  // HANDOVER_LINE retired: each handover line now stays up lineTime() (DECISIONS 32)
   FADE_TIME:        1.0,   // §3, §5: ink-wash return to the last checkpoint
   BACKDROP_ZOOM:   1.08,   // builder's number: far backdrop drawn at 108% of screen width, once (no repeats)
   BACKDROP_Y:      0.55,   // builder's number: share of the vertical overflow cropped from the top
@@ -1359,6 +1375,41 @@ function textObstacles(cxRef, opts={}){
 }
 // try offsets around (cx, base); a box is [cx-hw, base-up, cx+hw, base+down]. First clear spot wins,
 // otherwise the spot with the least overlap.
+// DECISIONS 32: how long a line stays up, and the panel every spoken line and hint sits on
+const lineTime = t => Math.max(TUNE.LINE_MIN, TUNE.LINE_PER_CHAR*t.length);
+const PANEL_TEXT_FONT = ()=> TUNE.PANEL_FONT + 'px Marcellus, Georgia, serif';
+const PANEL_WHO_FONT = ()=> TUNE.PANEL_NAME_FONT + 'px Marcellus, Georgia, serif';
+function panelLines(text){
+  ctx.font = PANEL_TEXT_FONT();
+  const words = text.split(' '), lines = []; let cur = '';
+  for(const w of words){ const t = cur ? cur + ' ' + w : w; if(ctx.measureText(t).width > TUNE.PANEL_MAX_W && cur){ lines.push(cur); cur = w; } else cur = t; }
+  if(cur) lines.push(cur);
+  return lines;
+}
+// size of a panel: half width, height above the baseline of its last line, height below it
+function panelSize(text, who){
+  const lines = panelLines(text); ctx.font = PANEL_TEXT_FONT();
+  let w = Math.max(...lines.map(l=>ctx.measureText(l).width));
+  if(who){ ctx.font = PANEL_WHO_FONT(); w = Math.max(w, ctx.measureText(who).width); }
+  const lh = TUNE.PANEL_FONT*1.3, P = TUNE.PANEL_PAD;
+  const up = (lines.length - 1)*lh + TUNE.PANEL_FONT + P + (who ? TUNE.PANEL_NAME_FONT + 4 : 0);
+  return {lines, hw: w/2 + P, up, down: P*0.7 + 4, lh};
+}
+// draw a panel whose last text line sits on `base`, centered on cx; alpha fades it out
+function drawPanel(text, who, cx, base, alpha = 1, S = panelSize(text, who)){
+  const P = TUNE.PANEL_PAD, x0 = cx - S.hw, y0 = base - S.up, w = S.hw*2, h = S.up + S.down;
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.fillStyle = 'rgba(30,20,10,0.25)'; ctx.fillRect(x0 + 2, y0 + 3, w, h);       // a soft drop under it
+  ctx.fillStyle = '#F2E7CA'; ctx.fillRect(x0, y0, w, h);
+  ctx.strokeStyle = '#2A1C10'; ctx.lineWidth = TUNE.PANEL_BORDER; ctx.strokeRect(x0 + 0.5, y0 + 0.5, w - 1, h - 1);
+  ctx.textAlign = 'center';
+  let y = y0 + P;
+  if(who){ ctx.font = PANEL_WHO_FONT(); ctx.fillStyle = '#7A4A1C'; ctx.fillText(who, cx, y + TUNE.PANEL_NAME_FONT - 2); y += TUNE.PANEL_NAME_FONT + 4; }
+  ctx.font = PANEL_TEXT_FONT(); ctx.fillStyle = '#1C120A';
+  S.lines.forEach((l, i)=> ctx.fillText(l, cx, base - (S.lines.length - 1 - i)*S.lh));
+  ctx.restore();
+  return [x0, y0, x0 + w, y0 + h];
+}
 function placeText(cx, base, hw, up, down, obstacles, dxs, dys){
   let best = null, bestCost = Infinity;
   for(const dx of dxs) for(const dy of dys){
@@ -1374,24 +1425,22 @@ function placeText(cx, base, hw, up, down, obstacles, dxs, dys){
   return best;
 }
 function placeHints(){
-  ctx.font = '19px "Marcellus SC", Marcellus, serif';
   const placed = [];
   level.hintsPlaced = level.hints.map(([hx,hy,txt,touchTxt])=>{
     const text = IS_TOUCH && touchTxt ? touchTxt : txt;
-    const hw = ctx.measureText(text).width/2 + 8;
+    const S = panelSize(text, null), hw = S.hw;
     const obs = textObstacles(hx).concat(placed);
-    const p = placeText(hx, hy-46, hw, 20, 30, obs,               // text plus the arrow mark under it
+    const p = placeText(hx, hy-46, hw, S.up, S.down + 18, obs,    // ruling 32 panel plus the arrow mark under it
       [0, 120, -120, 240, -240, 360, -360], [0,-30,-60,30,-90,60,-120,-150,-180]);
     placed.push(p.box);
-    return {x:p.x, base:p.base, text, box:p.box};
+    return {x:p.x, base:p.base, text, box:p.box, S};
   });
 }
 // the handover line and the speaker's name above it, kept off hints and props (not off the speakers)
-function placeDialogue(sx, sy, line){
-  ctx.font = '17px "Marcellus SC", serif';
-  const hw = ctx.measureText(line).width/2 + 10;
+function placeDialogue(sx, sy, line, who){
+  const S = panelSize(line, who);
   const obs = textObstacles(sx, {noNpc:true}).concat(level.hintsPlaced.map(h=>h.box));
-  return placeText(sx, sy, hw, 40, 8, obs, [0, 80, -80, 160, -160], [0,-26,-52,-78,-104,-130,26]);
+  return Object.assign(placeText(sx, sy, S.hw, S.up, S.down, obs, [0, 80, -80, 160, -160], [0,-26,-52,-78,-104,-130,26]), {S});
 }
 function prepLinks(){
   level.links = (level.links||[]).map(k=>{
@@ -1444,6 +1493,7 @@ function showInter(i){
   $('interDate').hidden = !l.date;
   const crew = i === 2 && RUN.goods.fish ? CREW_LINES.market : '';   // SCRIPT §4a: market fish, on the Chapter III card
   $('interCrew').textContent = crew; $('interCrew').hidden = !crew;
+  $('interLeave').textContent = leaveLine; $('interLeave').hidden = !leaveLine; leaveLine = '';
   if(i === 2) RUN.legs = 4;   // strip lines 3 and 4: on the level 3 interstitial, as the fleet lands
   $('interScreen').hidden = false;
   state = 'inter';
@@ -1499,7 +1549,7 @@ const CREW_LINES = {   // SCRIPT §4a, shown on the next card
   quay:'The water held to Kadaram. Nobody aboard went thirsty.',
   both:'Sattan shared my fish in port and my water at sea.',
 };
-let portNext = 0, portKey = null;
+let portNext = 0, portKey = null, leaveLine = '';
 function showPort(key, next){
   portKey = key; portNext = next; const P = PORTS[key];
   $('portTitle').textContent = P.title; $('portSetting').textContent = P.setting;
@@ -1531,7 +1581,7 @@ function buyGood(g){
   renderPurse(); saveMap();
 }
 $('portBtn').onclick = ()=>{
-  $('portMsg').textContent = PORTS[portKey].leave;
+  leaveLine = PORTS[portKey].leave;   // ruling 32: shown on the next card, where it can be read
   if(portKey === 'quay') RUN.legs = Math.max(RUN.legs, 2);   // strip line 2: leaving the quay
   $('portScreen').hidden = true; queueLevel(portNext);
 };
@@ -1878,6 +1928,11 @@ addEventListener('keydown', e=>{
     paused ? resumeGame() : pauseGame(); e.preventDefault(); return;
   }
   if(state === 'play' && paused && (e.key === 'm' || e.key === 'M')){ openMap(); return; }
+  if(state === 'play' && !paused && e.key === 'Enter'){   // ruling 32: a key press advances a line
+    if(player.scene) player.scene.adv = true;
+    else { const f = floats.find(f=>f.t > 0.3); if(f) f.t = 0.3; }
+    e.preventDefault(); return;
+  }
   if(state === 'inter'){ mapSkip(); return; }   // any key skips the sailing
   if(state === 'port'){
     const g = PORTS[portKey].goods[+e.key - 1];
@@ -2161,7 +2216,7 @@ function backToBanner(){                    // the midpoint of the ink-wash: mov
   p.x = p.checkpoint[0]; p.y = p.checkpoint[1]; p.lane = 1; p.vx = p.vy = 0;
   p.stillT = 0; p.onGround = false;
   for(const b of level.blocks){ b.p[0] = b.sx; b.p[1] = b.sy; b.vy = 0; }   // §2a: blocks and bales return to their start
-  floats.push({x:p.x, y:p.y-90, t:1.6, text:LINE_BACK_TO_BANNER});
+  floats.push({x:p.x, y:p.y-90, t:1.6, text:LINE_BACK_TO_BANNER, who:'Ilamaran'});
 }
 
 function movePlayer(dt){
@@ -2186,9 +2241,12 @@ function movePlayer(dt){
   }
   // the handover scene (§2 "The sheathed sword"): input waits, jump or J/X skips
   if(p.scene){
-    p.scene.t += dt;
-    const total = HANDOVER_LINES.length*TUNE.HANDOVER_LINE;
-    if(p.scene.t >= total || (p.scene.t > 0.25 && (jumpQueued > 0 || attackQueued))) endHandover();
+    p.scene.t += dt; p.scene.line = p.scene.line || 0; p.scene.lt = (p.scene.lt || 0) + dt;
+    // ruling 32: each line stays up its reading time; a key press (jump, J/X, Enter) advances to the next
+    const press = p.scene.lt > 0.25 && (jumpQueued > 0 || attackQueued || p.scene.adv);
+    p.scene.adv = false;
+    if(p.scene.lt >= lineTime(HANDOVER_LINES[p.scene.line][1]) || press){ p.scene.line++; p.scene.lt = 0; }
+    if(p.scene.line >= HANDOVER_LINES.length) endHandover();
     jumpQueued = 0; attackQueued = 0; shiftQueued = 0;
     p.vx = 0;
   }
@@ -2216,7 +2274,7 @@ function movePlayer(dt){
       const line = SHEATH_LINES[levelIdx];
       if(line && (level.sheathLineAt === null || time - level.sheathLineAt >= TUNE.SHEATH_REPEAT)){
         level.sheathLineAt = time;
-        floats.push({x:p.x, y:p.y-88, t:1.8, text:line});
+        floats.push({x:p.x, y:p.y-88, t:1.8, text:line, who:'Ilamaran'});
       }
     }
   } else if(attackQueued > 0 && p.attackT <= 0 && tryParry()){
@@ -2226,7 +2284,7 @@ function movePlayer(dt){
     p.attackT = TUNE.CUT_TIME; sfx.slash(); level.swordDrawn = true; p.swingId = (p.swingId||0) + 1;
     if(!level.firstCut){                    // §2 sign 4: the first cut sweeps an ink stroke along the blade
       level.firstCut = true; p.strokeT = TUNE.FIRST_STROKE;
-      floats.push({x:p.x, y:p.y-96, t:2.0, text:LINE_FIRST_CUT});
+      floats.push({x:p.x, y:p.y-96, t:2.0, text:LINE_FIRST_CUT, who:'Ilamaran'});
     }
   }
   p.strokeT = Math.max(0, (p.strokeT||0) - dt);
@@ -2676,7 +2734,7 @@ function updateGuards(dt){
         g.seeT += dt;
         if(g.seeT >= TUNE.SEEN_TIME){
           g.mode = 'chase'; g.chaseT = 0; g.outBandT = 0;
-          floats.push({x:g.x, y:g.y-100, t:1.2, text:LINE_SHOUT}); sfx.shout();
+          floats.push({x:g.x, y:g.y-100, t:1.2, text:LINE_SHOUT, who:'Guard'}); sfx.shout();
         }
       } else g.seeT = 0;
     }
@@ -2724,7 +2782,7 @@ function updateWorld(dt){
   level.checkpoints.forEach((c, i)=>{
     if(!c.lit && p.x >= c.x - 30 && p.fadeT <= 0 && !p.leap){
       c.lit = true; p.checkpoint = [c.x, c.y]; sfx.check(); p.hp = maxHearts();   // §5: hearts refill at every checkpoint
-      floats.push({x:c.x, y:c.y-120, t:1.6, text:(level.cpLines && level.cpLines[i]) || LINE_CHECKPOINT});
+      floats.push({x:c.x, y:c.y-120, t:1.6, text:(level.cpLines && level.cpLines[i]) || LINE_CHECKPOINT, who:'Ilamaran'});
     }
   });
 
@@ -2785,7 +2843,7 @@ function updateWorld(dt){
     q.t -= dt; q.x += q.vx*dt; q.y += q.vy*dt; q.vy += (q.grav||0)*dt;
   }
   particles = particles.filter(q=>q.t>0);
-  for(const f of floats) f.t -= dt;
+  for(const f of floats){ if(!f.init){ f.init = true; f.t = Math.max(f.t, lineTime(f.text)); } f.t -= dt; }   // ruling 32
   floats = floats.filter(f=>f.t>0);
 
   const tx = clamp(p.x + p.face*90 - W*0.45, 0, level.width - W);
@@ -3942,12 +4000,10 @@ function drawLaneContents(l){
     drawGoal(level.goal.x, level.goal.y);
     for(const b of birds) drawBird(b);
     // plane-shift hint markers
-    ctx.font = '19px "Marcellus SC", Marcellus, serif'; ctx.textAlign='center';
     for(const h of level.hintsPlaced){
-      ctx.fillStyle = 'rgba(70,52,32,'+(0.55+0.3*Math.sin(time*2.4))+')';
-      ctx.fillText(h.text, h.x, h.base);
+      drawPanel(h.text, null, h.x, h.base, 1, h.S || panelSize(h.text, null));   // ruling 32: on a solid panel
       ctx.fillStyle = level.gateCrimson === false ? 'rgba(30,22,16,0.8)' : 'rgba(181,52,42,0.8)';
-      const ay = h.base + 16;
+      const ay = h.base + (h.S ? h.S.down : 10) + 4;
       ctx.beginPath(); ctx.moveTo(h.x, ay); ctx.lineTo(h.x-7, ay+12); ctx.lineTo(h.x+7, ay+12); ctx.closePath(); ctx.fill();
     }
     ctx.textAlign='left';
@@ -4143,22 +4199,22 @@ function render(){
 
   // floating labels (screen-anchored to main lane)
   laneBegin(1);
-  ctx.font = '17px "Marcellus SC", serif'; ctx.textAlign='center';
-  // floats stay inside the viewport (playtest: the sheath line clipped off the left edge)
-  const inView = (x, text)=>{ const hw = ctx.measureText(text).width/2 + 16; return clamp(x, cam.x + hw, cam.x + W - hw); };
+  // ruling 32: every float is a panel (speaker's name when spoken), kept inside the view and off the others
+  const inView = (x, hw)=> clamp(x, cam.x + hw + 8, cam.x + W - hw - 8);
+  const drawn = [];
   for(const f of floats){
-    ctx.fillStyle = 'rgba(90,64,36,'+clamp(f.t,0,1)+')';
-    ctx.fillText(f.text, inView(f.x, f.text), f.y - (1.6-f.t)*26);
+    const S = panelSize(f.text, f.who), x = inView(f.x, S.hw);
+    let base = f.y;
+    for(let k = 0; k < 6; k++){ const hit = drawn.find(([a,b,c,d])=> x + S.hw > a && x - S.hw < c && base + S.down > b && base - S.up < d);
+      if(!hit) break; base = hit[1] - S.down - 6; }
+    drawn.push(drawPanel(f.text, f.who, x, base, clamp(f.t/0.3, 0, 1), S));
   }
   if(player.scene && level.npc){             // the handover, one line at a time over the speaker
-    const i = Math.min(HANDOVER_LINES.length-1, player.scene.t/TUNE.HANDOVER_LINE|0);
+    const i = Math.min(HANDOVER_LINES.length-1, player.scene.line);
     const [who, line] = HANDOVER_LINES[i];
     const spk = who === 'Ilamaran' ? player : level.npc;
-    const pl = placeDialogue(spk.x, spk.y - 112, line), dx = inView(pl.x, line);
-    ctx.fillStyle = 'rgba(60,42,26,0.95)'; ctx.fillText(line, dx, pl.base);
-    ctx.font = '13px "Marcellus SC", serif'; ctx.fillStyle = 'rgba(90,64,36,0.85)';
-    ctx.fillText(who, dx, pl.base - 22);
-    ctx.font = '17px "Marcellus SC", serif';
+    const pl = placeDialogue(spk.x, spk.y - 112, line, who);
+    drawPanel(line, who, inView(pl.x, pl.S.hw), pl.base, 1, pl.S);
   }
   ctx.textAlign='left';
   laneEnd();
