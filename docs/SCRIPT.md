@@ -138,7 +138,7 @@ Trail kasu are copper; named kasu are gold, silver, or bronze coin types
 |---|---|
 | Ghee seller (opens the scene) | Copper from the road spends here same as anywhere. Show me. |
 | Ghee seller | Ghee for a lamp at the shrine before you sail. Twelve copper. |
-| Boatman | I'll hang a lamp where each side way starts. Ten copper. |
+| Boatman | I know a quicker way onto the docks. I'll hang a lamp at it. Ten copper. |
 | Fish and rice woman | Fried fish and rice for your whole crew. Six copper. |
 
 **Short of a price (Ilamaran):** Not enough copper. The road east will
@@ -154,7 +154,7 @@ light.
 | Seller | Offer and price |
 |---|---|
 | Shrine keeper | A lamp and flowers at the shore shrine. Twelve copper. |
-| Pilot | I know the Kadaram river. I'll tell your helmsman where it branches. Ten copper. |
+| Pilot | I know the Kadaram shore. An old coin hides up high there. I'll mark it with a lamp. Ten copper. |
 | Provisioner | Water jars, dried fish, coconuts for the crossing. Six copper. |
 
 **Short of a price (Ilamaran):** My purse is light. The sea will not
@@ -348,6 +348,10 @@ and Sakhuja, eds., *Nagapattinam to Suvarnadwipa* (2009). Balasubrahmanyam,
    handover and crew lines to pay for it. Recommendation: (a).
 
 ## Revision notes
+
+- 2026-10-26, ruling 30: boatman's and pilot's lines rewritten for the paid
+  hint targets in LEVEL-2.md and LEVEL-3.md section 9 (a dock shortcut; a
+  named kasu up high in Kadaram).
 
 - 2026-10-26, fourth draft, third pass (DECISIONS.md 29): palm-leaf sailing
   directions, four legs in landmarks and days per RESEARCH.md 6b; map
