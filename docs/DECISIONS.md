@@ -130,3 +130,13 @@ note in docs/NOTES.md addressed to Gaurav.
     The historian researches how Indian Ocean sailors of the period found
     their way, so the owner can choose between a true-geography map, a
     pilot's chart in the Indian manner, or both.
+29. **Voyage map: both.** A true-scale map of the Bay of Bengal in the
+    painted style, with a palm-leaf strip of sailing directions along its
+    lower edge, written as landmarks and days between them in the manner
+    of the 1015 *Song Shi* itinerary (RESEARCH.md 6b). Each line fills in
+    as the player reaches that leg. The strip format is invented and the
+    game says so on a history card.
+30. **Paid hints point to what the free signs do not.** Now that detours
+    carry free stakes (ruling 27), the boatman's and pilot's paid lamps
+    reveal something otherwise unmarked: a named kasu's hiding place or a
+    shortcut.
