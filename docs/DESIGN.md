@@ -325,9 +325,9 @@ are [plausible]:
 
 | Line | Leg | Days | Fills in |
 |---|---|---|---|
-| 1 | Thanjavur to Nagapattinam, overland | 2 on foot | On finishing level 1 |
+| 1 | Thanjavur to Nagapattinam, overland | 3 on foot | On finishing level 1 |
 | 2 | Nagapattinam, south past Sri Lanka's north | 2 | Leaving the quay port |
-| 3 | Sri Lanka's north to the Nicobars (Nakkavaram) | 10 | On the level 3 interstitial |
+| 3 | Sri Lanka's north to the Nicobars (Manakkavaram) | 9 | On the level 3 interstitial |
 | 4 | The Nicobars across to Kadaram | 5 | On the level 3 interstitial, as the fleet lands |
 
 On the level 3 interstitial the ship sails lines 3 and 4 leg by leg,
@@ -458,7 +458,7 @@ never kills.
   30, RESEARCH 6b). Budget raised to 4,400 for at most 400 added words,
   per the coordinator. The voyage map is now a true-scale map with a
   four-line palm-leaf strip (Thanjavur overland, past Sri Lanka, the
-  Nicobars, Kadaram), with when it opens, when each line fills, and where
+  Manakkavaram, Kadaram), with when it opens, when each line fills, and where
   lamps, named kasu, and pennants sit; a fixed card says the strip's form
   is invented. The boatman and pilot no longer light staked detour
   entrances; each lights one unmarked target the level designer names in
